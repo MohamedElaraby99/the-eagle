@@ -39,16 +39,40 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(morgan('dev'));
+
+// Handle CORS preflight requests
+app.options('*', cors());
 app.use(cors({
-    origin: [
-        process.env.CLIENT_URL, 
-        'http://localhost:5180',
-        'https://the-eagle.fikra.solutions',
-        'https://api.the-eagle.fikra.solutions'
-    ],
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        
+        const allowedOrigins = [
+            process.env.CLIENT_URL,
+            'http://localhost:5180',
+            'https://the-eagle.fikra.solutions',
+            'https://www.the-eagle.fikra.solutions',
+            'https://api.the-eagle.fikra.solutions'
+        ];
+        
+        // Check if origin is allowed
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            // Allow subdomains of theeagle.fikra.solutions
+            if (origin.endsWith('.the-eagle.fikra.solutions')) {
+                callback(null, true);
+            } else {
+                callback(new Error('Not allowed by CORS'));
+            }
+        }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token']
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token', 'Origin', 'Accept'],
+    exposedHeaders: ['Content-Length', 'X-Foo', 'X-Bar'],
+    preflightContinue: false,
+    optionsSuccessStatus: 204
 }));
 
 // Serve uploaded files - accessible via /api/v1/uploads/ for production
