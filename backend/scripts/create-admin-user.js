@@ -56,7 +56,7 @@ const createAdminUser = async () => {
     console.log('🔐 Password: Admin123!');
     console.log('👑 Role: ADMIN');
     console.log('\n💡 You can now login with these credentials');
-    console.log('🌐 Go to: http://localhost:5173/login');
+    console.log('🌐 Go to: http://localhost:5180/login');
     
     process.exit(0);
   } catch (error) {

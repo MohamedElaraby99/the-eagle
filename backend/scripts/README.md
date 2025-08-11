@@ -101,7 +101,7 @@ MONGO_URI_COMMUNITY=mongodb://localhost:27017/theeagle
 
 4. **Follow the prompts** and create your admin account(s)
 
-5. **Login to the system** using the created credentials at `http://localhost:5173/login`
+5. **Login to the system** using the created credentials at `http://localhost:5180/login`
 
 ## Troubleshooting
 

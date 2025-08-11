@@ -244,8 +244,8 @@ const LessonContentModal = ({ isOpen, onClose, lesson }) => {
     const backendBaseUrl = axiosInstance.defaults.baseURL.replace('/api/v1', '');
     
     // If it's already a full URL pointing to frontend, convert it to backend
-    if (url.includes('localhost:5173')) {
-      const convertedUrl = url.replace('http://localhost:5173', backendBaseUrl);
+    if (url.includes('localhost:5180')) {
+      const convertedUrl = url.replace('http://localhost:5180', backendBaseUrl);
       console.log('Frontend URL detected, converting to backend:', convertedUrl);
       return convertedUrl;
     }

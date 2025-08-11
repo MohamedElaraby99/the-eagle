@@ -42,7 +42,7 @@ app.use(morgan('dev'));
 app.use(cors({
     origin: [
         process.env.CLIENT_URL, 
-        'http://localhost:5173', // Vite default dev server port
+        'http://localhost:5180', // Vite default dev server port
         'http://localhost:5175', 
         'https://theeagle.online',
         'https://lms.theeagle.online'
@@ -80,7 +80,7 @@ app.get('/api/v1/test-uploads', (req, res) => {
   
   try {
     const files = fs.readdirSync(uploadsDir);
-    const baseUrl = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 4001}`;
+    const baseUrl = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 4002}`;
     
     res.json({ 
       message: 'Uploads directory accessible',

@@ -12,7 +12,7 @@ export const generateFileUrl = (filename, subfolder = '') => {
   if (!filename) return null;
   
   // Get the base URL from environment variables
-  const baseUrl = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 4001}`;
+  const baseUrl = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 4002}`;
   
   // Build the path
   let path = '/api/v1/uploads/';

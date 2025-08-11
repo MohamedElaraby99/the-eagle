@@ -7,7 +7,7 @@ const getBaseUrl = () => {
     return 'https://lms.theeagle.online/api/v1';
   }
   // Development fallback
-  return import.meta.env.VITE_REACT_APP_API_URL || 'http://localhost:4001/api/v1';
+  return import.meta.env.VITE_REACT_APP_API_URL || 'http://localhost:4002/api/v1';
 };
 
 const BASE_URL = getBaseUrl();

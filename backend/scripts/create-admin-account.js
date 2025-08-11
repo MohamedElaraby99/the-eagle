@@ -196,7 +196,7 @@ const createQuickAdmin = async () => {
     console.log(`🔑 Role: ${admin.role}`);
     console.log(`🔐 Password: ${adminData.password}`);
     console.log("\n💡 You can now login with these credentials");
-    console.log("🌐 Go to: http://localhost:5173/login");
+    console.log("🌐 Go to: http://localhost:5180/login");
 };
 
 const createCustomAdmin = async () => {
@@ -291,7 +291,7 @@ const createCustomAdmin = async () => {
     console.log(`🔑 Role: ${admin.role}`);
     console.log(`🔐 Password: ${password}`);
     console.log("\n💡 You can now login with these credentials");
-    console.log("🌐 Go to: http://localhost:5173/login");
+    console.log("🌐 Go to: http://localhost:5180/login");
 };
 
 const createBulkAdmins = async () => {
@@ -387,7 +387,7 @@ const createBulkAdmins = async () => {
         });
         
         console.log("\n💡 You can now login with any of these credentials");
-        console.log("🌐 Go to: http://localhost:5173/login");
+        console.log("🌐 Go to: http://localhost:5180/login");
     }
 };
 

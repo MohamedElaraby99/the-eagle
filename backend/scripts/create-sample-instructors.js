@@ -159,7 +159,7 @@ const createSampleInstructors = async () => {
     }
     
     console.log(`\n🎉 Successfully created ${sampleInstructors.length} sample instructors!`);
-    console.log('\n💡 You can now view instructors at: http://localhost:5173/instructors');
+    console.log('\n💡 You can now view instructors at: http://localhost:5180/instructors');
     
     mongoose.connection.close();
   } catch (error) {

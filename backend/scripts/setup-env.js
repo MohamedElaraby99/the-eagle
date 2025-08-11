@@ -77,13 +77,13 @@ const setupEnvironment = async () => {
         }
         
         // Server port
-        const port = await askQuestion("\nEnter server port (default: 4001): ") || "4001";
+        const port = await askQuestion("\nEnter server port (default: 4002): ") || "4002";
         
         // JWT secret
         const jwtSecret = await askQuestion("\nEnter JWT secret (default: lms_jwt_secret_2024): ") || "lms_jwt_secret_2024";
         
         // Client URL
-        const clientUrl = await askQuestion("\nEnter client URL (default: http://localhost:5173): ") || "http://localhost:5173";
+        const clientUrl = await askQuestion("\nEnter client URL (default: http://localhost:5180): ") || "http://localhost:5180";
         
         // Build .env content
         const envContent = `# Database Configuration
