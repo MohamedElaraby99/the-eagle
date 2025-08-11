@@ -140,7 +140,7 @@ app.get('/api/v1/test-uploads', (req, res) => {
   
   try {
     const files = fs.readdirSync(uploadsDir);
-    const baseUrl = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 4002}`;
+    const baseUrl = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 4003}`;
     
     res.json({ 
       message: 'Uploads directory accessible',
@@ -338,7 +338,14 @@ function ensureCorsHeaders(res, origin) {
     res.header('Access-Control-Allow-Credentials', 'true');
 }
 
-// db init
-connectToDb();
+// db init - make it non-blocking
+setTimeout(() => {
+    try {
+        connectToDb();
+    } catch (error) {
+        console.log('⚠️ MongoDB connection failed, but server continues running');
+        console.log('💡 You can still test CORS and basic functionality');
+    }
+}, 1000);
 
 export default app;

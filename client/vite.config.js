@@ -8,7 +8,7 @@ export default defineConfig({
     'import.meta.env.VITE_REACT_APP_API_URL': JSON.stringify(
       process.env.NODE_ENV === 'production' 
         ? 'https://api.the-eagle.fikra.solutions/api/v1'
-        : (process.env.VITE_REACT_APP_API_URL || 'http://localhost:4002/api/v1')
+        : (process.env.VITE_REACT_APP_API_URL || 'http://localhost:4003/api/v1')
     )
   }
 })
