@@ -43,7 +43,7 @@ app.use(morgan('dev'));
 // Handle CORS preflight requests
 app.options('*', cors());
 
-// Add CORS headers to all responses
+// Add CORS headers to ALL responses - this is the most aggressive approach
 app.use((req, res, next) => {
     const origin = req.headers.origin;
     
@@ -52,38 +52,21 @@ app.use((req, res, next) => {
     console.log(`[CORS Middleware] Protocol: ${req.protocol}`);
     console.log(`[CORS Middleware] Host: ${req.get('host')}`);
     
-    // Check if origin is allowed
-    const allowedOrigins = [
-        process.env.CLIENT_URL,
-        'http://localhost:5180',
-        'https://the-eagle.fikra.solutions',
-        'https://www.the-eagle.fikra.solutions',
-        'https://api.the-eagle.fikra.solutions'
-    ];
-    
-    let isAllowed = false;
-    
-    if (!origin) {
-        isAllowed = true;
-        console.log('[CORS Middleware] No origin - allowing');
-    } else if (allowedOrigins.includes(origin)) {
-        isAllowed = true;
-        console.log(`[CORS Middleware] Origin ${origin} is in allowed list`);
-    } else if (origin.endsWith('.the-eagle.fikra.solutions')) {
-        isAllowed = true;
-        console.log(`[CORS Middleware] Origin ${origin} is subdomain of theeagle.fikra.solutions`);
+    // ALWAYS set CORS headers regardless of origin (for debugging)
+    if (origin) {
+        res.header('Access-Control-Allow-Origin', origin);
+        console.log(`[CORS Middleware] Set Access-Control-Allow-Origin to: ${origin}`);
     } else {
-        console.log(`[CORS Middleware] Origin ${origin} is NOT allowed`);
+        res.header('Access-Control-Allow-Origin', '*');
+        console.log(`[CORS Middleware] Set Access-Control-Allow-Origin to: *`);
     }
     
-    if (isAllowed) {
-        res.header('Access-Control-Allow-Origin', origin || '*');
-        res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-        res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-auth-token, Origin, Accept');
-        res.header('Access-Control-Allow-Credentials', 'true');
-        res.header('Access-Control-Expose-Headers', 'Content-Length, X-Foo, X-Bar');
-        console.log(`[CORS Middleware] Added CORS headers for origin: ${origin || '*'}`);
-    }
+    // Always set these headers
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-auth-token, Origin, Accept, X-Requested-With');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Expose-Headers', 'Content-Length, X-Foo, X-Bar');
+    res.header('Access-Control-Max-Age', '86400'); // 24 hours
     
     // Handle preflight requests
     if (req.method === 'OPTIONS') {
@@ -298,11 +281,62 @@ app.use('/api/v1/instructors', instructorRoutes);
 app.use('/api/v1/stages', stageRoutes);
  
 
+// Global 404 handler with CORS headers
 app.all('*', (req, res) => {
+    // Ensure CORS headers are set even on 404
+    const origin = req.headers.origin;
+    if (origin) {
+        res.header('Access-Control-Allow-Origin', origin);
+    } else {
+        res.header('Access-Control-Allow-Origin', '*');
+    }
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-auth-token, Origin, Accept');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    
     res.status(404).send('OOPS!! 404 page not found');
 })
 
 app.use(errorMiddleware);
+
+// Response interceptor to ensure CORS headers are always present
+app.use((req, res, next) => {
+    const originalSend = res.send;
+    const originalJson = res.json;
+    const originalEnd = res.end;
+    
+    // Intercept res.send
+    res.send = function(data) {
+        ensureCorsHeaders(res, req.headers.origin);
+        return originalSend.call(this, data);
+    };
+    
+    // Intercept res.json
+    res.json = function(data) {
+        ensureCorsHeaders(res, req.headers.origin);
+        return originalJson.call(this, data);
+    };
+    
+    // Intercept res.end
+    res.end = function(data) {
+        ensureCorsHeaders(res, req.headers.origin);
+        return originalEnd.call(this, data);
+    };
+    
+    next();
+});
+
+// Helper function to ensure CORS headers
+function ensureCorsHeaders(res, origin) {
+    if (origin) {
+        res.header('Access-Control-Allow-Origin', origin);
+    } else {
+        res.header('Access-Control-Allow-Origin', '*');
+    }
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-auth-token, Origin, Accept');
+    res.header('Access-Control-Allow-Credentials', 'true');
+}
 
 // db init
 connectToDb();
