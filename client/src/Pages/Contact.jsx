@@ -73,7 +73,7 @@ export default function Contact() {
     email: "softwarefikra@gmail.com",
     support: "softwarefikra@gmail.com",
     address: "Mansoura, 18 Street Torel, Egypt",
-    website: "https://fikra.solutions/",
+    website: "https://the-eagle.fikra.solutions/",
     workingHours: "Monday - Friday: 9:00 AM - 6:00 PM"
   };
 
@@ -81,7 +81,7 @@ export default function Contact() {
     { name: "Facebook", icon: FaFacebook, url: "https://www.facebook.com/people/Fikra-Software-%D9%81%D9%83%D8%B1%D8%A9/61572824761047/", color: "hover:text-blue-600" },
     { name: "LinkedIn", icon: FaLinkedin, url: "https://www.linkedin.com/company/fikra-software-%D9%81%D9%83%D8%B1%D8%A9-%D9%84%D9%84%D8%A8%D8%B1%D9%85%D8%AC%D9%8A%D8%A7%D8%AA/", color: "hover:text-blue-700" },
     { name: "WhatsApp", icon: FaWhatsapp, url: "https://wa.me/201207039410", color: "hover:text-green-500" },
-    { name: "Website", icon: FaGlobe, url: "https://fikra.solutions/", color: "hover:text-purple-600" }
+    { name: "Website", icon: FaGlobe, url: "https://the-eagle.fikra.solutions/", color: "hover:text-purple-600" }
   ];
 
   return (

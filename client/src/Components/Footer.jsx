@@ -101,7 +101,7 @@ export default function Footer() {
             مدعوم بواسطة
           </span>
           <a 
-            href="https://fikra.solutions/" 
+            href="https://the-eagle.fikra.solutions/" 
             target="_blank" 
             rel="noopener noreferrer"
             className="hover:opacity-80 transition-opacity duration-300"

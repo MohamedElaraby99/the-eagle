@@ -290,7 +290,7 @@ export default function TermsOfService() {
                     <p><strong>البريد الإلكتروني:</strong> softwarefikra@gmail.com</p>
                     <p><strong>الهاتف:</strong> +201207039410</p>
                     <p><strong>العنوان:</strong> المنصورة، شارع 18 توريل، مصر</p>
-                    <p><strong>الموقع الإلكتروني:</strong> https://fikra.solutions/</p>
+                    <p><strong>الموقع الإلكتروني:</strong> https://the-eagle.fikra.solutions/</p>
                   </div>
                 </div>
               </section>

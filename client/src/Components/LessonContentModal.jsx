@@ -251,7 +251,7 @@ const LessonContentModal = ({ isOpen, onClose, lesson }) => {
     }
     
     // If it's already a full URL pointing to backend, return as is
-    if (url.startsWith(backendBaseUrl) || url.startsWith('https://lms.fikra.solutions')) {
+    if (url.startsWith(backendBaseUrl) || url.startsWith('https://lms.the-eagle.fikra.solutions')) {
       console.log('Backend URL detected, returning as is:', url);
       return url;
     }

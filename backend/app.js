@@ -42,10 +42,9 @@ app.use(morgan('dev'));
 app.use(cors({
     origin: [
         process.env.CLIENT_URL, 
-        'http://localhost:5180', // Vite default dev server port
-        'http://localhost:5175', 
-        'https://theeagle.online',
-        'https://lms.theeagle.online'
+        'http://localhost:5180',
+        'https://the-eagle.fikra.solutions',
+        'https://api.the-eagle.fikra.solutions'
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],

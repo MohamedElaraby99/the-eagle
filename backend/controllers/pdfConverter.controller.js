@@ -20,7 +20,7 @@ const convertPdfToImages = asyncHandler(async (req, res) => {
     // Extract filename from URL and decode it
     let filename;
     
-    if (pdfUrl.includes('localhost:4002') || pdfUrl.includes('lms.theeagle.online')) {
+    if (pdfUrl.includes('localhost:4002') || pdfUrl.includes('api.the-eagle.fikra.solutions')) {
       // Full backend URL provided (development or production)
       const urlParts = pdfUrl.split('/');
       const encodedFilename = urlParts[urlParts.length - 1];
