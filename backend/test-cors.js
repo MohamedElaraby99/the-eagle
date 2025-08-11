@@ -1,7 +1,7 @@
 // Simple CORS test script
 // Run this to test if CORS headers are working
 
-const http = require('http');
+import http from 'http';
 
 const options = {
     hostname: 'localhost',
