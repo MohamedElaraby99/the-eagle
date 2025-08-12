@@ -436,6 +436,43 @@ const getUserStats = async (req, res, next) => {
     }
 };
 
+// Reset user password (admin only)
+const resetUserPassword = async (req, res, next) => {
+    try {
+        const { userId } = req.params;
+        const { newPassword } = req.body;
+
+        if (!newPassword || newPassword.length < 6) {
+            return next(new AppError("Password must be at least 6 characters long", 400));
+        }
+
+        // Find the user
+        const user = await userModel.findById(userId);
+        if (!user) {
+            return next(new AppError("User not found", 404));
+        }
+
+        // Hash the new password
+        const bcrypt = await import('bcryptjs');
+        const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+        // Update the user's password
+        user.password = hashedPassword;
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            message: "User password reset successfully",
+            data: {
+                userId: user._id,
+                email: user.email
+            }
+        });
+    } catch (error) {
+        return next(new AppError(error.message, 500));
+    }
+};
+
 export {
     getAllUsers,
     createUser,
@@ -444,5 +481,6 @@ export {
     deleteUser,
     updateUserRole,
     getUserActivities,
-    getUserStats
+    getUserStats,
+    resetUserPassword
 }; 

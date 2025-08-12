@@ -8,7 +8,8 @@ import {
     deleteUser,
     updateUserRole,
     getUserActivities,
-    getUserStats
+    getUserStats,
+    resetUserPassword
 } from "../controllers/adminUser.controller.js";
 
 const router = express.Router();
@@ -44,5 +45,8 @@ router.get("/users/:userId/activities", getUserActivities);
 
 // Get user statistics
 router.get("/users/:userId/stats", getUserStats);
+
+// Reset user password
+router.patch("/users/:userId/password", resetUserPassword);
 
 export default router; 

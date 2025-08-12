@@ -46,7 +46,8 @@ import {
     FaTimesCircle,
     FaPlus,
     FaSave,
-    FaTimes
+    FaTimes,
+    FaKey
 } from "react-icons/fa";
 import { axiosInstance } from "../../Helpers/axiosInstance";
 import { egyptianGovernorates } from "../../utils/governorateMapping";
@@ -78,6 +79,12 @@ export default function AdminUserDashboard() {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [userToDelete, setUserToDelete] = useState(null);
     const [showCreateModal, setShowCreateModal] = useState(false);
+    const [showPasswordResetModal, setShowPasswordResetModal] = useState(false);
+    const [userToResetPassword, setUserToResetPassword] = useState(null);
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [createUserForm, setCreateUserForm] = useState({
         fullName: '',
         username: '',
@@ -125,31 +132,13 @@ export default function AdminUserDashboard() {
         console.log('LocalStorage isLoggedIn:', localStorage.getItem('isLoggedIn'));
         
         if (isLoggedIn && role === "ADMIN") {
-            console.log('Dispatching getAllUsers...');
-            let roleFilter = "";
-            if (activeTab === "users") {
-                roleFilter = "USER";
-            } else if (activeTab === "admins") {
-                roleFilter = "ADMIN";
-            }
-            
-            console.log('Initial role filter:', roleFilter);
-            console.log('Initial filters:', filters);
-            
-            dispatch(getAllUsers({ 
-                page: 1, 
-                limit: 20, 
-                role: roleFilter,
-                status: filters.status,
-                stage: filters.stage,
-                search: filters.search 
-            }));
+            console.log('User is admin, ready to fetch users');
         } else {
             console.log('User not admin or not logged in');
             console.log('isLoggedIn:', isLoggedIn);
             console.log('role:', role);
         }
-    }, [dispatch, user, isLoggedIn, role, activeTab]);
+    }, [dispatch, user, isLoggedIn, role]);
 
     useEffect(() => {
         if (error) {
@@ -204,6 +193,32 @@ export default function AdminUserDashboard() {
         }));
     };
 
+    // Fetch users when tab changes or component mounts
+    useEffect(() => {
+        if (isLoggedIn && role === "ADMIN") {
+            let roleFilter = "";
+            if (activeTab === "users") {
+                roleFilter = "USER";
+            } else if (activeTab === "admins") {
+                roleFilter = "ADMIN";
+            } else {
+                roleFilter = filters.role;
+            }
+            
+            console.log('Tab changed or component mounted, fetching users with role filter:', roleFilter);
+            console.log('Active tab:', activeTab);
+            
+            dispatch(getAllUsers({ 
+                page: 1, 
+                limit: 20, 
+                role: roleFilter,
+                status: filters.status,
+                stage: filters.stage,
+                search: filters.search 
+            }));
+        }
+    }, [activeTab, dispatch, isLoggedIn, role, filters.status, filters.stage, filters.search]);
+
     const handleViewUser = async (userId) => {
         setSelectedUserId(userId);
         setShowUserDetails(true);
@@ -252,6 +267,38 @@ export default function AdminUserDashboard() {
             setUserToDelete(null);
         } catch (error) {
             // Error is handled in useEffect
+        }
+    };
+
+    const handlePasswordReset = async () => {
+        if (!userToResetPassword || !newPassword || !confirmPassword) return;
+        
+        if (newPassword !== confirmPassword) {
+            toast.error("Passwords do not match!");
+            return;
+        }
+        
+        if (newPassword.length < 6) {
+            toast.error("Password must be at least 6 characters long!");
+            return;
+        }
+        
+        try {
+            const response = await axiosInstance.patch(`/admin/users/${userToResetPassword}/password`, {
+                newPassword
+            });
+            
+            if (response.data.success) {
+                toast.success("Password reset successfully!");
+                setShowPasswordResetModal(false);
+                setUserToResetPassword(null);
+                setNewPassword('');
+                setConfirmPassword('');
+                setShowNewPassword(false);
+                setShowConfirmPassword(false);
+            }
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Failed to reset password");
         }
     };
 
@@ -373,7 +420,10 @@ export default function AdminUserDashboard() {
                     {/* Tabs */}
                     <div className="flex space-x-4 space-x-reverse mb-6">
                         <button
-                            onClick={() => setActiveTab("users")}
+                            onClick={() => {
+                                console.log('Switching to users tab');
+                                setActiveTab("users");
+                            }}
                             className={`px-6 py-3 rounded-lg font-medium transition-colors ${
                                 activeTab === "users"
                                     ? "bg-indigo-600 text-white"
@@ -384,7 +434,10 @@ export default function AdminUserDashboard() {
                             الطلاب
                         </button>
                         <button
-                            onClick={() => setActiveTab("admins")}
+                            onClick={() => {
+                                console.log('Switching to admins tab');
+                                setActiveTab("admins");
+                            }}
                             className={`px-6 py-3 rounded-lg font-medium transition-colors ${
                                 activeTab === "admins"
                                     ? "bg-purple-600 text-white"
@@ -395,8 +448,11 @@ export default function AdminUserDashboard() {
                             المديرون
                         </button>
                         <button
-                            onClick={() => setActiveTab("all")}
-                            className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                            onClick={() => {
+                                console.log('Switching to all tab');
+                                setActiveTab("all");
+                            }}
+                            className={`px-6 py-2 rounded-lg font-medium transition-colors ${
                                 activeTab === "all"
                                     ? "bg-green-600 text-white"
                                     : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
@@ -535,7 +591,7 @@ export default function AdminUserDashboard() {
                                                             <h4 className="font-semibold text-gray-900 dark:text-white">
                                                                 {user.fullName}
                                                             </h4>
-                                                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getRoleColor(user.role)}`}>
+                                                            <span className={`inline-flex items-center px-2 py-2 rounded-full text-xs font-medium ${getRoleColor(user.role)}`}>
                                                                 {user.role}
                                                             </span>
                                                         </div>
@@ -543,15 +599,31 @@ export default function AdminUserDashboard() {
                                                             {user.email}
                                                         </p>
                                                         <p className="text-xs text-gray-400 dark:text-gray-500">
-                                                            المحفظة: {user.walletBalance} جنيه مصري • المعاملات: {user.totalTransactions}
-                                                            {user.stage && (
-                                                                <span className="ml-2">• المرحلة: {user.stage.name}</span>
+                                                            {user.role === 'USER' && (
+                                                                <>
+                                                                    المحفظة: {user.walletBalance} جنيه مصري • المعاملات: {user.totalTransactions}
+                                                                    {user.stage && (
+                                                                        <span className="ml-2">• المرحلة: {user.stage.name}</span>
+                                                                    )}
+                                                                </>
+                                                            )}
+                                                            {user.role === 'ADMIN' && (
+                                                                <span>مدير النظام</span>
                                                             )}
                                                         </p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center space-x-2">
-                                                  
+                                                    <button
+                                                        onClick={() => {
+                                                            setUserToResetPassword(user);
+                                                            setShowPasswordResetModal(true);
+                                                        }}
+                                                        className="p-2 text-gray-500 hover:text-blue-600 transition-colors"
+                                                        title="إعادة تعيين كلمة المرور"
+                                                    >
+                                                        <FaKey />
+                                                    </button>
                                                     <button
                                                         onClick={() => handleToggleStatus(user.id, user.isActive)}
                                                         className="p-2 text-gray-500 hover:text-yellow-600 transition-colors"
@@ -616,7 +688,6 @@ export default function AdminUserDashboard() {
                                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
                                     المديرون
                                 </h3>
-
                                 {/* Filters */}
                                 <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -667,12 +738,16 @@ export default function AdminUserDashboard() {
                                 {loading ? (
                                     <div className="flex justify-center items-center py-8">
                                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+                                        <span className="mr-3 text-gray-600 dark:text-gray-400">جاري تحميل المديرين...</span>
                                     </div>
                                 ) : users.length === 0 ? (
                                     <div className="text-center py-8">
                                         <FaCrown className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                                         <p className="text-gray-500 dark:text-gray-400">
                                             لا يوجد مديرون حالياً
+                                        </p>
+                                        <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">
+                                            تم البحث عن المستخدمين بدور ADMIN
                                         </p>
                                     </div>
                                 ) : (
@@ -699,7 +774,14 @@ export default function AdminUserDashboard() {
                                                             {user.email}
                                                         </p>
                                                         <p className="text-xs text-gray-400 dark:text-gray-500">
-                                                            المحفظة: {user.walletBalance} جنيه مصري • المعاملات: {user.totalTransactions}
+                                                            {user.role === 'USER' && (
+                                                                <>
+                                                                    المحفظة: {user.walletBalance} جنيه مصري • المعاملات: {user.totalTransactions}
+                                                                </>
+                                                            )}
+                                                            {user.role === 'ADMIN' && (
+                                                                <span>مدير النظام</span>
+                                                            )}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -780,7 +862,7 @@ export default function AdminUserDashboard() {
                                             </select>
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
                                                 المرحلة الدراسية
                                             </label>
                                             <select
@@ -846,15 +928,31 @@ export default function AdminUserDashboard() {
                                                             {user.email}
                                                         </p>
                                                         <p className="text-xs text-gray-400 dark:text-gray-500">
-                                                            المحفظة: {user.walletBalance} جنيه مصري • المعاملات: {user.totalTransactions}
-                                                            {user.stage && (
-                                                                <span className="ml-2">• المرحلة: {user.stage.name}</span>
+                                                            {user.role === 'USER' && (
+                                                                <>
+                                                                    المحفظة: {user.walletBalance} جنيه مصري • المعاملات: {user.totalTransactions}
+                                                                    {user.stage && (
+                                                                        <span className="ml-2">• المرحلة: {user.stage.name}</span>
+                                                                    )}
+                                                                </>
+                                                            )}
+                                                            {user.role === 'ADMIN' && (
+                                                                <span>مدير النظام</span>
                                                             )}
                                                         </p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center space-x-2">
-                                                   
+                                                    <button
+                                                        onClick={() => {
+                                                            setUserToResetPassword(user);
+                                                            setShowPasswordResetModal(true);
+                                                        }}
+                                                        className="p-2 text-gray-500 hover:text-blue-600 transition-colors"
+                                                        title="إعادة تعيين كلمة المرور"
+                                                    >
+                                                        <FaKey />
+                                                    </button>
                                                     <button
                                                         onClick={() => handleToggleStatus(user.id, user.isActive)}
                                                         className="p-2 text-gray-500 hover:text-yellow-600 transition-colors"
@@ -1172,6 +1270,94 @@ export default function AdminUserDashboard() {
                                     className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
                                 >
                                     Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Password Reset Modal */}
+                {showPasswordResetModal && userToResetPassword && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" dir="rtl">
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+                            <div className="flex items-center space-x-3 mb-4">
+                                <FaKey className="h-8 w-8 text-blue-500" />
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                    إعادة تعيين كلمة المرور
+                                </h3>
+                            </div>
+                            <p className="text-gray-600 dark:text-gray-300 mb-4">
+                                إعادة تعيين كلمة المرور للمستخدم: <strong>{userToResetPassword.fullName}</strong>
+                            </p>
+                            
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        كلمة المرور الجديدة
+                                    </label>
+                                    <div className="relative">
+                                        <input
+                                            type={showNewPassword ? "text" : "password"}
+                                            value={newPassword}
+                                            onChange={(e) => setNewPassword(e.target.value)}
+                                            className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                            placeholder="أدخل كلمة المرور الجديدة"
+                                            minLength={6}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowNewPassword(!showNewPassword)}
+                                            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                                        >
+                                            {showNewPassword ? <FaEyeSlash /> : <FaEye />}
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        تأكيد كلمة المرور
+                                    </label>
+                                    <div className="relative">
+                                        <input
+                                            type={showConfirmPassword ? "text" : "password"}
+                                            value={confirmPassword}
+                                            onChange={(e) => setConfirmPassword(e.target.value)}
+                                            className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                            placeholder="أعد إدخال كلمة المرور الجديدة"
+                                            minLength={6}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                                        >
+                                            {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div className="flex space-x-3 space-x-reverse mt-6">
+                                <button
+                                    onClick={() => {
+                                        setShowPasswordResetModal(false);
+                                        setUserToResetPassword(null);
+                                        setNewPassword('');
+                                        setConfirmPassword('');
+                                        setShowNewPassword(false);
+                                        setShowConfirmPassword(false);
+                                    }}
+                                    className="flex-1 px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-lg transition-colors"
+                                >
+                                    إلغاء
+                                </button>
+                                <button
+                                    onClick={handlePasswordReset}
+                                    disabled={!newPassword || !confirmPassword || newPassword !== confirmPassword || newPassword.length < 6}
+                                    className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    إعادة تعيين كلمة المرور
                                 </button>
                             </div>
                         </div>
