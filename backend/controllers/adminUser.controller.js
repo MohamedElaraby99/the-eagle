@@ -11,7 +11,13 @@ const getAllUsers = async (req, res, next) => {
 
         // Filter by role
         if (role && role !== 'all') {
-            query.role = role;
+            if (role.includes(',')) {
+                // Handle multiple roles (e.g., "USER,USER1")
+                const roles = role.split(',');
+                query.role = { $in: roles };
+            } else {
+                query.role = role;
+            }
         }
 
         // Filter by status (active/inactive)
@@ -56,7 +62,8 @@ const getAllUsers = async (req, res, next) => {
                     activeUsers: { $sum: { $cond: ['$isActive', 1, 0] } },
                     inactiveUsers: { $sum: { $cond: ['$isActive', 0, 1] } },
                     adminUsers: { $sum: { $cond: [{ $eq: ['$role', 'ADMIN'] }, 1, 0] } },
-                    regularUsers: { $sum: { $cond: [{ $eq: ['$role', 'USER'] }, 1, 0] } }
+                    regularUsers: { $sum: { $cond: [{ $eq: ['$role', 'USER'] }, 1, 0] } },
+                    user1Users: { $sum: { $cond: [{ $eq: ['$role', 'USER1'] }, 1, 0] } }
                 }
             }
         ]);
@@ -93,7 +100,8 @@ const getAllUsers = async (req, res, next) => {
                     activeUsers: 0,
                     inactiveUsers: 0,
                     adminUsers: 0,
-                    regularUsers: 0
+                    regularUsers: 0,
+                    user1Users: 0
                 }
             }
         });
@@ -124,29 +132,26 @@ const createUser = async (req, res, next) => {
         }
 
         // Validate role
-        if (!['USER', 'ADMIN'].includes(role)) {
-            return next(new AppError("Role must be either USER or ADMIN", 400));
+        if (!['USER', 'USER1', 'ADMIN'].includes(role)) {
+            return next(new AppError("Role must be either USER, USER1, or ADMIN", 400));
         }
 
-        // For USER role, require additional fields
-        if (role === 'USER') {
+        // For USER and USER1 roles, require additional fields
+        if (role === 'USER' || role === 'USER1') {
             if (!phoneNumber || !fatherPhoneNumber || !governorate || !stage || !age) {
                 return next(new AppError("Phone number, father phone number, governorate, stage, and age are required for regular users", 400));
             }
         }
 
         // Check if user already exists
-        const existingUser = await userModel.findOne({ 
-            $or: [{ email }, { username }] 
-        });
+        const existingUserByEmail = await userModel.findOne({ email: email.toLowerCase() });
+        const existingUserByUsername = await userModel.findOne({ username: username.toLowerCase() });
 
-        if (existingUser) {
-            if (existingUser.email === email) {
-                return next(new AppError("Email already exists", 400));
-            }
-            if (existingUser.username === username) {
-                return next(new AppError("Username already exists", 400));
-            }
+        if (existingUserByEmail) {
+            return next(new AppError("Email already exists", 400));
+        }
+        if (existingUserByUsername) {
+            return next(new AppError("Username already exists", 400));
         }
 
         // Prepare user data
@@ -163,8 +168,8 @@ const createUser = async (req, res, next) => {
             }
         };
 
-        // Add optional fields for USER role
-        if (role === 'USER') {
+        // Add optional fields for USER and USER1 roles
+        if (role === 'USER' || role === 'USER1') {
             userData.phoneNumber = phoneNumber;
             userData.fatherPhoneNumber = fatherPhoneNumber;
             userData.governorate = governorate;
@@ -327,7 +332,7 @@ const updateUserRole = async (req, res, next) => {
         const { userId } = req.params;
         const { role } = req.body;
 
-        if (!['USER', 'ADMIN'].includes(role)) {
+        if (!['USER', 'USER1', 'ADMIN'].includes(role)) {
             return next(new AppError("Invalid role", 400));
         }
 

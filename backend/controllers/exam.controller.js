@@ -55,6 +55,14 @@ const takeTrainingExam = asyncHandler(async (req, res) => {
         throw new AppError("Training not found or has no questions", 400);
     }
 
+    // Check if user has already taken this training (for all users including USER1)
+    const existingAttempt = training.userAttempts.find(attempt => 
+        attempt.userId.toString() === userId.toString()
+    );
+    if (existingAttempt) {
+        throw new AppError("You have already taken this training", 400);
+    }
+
     // Calculate results
     const questions = training.questions;
     let correctAnswers = 0;

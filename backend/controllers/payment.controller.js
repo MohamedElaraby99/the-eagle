@@ -279,6 +279,24 @@ export const checkPurchaseStatus = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Course ID, purchase type, and item ID are required");
     }
 
+    // Get user to check their role
+    const user = await User.findById(userId);
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+
+    // Admin users and USER1 users always have access to all content
+    if (user.role === 'ADMIN' || user.role === 'USER1') {
+        return res.status(200).json(
+            new ApiResponse(200, { 
+                isPurchased: true,
+                purchase: null,
+                message: user.role === 'ADMIN' ? 'Admin access granted' : 'USER1 content access granted'
+            }, "Access granted")
+        );
+    }
+
+    // For regular users, check actual purchase status
     const purchase = await Purchase.findOne({
         userId,
         courseId,

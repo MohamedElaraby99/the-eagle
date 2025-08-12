@@ -20,15 +20,7 @@ const connectToDb = async () => {
 const createAdminUser = async () => {
   try {
     await connectToDb();
-    
-    // Check if admin already exists
-    // const existingAdmin = await User.findOne({ role: 'ADMIN' });
-    // if (existingAdmin) {
-    //   console.log('Admin user already exists:', existingAdmin.email);
-    //   process.exit(0);
-    // }
-    
-    // Create admin user - don't hash password manually, let the model handle it
+  
     const adminUser1 = {
       username: 'adminn34',
       fullName: 'System Administrator',

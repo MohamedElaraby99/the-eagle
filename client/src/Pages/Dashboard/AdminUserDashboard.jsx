@@ -199,6 +199,8 @@ export default function AdminUserDashboard() {
             let roleFilter = "";
             if (activeTab === "users") {
                 roleFilter = "USER";
+            } else if (activeTab === "user1") {
+                roleFilter = "USER1";
             } else if (activeTab === "admins") {
                 roleFilter = "ADMIN";
             } else {
@@ -319,9 +321,19 @@ export default function AdminUserDashboard() {
     };
 
     const getRoleColor = (role) => {
-        return role === 'ADMIN' 
-            ? 'text-purple-600 bg-purple-50 dark:bg-purple-900/20' 
-            : 'text-blue-600 bg-blue-50 dark:bg-blue-900/20';
+        if (role === 'ADMIN') {
+            return 'text-purple-600 bg-purple-50 dark:bg-purple-900/20';
+        } else if (role === 'USER1') {
+            return 'text-orange-600 bg-orange-50 dark:bg-orange-900/20';
+        } else {
+            return 'text-blue-600 bg-blue-50 dark:bg-blue-900/20';
+        }
+    };
+
+    const getNextRole = (currentRole) => {
+        if (currentRole === 'USER') return 'USER1';
+        if (currentRole === 'USER1') return 'ADMIN';
+        return 'USER';
     };
 
     const getTransactionIcon = (type) => {
@@ -415,6 +427,18 @@ export default function AdminUserDashboard() {
                                 </div>
                             </div>
                         </div>
+
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
+                            <div className="flex items-center">
+                                <div className="p-3 rounded-full bg-orange-100 dark:bg-orange-900/20">
+                                    <FaUser className="h-6 w-6 text-orange-600" />
+                                </div>
+                                <div className="mr-4">
+                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">مستخدمي المحتوى</p>
+                                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.user1Users || 0}</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     {/* Tabs */}
@@ -432,6 +456,20 @@ export default function AdminUserDashboard() {
                         >
                             <FaUsers className="inline mr-2" />
                             الطلاب
+                        </button>
+                        <button
+                            onClick={() => {
+                                console.log('Switching to user1 tab');
+                                setActiveTab("user1");
+                            }}
+                            className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                                activeTab === "user1"
+                                    ? "bg-orange-600 text-white"
+                                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                            }`}
+                        >
+                            <FaUser className="inline mr-2" />
+                            مستخدمي المحتوى
                         </button>
                         <button
                             onClick={() => {
@@ -479,7 +517,7 @@ export default function AdminUserDashboard() {
                         {activeTab === "users" && (
                             <div className="p-6">
                                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
-                                    جميع المستخدمين
+                                    الطلاب ومستخدمي المحتوى
                                 </h3>
 
                                 {/* Filters */}
@@ -511,6 +549,7 @@ export default function AdminUserDashboard() {
                                                 >
                                                     <option value="">جميع الأدوار</option>
                                                     <option value="USER">مستخدم</option>
+                                                    <option value="USER1">مستخدم محتوى</option>
                                                     <option value="ADMIN">مدير</option>
                                                 </select>
                                             </div>
@@ -678,6 +717,170 @@ export default function AdminUserDashboard() {
                                                 </button>
                                             ))}
                                         </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {activeTab === "user1" && (
+                            <div className="p-6">
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
+                                    مستخدمي المحتوى
+                                </h3>
+                                
+                                {/* Filters */}
+                                <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                البحث
+                                            </label>
+                                            <input
+                                                type="text"
+                                                name="search"
+                                                value={filters.search}
+                                                onChange={handleFilterChange}
+                                                className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                                placeholder="البحث بالاسم أو البريد الإلكتروني"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                الحالة
+                                            </label>
+                                            <select
+                                                name="status"
+                                                value={filters.status}
+                                                onChange={handleFilterChange}
+                                                className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                            >
+                                                <option value="">جميع الحالات</option>
+                                                <option value="active">نشط</option>
+                                                <option value="inactive">غير نشط</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                المرحلة الدراسية
+                                            </label>
+                                            <select
+                                                name="stage"
+                                                value={filters.stage}
+                                                onChange={handleFilterChange}
+                                                className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                            >
+                                                <option value="">جميع المراحل</option>
+                                                {stages.map(stage => (
+                                                    <option key={stage._id} value={stage._id}>{stage.name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div className="flex items-end">
+                                            <button
+                                                onClick={() => {
+                                                    console.log('Filter button clicked (user1)!');
+                                                    handleApplyFilters();
+                                                }}
+                                                className="w-full px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm transition-colors"
+                                            >
+                                                <FaFilter className="inline mr-2" />
+                                                تطبيق المرشحات
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* USER1 Users List */}
+                                {loading ? (
+                                    <div className="flex justify-center items-center py-8">
+                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+                                        <span className="mr-3 text-gray-600 dark:text-gray-400">جاري تحميل مستخدمي المحتوى...</span>
+                                    </div>
+                                ) : users.length === 0 ? (
+                                    <div className="text-center py-8">
+                                        <FaUser className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                                        <p className="text-gray-500 dark:text-gray-400">
+                                            لا يوجد مستخدمي محتوى حالياً
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {users.map((user) => (
+                                            <div
+                                                key={user.id}
+                                                className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600"
+                                            >
+                                                <div className="flex items-center space-x-4">
+                                                    <div className={`p-2 rounded-full ${getStatusColor(user.isActive)}`}>
+                                                        {user.isActive ? <FaUserCheck /> : <FaUserTimes />}
+                                                    </div>
+                                                    <div>
+                                                        <div className="flex items-center space-x-2">
+                                                            <h4 className="font-semibold text-gray-900 dark:text-white">
+                                                                {user.fullName}
+                                                            </h4>
+                                                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getRoleColor(user.role)}`}>
+                                                                {user.role}
+                                                            </span>
+                                                        </div>
+                                                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                                                            {user.email}
+                                                        </p>
+                                                        <p className="text-xs text-gray-400 dark:text-gray-500">
+                                                            {(user.role === 'USER' || user.role === 'USER1') && (
+                                                                <>
+                                                                    المحفظة: {user.walletBalance} جنيه مصري • المعاملات: {user.totalTransactions}
+                                                                    {user.stage && (
+                                                                        <span className="ml-2">• المرحلة: {user.stage.name}</span>
+                                                                    )}
+                                                                </>
+                                                            )}
+                                                            {user.role === 'ADMIN' && (
+                                                                <span>مدير النظام</span>
+                                                            )}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center space-x-2">
+                                                    <button
+                                                        onClick={() => {
+                                                            setUserToResetPassword(user);
+                                                            setShowPasswordResetModal(true);
+                                                        }}
+                                                        className="p-2 text-gray-500 hover:text-blue-600 transition-colors"
+                                                        title="إعادة تعيين كلمة المرور"
+                                                    >
+                                                        <FaKey />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleToggleStatus(user.id, user.isActive)}
+                                                        className="p-2 text-gray-500 hover:text-yellow-600 transition-colors"
+                                                        title={user.isActive ? "إلغاء التفعيل" : "تفعيل"}
+                                                    >
+                                                        {user.isActive ? <FaToggleOn /> : <FaToggleOff />}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleUpdateRole(user.id, user.role === 'ADMIN' ? 'USER' : 'ADMIN')}
+                                                        className="p-2 text-gray-500 hover:text-purple-600 transition-colors"
+                                                        title="تغيير الدور"
+                                                    >
+                                                        <FaUserCog />
+                                                    </button>
+                                                    {user.role !== 'ADMIN' && (
+                                                        <button
+                                                            onClick={() => {
+                                                                setUserToDelete(user.id);
+                                                                setShowDeleteConfirm(true);
+                                                            }}
+                                                            className="p-2 text-gray-500 hover:text-red-600 transition-colors"
+                                                            title="حذف المستخدم"
+                                                        >
+                                                            <FaTrash />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
                                 )}
                             </div>
@@ -1053,6 +1256,17 @@ export default function AdminUserDashboard() {
                                             <input
                                                 type="radio"
                                                 name="role"
+                                                value="USER1"
+                                                checked={createUserForm.role === 'USER1'}
+                                                onChange={(e) => setCreateUserForm({...createUserForm, role: e.target.value})}
+                                                className="ml-2"
+                                            />
+                                            مستخدم محتوى (USER1)
+                                        </label>
+                                        <label className="flex items-center">
+                                            <input
+                                                type="radio"
+                                                name="role"
                                                 value="ADMIN"
                                                 checked={createUserForm.role === 'ADMIN'}
                                                 onChange={(e) => setCreateUserForm({...createUserForm, role: e.target.value})}
@@ -1123,9 +1337,11 @@ export default function AdminUserDashboard() {
                                 </div>
 
                                 {/* User-specific fields */}
-                                {createUserForm.role === 'USER' && (
+                                {(createUserForm.role === 'USER' || createUserForm.role === 'USER1') && (
                                     <div className="space-y-4 border-t pt-4">
-                                        <h4 className="font-medium text-gray-900 dark:text-white">معلومات إضافية للطلاب</h4>
+                                        <h4 className="font-medium text-gray-900 dark:text-white">
+                                            {createUserForm.role === 'USER' ? 'معلومات إضافية للطلاب' : 'معلومات إضافية لمستخدمي المحتوى'}
+                                        </h4>
                                         
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>

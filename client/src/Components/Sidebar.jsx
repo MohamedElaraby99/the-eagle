@@ -35,9 +35,9 @@ export default function Sidebar({ hideBar = false }) {
   const { isLoggedIn, role, data } = useSelector((state) => state.auth);
   const { balance } = useSelector((state) => state.wallet);
 
-  // Fetch wallet balance when user is logged in
+  // Fetch wallet balance when user is logged in (not for ADMIN or USER1)
   useEffect(() => {
-    if (isLoggedIn && role !== "ADMIN") {
+    if (isLoggedIn && role !== "ADMIN" && role !== "USER1") {
       dispatch(getWalletBalance());
     }
   }, [dispatch, isLoggedIn, role]);
@@ -85,7 +85,7 @@ export default function Sidebar({ hideBar = false }) {
           </div>
 
           {/* Wallet Balance */}
-          {isLoggedIn && role !== "ADMIN" && (
+          {isLoggedIn && role !== "ADMIN" && role !== "USER1" && (
             <div className="mb-4">
               <div className="bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 rounded-lg p-3 text-white shadow-md">
                 <div className="flex items-center justify-between mb-2">
@@ -129,7 +129,7 @@ export default function Sidebar({ hideBar = false }) {
               </Link>
             </li>
 
-            {isLoggedIn && role !== "ADMIN" && (
+            {isLoggedIn && role !== "ADMIN" && role !== "USER1" && (
               <li>
                 <Link to="/wallet" className="flex gap-3 items-center text-gray-700 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-right py-2" onClick={closeSidebar}>
                 <FaWallet size={16} className="text-gray-500 dark:text-slate-100" />
