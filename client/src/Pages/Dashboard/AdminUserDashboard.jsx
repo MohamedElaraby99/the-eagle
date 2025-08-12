@@ -551,13 +551,7 @@ export default function AdminUserDashboard() {
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center space-x-2">
-                                                    <button
-                                                        onClick={() => handleViewUser(user.id)}
-                                                        className="p-2 text-gray-500 hover:text-blue-600 transition-colors"
-                                                        title="عرض التفاصيل"
-                                                    >
-                                                        <FaEye />
-                                                    </button>
+                                                  
                                                     <button
                                                         onClick={() => handleToggleStatus(user.id, user.isActive)}
                                                         className="p-2 text-gray-500 hover:text-yellow-600 transition-colors"
@@ -710,13 +704,7 @@ export default function AdminUserDashboard() {
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center space-x-2">
-                                                    <button
-                                                        onClick={() => handleViewUser(user.id)}
-                                                        className="p-2 text-gray-500 hover:text-blue-600 transition-colors"
-                                                        title="عرض التفاصيل"
-                                                    >
-                                                        <FaEye />
-                                                    </button>
+                                                   
                                                     <button
                                                         onClick={() => handleToggleStatus(user.id, user.isActive)}
                                                         className="p-2 text-gray-500 hover:text-yellow-600 transition-colors"
@@ -866,13 +854,7 @@ export default function AdminUserDashboard() {
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center space-x-2">
-                                                    <button
-                                                        onClick={() => handleViewUser(user.id)}
-                                                        className="p-2 text-gray-500 hover:text-blue-600 transition-colors"
-                                                        title="عرض التفاصيل"
-                                                    >
-                                                        <FaEye />
-                                                    </button>
+                                                   
                                                     <button
                                                         onClick={() => handleToggleStatus(user.id, user.isActive)}
                                                         className="p-2 text-gray-500 hover:text-yellow-600 transition-colors"
