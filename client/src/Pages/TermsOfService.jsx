@@ -16,7 +16,7 @@ export default function TermsOfService() {
               شروط الخدمة
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-              يرجى قراءة هذه الشروط بعناية قبل استخدام منصة فكرة التعليمية
+              يرجى قراءة هذه الشروط بعناية قبل استخدام منصة the-eagle التعليمية
             </p>
             <div className="mt-4 text-sm text-gray-500 dark:text-gray-400">
               آخر تحديث: {new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' })}

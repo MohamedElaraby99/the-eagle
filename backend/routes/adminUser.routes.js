@@ -9,7 +9,8 @@ import {
     updateUserRole,
     getUserActivities,
     getUserStats,
-    resetUserPassword
+    resetUserPassword,
+    createBulkUser1Accounts
 } from "../controllers/adminUser.controller.js";
 
 const router = express.Router();
@@ -19,7 +20,7 @@ router.use(isLoggedIn);
 router.use(authorisedRoles("ADMIN"));
 
 // Get all users with filters and pagination
-router.get("/users", (req, res, next) => {
+router.get("/", (req, res, next) => {
     console.log('=== ADMIN USERS ROUTE HIT ===');
     console.log('User making request:', req.user);
     next();
@@ -29,24 +30,27 @@ router.get("/users", (req, res, next) => {
 router.post("/create", createUser);
 
 // Get user details
-router.get("/users/:userId", getUserDetails);
+router.get("/:userId", getUserDetails);
 
 // Toggle user active status
-router.patch("/users/:userId/status", toggleUserStatus);
+router.patch("/:userId/status", toggleUserStatus);
 
 // Update user role
-router.patch("/users/:userId/role", updateUserRole);
+router.patch("/:userId/role", updateUserRole);
 
 // Delete user
-router.delete("/users/:userId", deleteUser);
+router.delete("/:userId", deleteUser);
 
 // Get user activities
-router.get("/users/:userId/activities", getUserActivities);
+router.get("/:userId/activities", getUserActivities);
 
 // Get user statistics
-router.get("/users/:userId/stats", getUserStats);
+router.get("/:userId/stats", getUserStats);
 
 // Reset user password
-router.patch("/users/:userId/password", resetUserPassword);
+router.patch("/:userId/password", resetUserPassword);
+
+// Create bulk USER1 accounts
+router.post("/bulk-user1", createBulkUser1Accounts);
 
 export default router; 

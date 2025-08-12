@@ -104,14 +104,14 @@ export default function HomePage() {
   const handleAPKDownload = () => {
     // Create a download link for the APK file
     const link = document.createElement('a');
-    link.href = '/downloads/fikra-app.apk'; // Update this path to your APK file location
-    link.download = 'fikra-app.apk';
+    link.href = '/downloads/the-eagle.apk'; // Update this path to your APK file location
+    link.download = 'the-eagle.apk';
     link.target = '_blank';
     
     // Fallback for mobile browsers
     if (navigator.userAgent.toLowerCase().indexOf('android') > -1) {
       // For Android devices, open the download directly
-      window.open('/downloads/fikra-app.apk', '_blank');
+      window.open('/downloads/the-eagle.apk', '_blank');
     } else {
       // For other devices, trigger download
       document.body.appendChild(link);

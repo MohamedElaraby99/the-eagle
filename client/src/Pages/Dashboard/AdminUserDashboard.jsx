@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-hot-toast";
 import Layout from "../../Layout/Layout";
+import BulkUser1Creator from "../../Components/BulkUser1Creator";
 import { 
     getAllUsers, 
     createUser,
@@ -47,7 +48,8 @@ import {
     FaPlus,
     FaSave,
     FaTimes,
-    FaKey
+    FaKey,
+    FaFileExcel
 } from "react-icons/fa";
 import { axiosInstance } from "../../Helpers/axiosInstance";
 import { egyptianGovernorates } from "../../utils/governorateMapping";
@@ -85,6 +87,7 @@ export default function AdminUserDashboard() {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [showBulkUser1Modal, setShowBulkUser1Modal] = useState(false);
     const [createUserForm, setCreateUserForm] = useState({
         fullName: '',
         username: '',
@@ -99,6 +102,9 @@ export default function AdminUserDashboard() {
     });
     const [activeTab, setActiveTab] = useState("users");
     const [stages, setStages] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(20);
+    const [isChangingPage, setIsChangingPage] = useState(false);
 
     // Fetch stages on component mount
     useEffect(() => {
@@ -176,21 +182,255 @@ export default function AdminUserDashboard() {
         console.log('Role filter:', roleFilter);
         console.log('Final filter params:', { 
             page: 1, 
-            limit: 20, 
+            limit: pageSize, 
             role: roleFilter,
             status: filters.status,
             stage: filters.stage,
             search: filters.search 
         });
         
+        setCurrentPage(1); // Reset to first page when filters change
+        
         dispatch(getAllUsers({ 
             page: 1, 
-            limit: 20, 
+            limit: pageSize, 
             role: roleFilter,
             status: filters.status,
             stage: filters.stage,
             search: filters.search 
         }));
+    };
+
+    const handlePageChange = async (page) => {
+        setIsChangingPage(true);
+        setCurrentPage(page);
+        
+        let roleFilter = "";
+        if (activeTab === "users") {
+            roleFilter = "USER";
+        } else if (activeTab === "user1") {
+            roleFilter = "USER1";
+        } else if (activeTab === "admins") {
+            roleFilter = "ADMIN";
+        } else {
+            roleFilter = filters.role;
+        }
+        
+        try {
+            await dispatch(getAllUsers({ 
+                page, 
+                limit: pageSize, 
+                role: roleFilter,
+                status: filters.status,
+                stage: filters.stage,
+                search: filters.search 
+            })).unwrap();
+        } catch (error) {
+            console.error('Error changing page:', error);
+        } finally {
+            setIsChangingPage(false);
+        }
+    };
+
+    const handlePageSizeChange = (newPageSize) => {
+        setPageSize(newPageSize);
+        setCurrentPage(1); // Reset to first page when page size changes
+        
+        let roleFilter = "";
+        if (activeTab === "users") {
+            roleFilter = "USER";
+        } else if (activeTab === "user1") {
+            roleFilter = "USER";
+        } else if (activeTab === "admins") {
+            roleFilter = "ADMIN";
+        } else {
+            roleFilter = filters.role;
+        }
+        
+        dispatch(getAllUsers({ 
+            page: 1, 
+            limit: newPageSize, 
+            role: roleFilter,
+            status: filters.status,
+            stage: filters.stage,
+            search: filters.search 
+        }));
+    };
+
+    const generateEnglishName = (arabicName) => {
+        if (!arabicName) return 'Content User';
+        
+        // Common Arabic name mappings to English
+        const nameMappings = {
+            'مستخدم': 'User',
+            'محتوى': 'Content',
+            'طالب': 'Student',
+            'مدرس': 'Teacher',
+            'أحمد': 'Ahmed',
+            'محمد': 'Mohammed',
+            'علي': 'Ali',
+            'فاطمة': 'Fatima',
+            'عائشة': 'Aisha',
+            'خديجة': 'Khadija',
+            'عمر': 'Omar',
+            'عثمان': 'Othman',
+            'عبدالله': 'Abdullah',
+            'يوسف': 'Yusuf',
+            'إبراهيم': 'Ibrahim',
+            'إسماعيل': 'Ismail',
+            'داود': 'David',
+            'سليمان': 'Solomon',
+            'موسى': 'Moses',
+            'عيسى': 'Jesus',
+            'نوح': 'Noah',
+            'آدم': 'Adam'
+        };
+        
+        // Replace Arabic words with English equivalents
+        let englishName = arabicName;
+        Object.entries(nameMappings).forEach(([arabic, english]) => {
+            englishName = englishName.replace(new RegExp(arabic, 'g'), english);
+        });
+        
+        // If the name still contains Arabic characters, generate a generic English name
+        if (/[\u0600-\u06FF]/.test(englishName)) {
+            const randomNumber = Math.floor(Math.random() * 1000);
+            return `Content User ${randomNumber}`;
+        }
+        
+        return englishName || 'Content User';
+    };
+
+    const exportUser1ToExcel = async (exportFiltered = false) => {
+        try {
+            // Show loading state with progress
+            toast.loading('جاري جلب بيانات المستخدمين...', { id: 'export' });
+            
+            let allUsers = [];
+            let currentPage = 1;
+            const pageSize = 100; // Fetch 100 users at a time
+            
+            // Prepare export parameters
+            const exportParams = {
+                role: 'USER1',
+                limit: pageSize,
+                page: 1
+            };
+            
+            // Add filters if exporting filtered results
+            if (exportFiltered) {
+                if (filters.search) exportParams.search = filters.search;
+                if (filters.status) exportParams.status = filters.status;
+                if (filters.stage) exportParams.stage = filters.stage;
+            }
+            
+            // First, get total count to show progress
+            const countResponse = await axiosInstance.get('/admin/users', {
+                params: exportParams
+            });
+            
+            const totalUsers = countResponse.data.data.pagination?.total || 0;
+            
+            if (totalUsers === 0) {
+                const message = exportFiltered ? 'لا توجد نتائج تطابق الفلاتر المحددة' : 'لا يوجد مستخدمي محتوى للتصدير';
+                toast.error(message, { id: 'export' });
+                return;
+            }
+            
+            // Fetch all USER1 users in batches
+            while (true) {
+                const response = await axiosInstance.get('/admin/users', {
+                    params: {
+                        ...exportParams,
+                        page: currentPage
+                    }
+                });
+
+                if (response.data.success && response.data.data.users.length > 0) {
+                    allUsers = [...allUsers, ...response.data.data.users];
+                    
+                    // Update progress
+                    const progress = Math.round((allUsers.length / totalUsers) * 100);
+                    toast.loading(`جاري جلب البيانات... ${progress}% (${allUsers.length}/${totalUsers})`, { id: 'export' });
+                    
+                    // If we got less than pageSize users, we've reached the end
+                    if (response.data.data.users.length < pageSize) {
+                        break;
+                    }
+                    
+                    currentPage++;
+                } else {
+                    break;
+                }
+            }
+
+            if (allUsers.length > 0) {
+                // Create CSV content with English headers
+                const headers = [
+                    'Full Name',
+                    'Email', 
+                    'Phone Number',
+                    'Father Phone Number',
+                    'Governorate',
+                    'Study Stage',
+                    'Age',
+                    'Status',
+                    'Creation Date',
+                    'Wallet Balance',
+                    'Transaction Count'
+                ];
+                
+                const csvContent = [
+                    headers.join(','),
+                    ...allUsers.map(user => [
+                        `"${generateEnglishName(user.fullName) || 'Content User'}"`,
+                        `"${user.email || ''}"`,
+                        `"${user.phoneNumber || ''}"`,
+                        `"${user.fatherPhoneNumber || ''}"`,
+                        `"${user.governorate || ''}"`,
+                        `"${user.stage?.name || ''}"`,
+                        `"${user.age || ''}"`,
+                        `"${user.isActive ? 'Active' : 'Inactive'}"`,
+                        `"${new Date(user.createdAt).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                        })}"`,
+                        `"${user.walletBalance || 0}"`,
+                        `"${user.totalTransactions || 0}"`
+                    ].join(','))
+                ].join('\n');
+
+                // Create and download file with BOM for proper Arabic text display
+                const blob = new Blob(['\ufeff' + csvContent], { 
+                    type: 'text/csv;charset=utf-8;' 
+                });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                const filename = exportFiltered 
+                    ? `Content_Users_Filtered_${new Date().toISOString().split('T')[0]}.csv`
+                    : `Content_Users_${new Date().toISOString().split('T')[0]}.csv`;
+                link.setAttribute('download', filename);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                // Clean up the URL object
+                URL.revokeObjectURL(url);
+                
+                const successMessage = exportFiltered 
+                    ? `تم تصدير ${allUsers.length} مستخدم (نتائج مفلترة) بنجاح!`
+                    : `تم تصدير ${allUsers.length} مستخدم بنجاح!`;
+                toast.success(successMessage, { id: 'export' });
+            } else {
+                toast.error('لا يوجد مستخدمي محتوى للتصدير', { id: 'export' });
+            }
+        } catch (error) {
+            console.error('Error exporting USER1 users:', error);
+            toast.error('حدث خطأ أثناء التصدير', { id: 'export' });
+        }
     };
 
     // Fetch users when tab changes or component mounts
@@ -210,16 +450,18 @@ export default function AdminUserDashboard() {
             console.log('Tab changed or component mounted, fetching users with role filter:', roleFilter);
             console.log('Active tab:', activeTab);
             
+            setCurrentPage(1); // Reset to first page when tab changes
+            
             dispatch(getAllUsers({ 
                 page: 1, 
-                limit: 20, 
+                limit: pageSize, 
                 role: roleFilter,
                 status: filters.status,
                 stage: filters.stage,
                 search: filters.search 
             }));
         }
-    }, [activeTab, dispatch, isLoggedIn, role, filters.status, filters.stage, filters.search]);
+    }, [activeTab, dispatch, isLoggedIn, role, filters.status, filters.stage, filters.search, pageSize]);
 
     const handleViewUser = async (userId) => {
         setSelectedUserId(userId);
@@ -316,7 +558,7 @@ export default function AdminUserDashboard() {
 
     const getStatusColor = (isActive) => {
         return isActive 
-            ? 'text-green-600 bg-green-50 dark:bg-green-900/20' 
+            ? 'text-green-600 bg-green-50 dark:bg-green-900/20'  
             : 'text-red-600 bg-red-50 dark:bg-red-900/20';
     };
 
@@ -501,28 +743,64 @@ export default function AdminUserDashboard() {
                         </button>
                     </div>
 
-                    {/* Create User Button */}
-                    <div className="mb-6 flex justify-end">
-                        <button
-                            onClick={() => setShowCreateModal(true)}
-                            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium flex items-center gap-2 transition-colors duration-200 shadow-lg hover:shadow-xl"
-                        >
-                            <FaPlus />
-                            إنشاء مستخدم جديد
-                        </button>
+                    {/* Page Size Selector and Create User Buttons */}
+                    <div className="mb-6 flex justify-between items-center">
+                        <div className="flex items-center gap-3">
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                عدد العناصر في الصفحة:
+                            </label>
+                            <select
+                                value={pageSize}
+                                onChange={(e) => handlePageSizeChange(parseInt(e.target.value))}
+                                disabled={isChangingPage}
+                                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <option value={10}>10</option>
+                                <option value={20}>20</option>
+                                <option value={50}>50</option>
+                                <option value={100}>100</option>
+                            </select>
+                            {isChangingPage && (
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600"></div>
+                            )}
+                        </div>
+                        
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setShowBulkUser1Modal(true)}
+                                className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg font-medium flex items-center gap-2 transition-colors duration-200 shadow-lg hover:shadow-xl"
+                            >
+                                <FaUsers />
+                                إنشاء حسابات  متعددة لمستخدمي المحتوى
+                            </button>
+                            <button
+                                onClick={() => setShowCreateModal(true)}
+                                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium flex items-center gap-2 transition-colors duration-200 shadow-lg hover:shadow-xl"
+                            >
+                                <FaPlus />
+                                إنشاء مستخدم جديد
+                            </button>
+                        </div>
                     </div>
 
                     {/* Tab Content */}
                     <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700">
                         {activeTab === "users" && (
                             <div className="p-6">
-                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
-                                    الطلاب ومستخدمي المحتوى
-                                </h3>
+                                <div className="flex justify-between items-center mb-6">
+                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                                        الطلاب ومستخدمي المحتوى
+                                    </h3>
+                                    {pagination.total > 0 && (
+                                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                                            إجمالي المستخدمين: {pagination.total} | الصفحة {pagination.currentPage} من {pagination.totalPages}
+                                        </div>
+                                    )}
+                                </div>
 
                                 {/* Filters */}
                                 <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                                 البحث
@@ -536,24 +814,22 @@ export default function AdminUserDashboard() {
                                                 placeholder="البحث بالاسم أو البريد الإلكتروني"
                                             />
                                         </div>
-                                        {activeTab === "all" && (
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                    الدور
-                                                </label>
-                                                <select
-                                                    name="role"
-                                                    value={filters.role}
-                                                    onChange={handleFilterChange}
-                                                    className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                                >
-                                                    <option value="">جميع الأدوار</option>
-                                                    <option value="USER">مستخدم</option>
-                                                    <option value="USER1">مستخدم محتوى</option>
-                                                    <option value="ADMIN">مدير</option>
-                                                </select>
-                                            </div>
-                                        )}
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                الدور
+                                            </label>
+                                            <select
+                                                name="role"
+                                                value={filters.role}
+                                                onChange={handleFilterChange}
+                                                className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                            >
+                                                <option value="">جميع الأدوار</option>
+                                                <option value="USER">مستخدم</option>
+                                                <option value="USER1">مستخدم محتوى</option>
+                                                <option value="ADMIN">مدير</option>
+                                            </select>
+                                        </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                                 الحالة
@@ -697,25 +973,61 @@ export default function AdminUserDashboard() {
 
                                 {/* Pagination */}
                                 {pagination.totalPages > 1 && (
-                                    <div className="mt-6 flex justify-center">
-                                        <div className="flex space-x-2">
-                                            {Array.from({ length: pagination.totalPages }, (_, i) => (
-                                                <button
-                                                    key={i + 1}
-                                                    onClick={() => dispatch(getAllUsers({ 
-                                                        page: i + 1, 
-                                                        limit: 20, 
-                                                        ...filters 
-                                                    }))}
-                                                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                                                        pagination.currentPage === i + 1
-                                                            ? "bg-indigo-600 text-white"
-                                                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                                                    }`}
-                                                >
-                                                    {i + 1}
-                                                </button>
-                                            ))}
+                                    <div className="mt-6 flex flex-col items-center gap-4">
+                                        {/* Page Info */}
+                                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                                            عرض {((pagination.currentPage - 1) * pageSize) + 1} إلى {Math.min(pagination.currentPage * pageSize, pagination.total)} من أصل {pagination.total} مستخدم
+                                        </div>
+                                        
+                                        {/* Pagination Controls */}
+                                        <div className="flex items-center gap-2">
+                                            {/* Previous Page */}
+                                            <button
+                                                onClick={() => handlePageChange(pagination.currentPage - 1)}
+                                                disabled={pagination.currentPage === 1}
+                                                className="px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                                            >
+                                                السابق
+                                            </button>
+                                            
+                                            {/* Page Numbers */}
+                                            <div className="flex space-x-1">
+                                                {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                                                    let pageNum;
+                                                    if (pagination.totalPages <= 5) {
+                                                        pageNum = i + 1;
+                                                    } else if (pagination.currentPage <= 3) {
+                                                        pageNum = i + 1;
+                                                    } else if (pagination.currentPage >= pagination.totalPages - 2) {
+                                                        pageNum = pagination.totalPages - 4 + i;
+                                                    } else {
+                                                        pageNum = pagination.currentPage - 2 + i;
+                                                    }
+                                                    
+                                                    return (
+                                                        <button
+                                                            key={pageNum}
+                                                            onClick={() => handlePageChange(pageNum)}
+                                                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                                                pagination.currentPage === pageNum
+                                                                    ? "bg-indigo-600 text-white"
+                                                                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                                                            }`}
+                                                        >
+                                                            {pageNum}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                            
+                                            {/* Next Page */}
+                                            <button
+                                                onClick={() => handlePageChange(pagination.currentPage + 1)}
+                                                disabled={pagination.currentPage === pagination.totalPages}
+                                                className="px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                                            >
+                                                التالي
+                                            </button>
                                         </div>
                                     </div>
                                 )}
@@ -724,9 +1036,38 @@ export default function AdminUserDashboard() {
 
                         {activeTab === "user1" && (
                             <div className="p-6">
-                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
-                                    مستخدمي المحتوى
-                                </h3>
+                                <div className="flex justify-between items-center mb-6">
+                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                                        مستخدمي المحتوى
+                                    </h3>
+                                    <div className="flex items-center gap-3">
+                                        {pagination.total > 0 && (
+                                            <div className="text-sm text-gray-600 dark:text-gray-400">
+                                                إجمالي المستخدمين: {pagination.total} | الصفحة {pagination.currentPage} من {pagination.totalPages}
+                                            </div>
+                                        )}
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={exportUser1ToExcel}
+                                                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors duration-200 shadow-lg hover:shadow-xl"
+                                                title="تصدير جميع مستخدمي المحتوى إلى Excel"
+                                            >
+                                                <FaFileExcel />
+                                                تصدير الكل
+                                            </button>
+                                            {(filters.search || filters.status || filters.stage) && (
+                                                <button
+                                                    onClick={() => exportUser1ToExcel(true)}
+                                                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors duration-200 shadow-lg hover:shadow-xl"
+                                                    title="تصدير النتائج المفلترة فقط"
+                                                >
+                                                    <FaFileExcel />
+                                                    تصدير النتائج
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
                                 
                                 {/* Filters */}
                                 <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -883,14 +1224,82 @@ export default function AdminUserDashboard() {
                                         ))}
                                     </div>
                                 )}
+
+                                {/* Pagination for USER1 */}
+                                {pagination.totalPages > 1 && (
+                                    <div className="mt-6 flex flex-col items-center gap-4">
+                                        {/* Page Info */}
+                                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                                            عرض {((pagination.currentPage - 1) * pageSize) + 1} إلى {Math.min(pagination.currentPage * pageSize, pagination.total)} من أصل {pagination.total} مستخدم
+                                        </div>
+                                        
+                                        {/* Pagination Controls */}
+                                        <div className="flex items-center gap-2">
+                                            {/* Previous Page */}
+                                            <button
+                                                onClick={() => handlePageChange(pagination.currentPage - 1)}
+                                                disabled={pagination.currentPage === 1}
+                                                className="px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                                            >
+                                                السابق
+                                            </button>
+                                            
+                                            {/* Page Numbers */}
+                                            <div className="flex space-x-1">
+                                                {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                                                    let pageNum;
+                                                    if (pagination.totalPages <= 5) {
+                                                        pageNum = i + 1;
+                                                    } else if (pagination.currentPage <= 3) {
+                                                        pageNum = i + 1;
+                                                    } else if (pagination.currentPage >= pagination.totalPages - 2) {
+                                                        pageNum = pagination.totalPages - 4 + i;
+                                                    } else {
+                                                        pageNum = pagination.currentPage - 2 + i;
+                                                    }
+                                                    
+                                                    return (
+                                                        <button
+                                                            key={pageNum}
+                                                            onClick={() => handlePageChange(pageNum)}
+                                                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                                                pagination.currentPage === pageNum
+                                                                    ? "bg-orange-600 text-white"
+                                                                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                                                            }`}
+                                                        >
+                                                            {pageNum}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                            
+                                            {/* Next Page */}
+                                            <button
+                                                onClick={() => handlePageChange(pagination.currentPage + 1)}
+                                                disabled={pagination.currentPage === pagination.totalPages}
+                                                className="px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                                            >
+                                                التالي
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
 
                         {activeTab === "admins" && (
                             <div className="p-6">
-                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
-                                    المديرون
-                                </h3>
+                                <div className="flex justify-between items-center mb-6">
+                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                                        المديرون
+                                    </h3>
+                                    {pagination.total > 0 && (
+                                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                                            إجمالي المستخدمين: {pagination.total} | الصفحة {pagination.currentPage} من {pagination.totalPages}
+                                        </div>
+                                    )}
+                                </div>
                                 {/* Filters */}
                                 <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -1009,18 +1418,86 @@ export default function AdminUserDashboard() {
                                         ))}
                                     </div>
                                 )}
+
+                                {/* Pagination for Admins */}
+                                {pagination.totalPages > 1 && (
+                                    <div className="mt-6 flex flex-col items-center gap-4">
+                                        {/* Page Info */}
+                                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                                            عرض {((pagination.currentPage - 1) * pageSize) + 1} إلى {Math.min(pagination.currentPage * pageSize, pagination.total)} من أصل {pagination.total} مستخدم
+                                        </div>
+                                        
+                                        {/* Pagination Controls */}
+                                        <div className="flex items-center gap-2">
+                                            {/* Previous Page */}
+                                            <button
+                                                onClick={() => handlePageChange(pagination.currentPage - 1)}
+                                                disabled={pagination.currentPage === 1}
+                                                className="px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                                            >
+                                                السابق
+                                            </button>
+                                            
+                                            {/* Page Numbers */}
+                                            <div className="flex space-x-1">
+                                                {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                                                    let pageNum;
+                                                    if (pagination.totalPages <= 5) {
+                                                        pageNum = i + 1;
+                                                    } else if (pagination.currentPage <= 3) {
+                                                        pageNum = i + 1;
+                                                    } else if (pagination.currentPage >= pagination.totalPages - 2) {
+                                                        pageNum = pagination.totalPages - 4 + i;
+                                                    } else {
+                                                        pageNum = pagination.currentPage - 2 + i;
+                                                    }
+                                                    
+                                                    return (
+                                                        <button
+                                                            key={pageNum}
+                                                            onClick={() => handlePageChange(pageNum)}
+                                                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                                                pagination.currentPage === pageNum
+                                                                    ? "bg-purple-600 text-white"
+                                                                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                                                            }`}
+                                                        >
+                                                            {pageNum}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                            
+                                            {/* Next Page */}
+                                            <button
+                                                onClick={() => handlePageChange(pagination.currentPage + 1)}
+                                                disabled={pagination.currentPage === pagination.totalPages}
+                                                className="px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                                            >
+                                                التالي
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
 
                         {activeTab === "all" && (
                             <div className="p-6">
-                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
-                                    جميع المستخدمين
-                                </h3>
+                                <div className="flex justify-between items-center mb-6">
+                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                                        جميع المستخدمين
+                                    </h3>
+                                    {pagination.total > 0 && (
+                                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                                            إجمالي المستخدمين: {pagination.total} | الصفحة {pagination.currentPage} من {pagination.totalPages}
+                                        </div>
+                                    )}
+                                </div>
 
                                 {/* Filters */}
                                 <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                                 البحث
@@ -1046,6 +1523,7 @@ export default function AdminUserDashboard() {
                                             >
                                                 <option value="">جميع الأدوار</option>
                                                 <option value="USER">مستخدم</option>
+                                                <option value="USER1">مستخدم محتوى</option>
                                                 <option value="ADMIN">مدير</option>
                                             </select>
                                         </div>
@@ -1185,6 +1663,67 @@ export default function AdminUserDashboard() {
                                                 </div>
                                             </div>
                                         ))}
+                                    </div>
+                                )}
+
+                                {/* Pagination for All Users */}
+                                {pagination.totalPages > 1 && (
+                                    <div className="mt-6 flex flex-col items-center gap-4">
+                                        {/* Page Info */}
+                                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                                            عرض {((pagination.currentPage - 1) * pageSize) + 1} إلى {Math.min(pagination.currentPage * pageSize, pagination.total)} من أصل {pagination.total} مستخدم
+                                        </div>
+                                        
+                                        {/* Pagination Controls */}
+                                        <div className="flex items-center gap-2">
+                                            {/* Previous Page */}
+                                            <button
+                                                onClick={() => handlePageChange(pagination.currentPage - 1)}
+                                                disabled={pagination.currentPage === 1}
+                                                className="px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                                            >
+                                                السابق
+                                            </button>
+                                            
+                                            {/* Page Numbers */}
+                                            <div className="flex space-x-1">
+                                                {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                                                    let pageNum;
+                                                    if (pagination.totalPages <= 5) {
+                                                        pageNum = i + 1;
+                                                    } else if (pagination.currentPage <= 3) {
+                                                        pageNum = i + 1;
+                                                    } else if (pagination.currentPage >= pagination.totalPages - 2) {
+                                                        pageNum = pagination.totalPages - 4 + i;
+                                                    } else {
+                                                        pageNum = pagination.currentPage - 2 + i;
+                                                    }
+                                                    
+                                                    return (
+                                                        <button
+                                                            key={pageNum}
+                                                            onClick={() => handlePageChange(pageNum)}
+                                                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                                                pagination.currentPage === pageNum
+                                                                    ? "bg-green-600 text-white"
+                                                                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                                                            }`}
+                                                        >
+                                                            {pageNum}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                            
+                                            {/* Next Page */}
+                                            <button
+                                                onClick={() => handlePageChange(pagination.currentPage + 1)}
+                                                disabled={pagination.currentPage === pagination.totalPages}
+                                                className="px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                                            >
+                                                التالي
+                                            </button>
+                                        </div>
                                     </div>
                                 )}
                             </div>
@@ -1578,6 +2117,18 @@ export default function AdminUserDashboard() {
                             </div>
                         </div>
                     </div>
+                )}
+
+                {/* Bulk USER1 Creation Modal */}
+                {showBulkUser1Modal && (
+                    <BulkUser1Creator
+                        onClose={() => setShowBulkUser1Modal(false)}
+                        onSuccess={() => {
+                            setShowBulkUser1Modal(false);
+                            // Refresh users list
+                            handleApplyFilters();
+                        }}
+                    />
                 )}
             </div>
         </Layout>

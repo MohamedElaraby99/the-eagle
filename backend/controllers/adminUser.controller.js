@@ -1,4 +1,6 @@
 import userModel from "../models/user.model.js";
+import stageModel from "../models/stage.model.js";
+import bcrypt from "bcryptjs";
 import AppError from "../utils/error.utils.js";
 
 // Get all users with pagination and filters
@@ -458,7 +460,6 @@ const resetUserPassword = async (req, res, next) => {
         }
 
         // Hash the new password
-        const bcrypt = await import('bcryptjs');
         const hashedPassword = await bcrypt.hash(newPassword, 12);
 
         // Update the user's password
@@ -478,6 +479,104 @@ const resetUserPassword = async (req, res, next) => {
     }
 };
 
+// Create bulk USER1 accounts randomly
+const createBulkUser1Accounts = async (req, res, next) => {
+    try {
+        const { count, stageId } = req.body;
+
+        if (!count || !stageId) {
+            return next(new AppError("Count and stage ID are required", 400));
+        }
+
+        if (count < 1 || count > 100) {
+            return next(new AppError("Count must be between 1 and 100", 400));
+        }
+
+        // Validate stage exists
+        const stage = await stageModel.findById(stageId);
+        if (!stage) {
+            return next(new AppError("Stage not found", 404));
+        }
+
+        const createdUsers = [];
+        const failedUsers = [];
+
+        for (let i = 0; i < count; i++) {
+            try {
+                // Generate random data
+                const randomNumber = Math.floor(Math.random() * 10000);
+                const email = `user1_${randomNumber}_${Date.now()}@eagle.edu`;
+                // Generate shorter username to fit within 20 character limit
+                const shortRandom = Math.floor(Math.random() * 999); // 0-998 (max 3 digits)
+                const username = `u1_${randomNumber}_${shortRandom}`;
+                const password = Math.random().toString(36).substring(2, 8) + Math.floor(Math.random() * 1000);
+                const fullName = `مستخدم محتوى ${randomNumber}`;
+                const phoneNumber = `01${Math.floor(Math.random() * 9000000000) + 1000000000}`;
+                const fatherPhoneNumber = `01${Math.floor(Math.random() * 9000000000) + 1000000000}`;
+                const governorates = ['Cairo', 'Alexandria', 'Giza', 'Qalyubia', 'Port Said', 'Suez', 'Luxor', 'Aswan', 'Sharkia', 'Dakahlia'];
+                const governorate = governorates[Math.floor(Math.random() * governorates.length)];
+                const age = Math.floor(Math.random() * 10) + 15; // 15-25 years
+
+                // Validate username length before proceeding
+                if (username.length > 20) {
+                    throw new Error(`Generated username '${username}' is ${username.length} characters long, exceeding the 20 character limit`);
+                }
+                
+                // Log username for debugging (optional)
+                console.log(`Generated username: ${username} (${username.length} characters)`);
+
+                // Hash password
+                const hashedPassword = await bcrypt.hash(password, 12);
+
+                // Create user
+                const user = new userModel({
+                    email,
+                    username,
+                    password: hashedPassword,
+                    fullName,
+                    phoneNumber,
+                    fatherPhoneNumber,
+                    governorate,
+                    stage: stageId,
+                    age,
+                    role: 'USER1',
+                    isActive: true
+                });
+
+                await user.save();
+
+                createdUsers.push({
+                    email,
+                    password,
+                    stage: stage.name,
+                    fullName,
+                    phoneNumber,
+                    username
+                });
+            } catch (error) {
+                failedUsers.push({
+                    attempt: i + 1,
+                    error: error.message
+                });
+            }
+        }
+
+        res.status(200).json({
+            success: true,
+            message: `Successfully created ${createdUsers.length} USER1 accounts`,
+            data: {
+                createdUsers,
+                failedUsers,
+                totalRequested: count,
+                totalCreated: createdUsers.length,
+                totalFailed: failedUsers.length
+            }
+        });
+    } catch (error) {
+        return next(new AppError(error.message, 500));
+    }
+};
+
 export {
     getAllUsers,
     createUser,
@@ -487,5 +586,6 @@ export {
     updateUserRole,
     getUserActivities,
     getUserStats,
-    resetUserPassword
+    resetUserPassword,
+    createBulkUser1Accounts
 }; 

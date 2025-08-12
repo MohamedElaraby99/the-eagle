@@ -18,7 +18,7 @@ export const getAllUsers = createAsyncThunk(
             });
             
             console.log('API URL params:', params.toString());
-            const response = await axiosInstance.get(`/admin/users/users?${params}`);
+            const response = await axiosInstance.get(`/admin/users?${params}`);
             console.log('API response:', response.data);
             return response.data;
         } catch (error) {
@@ -32,7 +32,7 @@ export const getUserDetails = createAsyncThunk(
     "adminUser/getDetails",
     async (userId, { rejectWithValue }) => {
         try {
-            const response = await axiosInstance.get(`/admin/users/users/${userId}`);
+            const response = await axiosInstance.get(`/admin/users/${userId}`);
             return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || "Failed to get user details");
@@ -56,7 +56,7 @@ export const toggleUserStatus = createAsyncThunk(
     "adminUser/toggleStatus",
     async ({ userId, isActive }, { rejectWithValue }) => {
         try {
-            const response = await axiosInstance.patch(`/admin/users/users/${userId}/status`, { isActive });
+            const response = await axiosInstance.patch(`/admin/users/${userId}/status`, { isActive });
             return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || "Failed to toggle user status");
@@ -68,7 +68,7 @@ export const updateUserRole = createAsyncThunk(
     "adminUser/updateRole",
     async ({ userId, role }, { rejectWithValue }) => {
         try {
-            const response = await axiosInstance.patch(`/admin/users/users/${userId}/role`, { role });
+            const response = await axiosInstance.patch(`/admin/users/${userId}/role`, { role });
             return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || "Failed to update user role");
@@ -80,7 +80,7 @@ export const deleteUser = createAsyncThunk(
     "adminUser/delete",
     async (userId, { rejectWithValue }) => {
         try {
-            const response = await axiosInstance.delete(`/admin/users/users/${userId}`);
+            const response = await axiosInstance.delete(`/admin/users/${userId}`);
             return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || "Failed to delete user");
@@ -93,7 +93,7 @@ export const getUserActivities = createAsyncThunk(
     async ({ userId, page = 1, limit = 20 }, { rejectWithValue }) => {
         try {
             const params = new URLSearchParams({ page, limit });
-            const response = await axiosInstance.get(`/admin/users/users/${userId}/activities?${params}`);
+            const response = await axiosInstance.get(`/admin/users/${userId}/activities?${params}`);
             return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || "Failed to get user activities");
@@ -105,7 +105,7 @@ export const getUserStats = createAsyncThunk(
     "adminUser/getStats",
     async (userId, { rejectWithValue }) => {
         try {
-            const response = await axiosInstance.get(`/admin/users/users/${userId}/stats`);
+            const response = await axiosInstance.get(`/admin/users/${userId}/stats`);
             return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || "Failed to get user stats");

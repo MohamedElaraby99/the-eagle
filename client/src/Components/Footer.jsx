@@ -131,7 +131,7 @@ export default function Footer() {
           </a>
         </div>
         <span className="oi-regular text-xs text-gray-500 dark:text-gray-400">
-          Fikra Software - فكرة للبرمجيات
+          Fikra Software - the-eagle للبرمجيات
         </span>
       </div>
     </footer>
