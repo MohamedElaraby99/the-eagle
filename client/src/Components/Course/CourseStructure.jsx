@@ -324,6 +324,61 @@ const CourseStructure = ({ course, onUpdate }) => {
         </div>
       </div>
 
+      {/* مقدمة - Introduction Section (Direct Lessons) */}
+      {course?.directLessons?.length > 0 && (
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+            <h4 className="text-lg font-medium text-gray-900 dark:text-white">
+              مقدمة
+            </h4>
+          </div>
+          <div className="p-4">
+            <div className="space-y-2">
+              {course.directLessons.map((lesson, lessonIndex) => (
+                <div
+                  key={lessonIndex}
+                  className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                >
+                  <div className="flex items-center gap-3 flex-1">
+                    <FaGripVertical className="text-gray-400 cursor-move" />
+                    {getLessonIcon(lesson.lessonType)}
+                    <div className="flex-1">
+                      <h5 className="font-medium text-gray-900 dark:text-white">
+                        {lesson.title}
+                      </h5>
+                      {lesson.description && (
+                        <p className="text-gray-600 dark:text-gray-400 text-sm">
+                          {lesson.description}
+                        </p>
+                      )}
+                      <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        <span>{formatDuration(lesson.duration)}</span>
+                        <span>{lesson.isFree ? 'مجاني' : `$${lesson.price}`}</span>
+                        <span className="capitalize">{getArabicLessonType(lesson.lessonType)}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleEditLesson(lesson, null, lessonIndex)}
+                      className="text-blue-600 hover:text-blue-800 p-1"
+                    >
+                      <FaEdit className="text-sm" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteLesson(null, lessonIndex)}
+                      className="text-red-600 hover:text-red-800 p-1"
+                    >
+                      <FaTrash className="text-sm" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Units */}
       <div className="space-y-4">
         {course?.units?.map((unit, unitIndex) => (
@@ -405,61 +460,6 @@ const CourseStructure = ({ course, onUpdate }) => {
           </div>
         ))}
       </div>
-
-      {/* Direct Lessons */}
-      {course?.directLessons?.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-            <h4 className="text-lg font-medium text-gray-900 dark:text-white">
-              الدروس المباشرة (غير مرتبطة بوحدات)
-            </h4>
-          </div>
-          <div className="p-4">
-            <div className="space-y-2">
-              {course.directLessons.map((lesson, lessonIndex) => (
-                <div
-                  key={lessonIndex}
-                  className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
-                >
-                  <div className="flex items-center gap-3 flex-1">
-                    <FaGripVertical className="text-gray-400 cursor-move" />
-                    {getLessonIcon(lesson.lessonType)}
-                    <div className="flex-1">
-                      <h5 className="font-medium text-gray-900 dark:text-white">
-                        {lesson.title}
-                      </h5>
-                      {lesson.description && (
-                        <p className="text-gray-600 dark:text-gray-400 text-sm">
-                          {lesson.description}
-                        </p>
-                      )}
-                      <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        <span>{formatDuration(lesson.duration)}</span>
-                        <span>{lesson.isFree ? 'مجاني' : `$${lesson.price}`}</span>
-                        <span className="capitalize">{getArabicLessonType(lesson.lessonType)}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleEditLesson(lesson, null, lessonIndex)}
-                      className="text-blue-600 hover:text-blue-800 p-1"
-                    >
-                      <FaEdit className="text-sm" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteLesson(null, lessonIndex)}
-                      className="text-red-600 hover:text-red-800 p-1"
-                    >
-                      <FaTrash className="text-sm" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Add Unit Modal */}
       {showAddUnit && (

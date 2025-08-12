@@ -184,8 +184,8 @@ export default function HomePage() {
 
   const categories = [
     { icon: FaCode, name: "البرمجة", count: "150+ دورة", color: "bg-blue-500" },
-    { icon: FaPalette, name: "التصميم", count: "120+ دورة", color: "bg-purple-500" },
-    { icon: FaChartLine, name: "الأعمال", count: "200+ دورة", color: "bg-green-500" },
+            { icon: FaPalette, name: "تصميم", count: "120+ دورة", color: "bg-purple-500" },
+        { icon: FaChartLine, name: "أعمال", count: "200+ دورة", color: "bg-green-500" },
     { icon: FaBookOpen, name: "التسويق", count: "180+ دورة", color: "bg-orange-500" }
   ];
 
@@ -281,8 +281,12 @@ export default function HomePage() {
                           alt={course.title}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                           onError={(e) => {
-                            e.target.style.display = 'none';
-                            e.target.nextSibling.style.display = 'block';
+                            if (e.target && e.target.style) {
+                              e.target.style.display = 'none';
+                            }
+                            if (e.target && e.target.nextSibling && e.target.nextSibling.style) {
+                              e.target.nextSibling.style.display = 'block';
+                            }
                           }}
                         />
                         <div className="absolute inset-0 bg-black bg-opacity-20"></div>

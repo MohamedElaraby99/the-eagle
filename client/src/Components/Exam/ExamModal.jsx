@@ -4,7 +4,6 @@ import {
   FaTimes, 
   FaClock, 
   FaCheck, 
-  FaTimes as FaX, 
   FaChevronLeft, 
   FaChevronRight,
   FaPlay,
@@ -12,10 +11,16 @@ import {
   FaRedo,
   FaChartBar,
   FaTrophy,
-  FaExclamationTriangle
+  FaExclamationTriangle,
+  FaArrowLeft,
+  FaArrowRight,
+  FaEye,
+  FaEyeSlash
 } from 'react-icons/fa';
 import { takeTrainingExam, takeFinalExam, clearExamError, clearLastExamResult } from '../../Redux/Slices/ExamSlice';
 import { axiosInstance } from '../../Helpers/axiosInstance';
+import { generateImageUrl } from '../../utils/fileUtils';
+import { toast } from 'react-hot-toast';
 
 const ExamModal = ({ isOpen, onClose, exam, courseId, lessonId, unitId, examType = 'training' }) => {
   const dispatch = useDispatch();
@@ -33,6 +38,11 @@ const ExamModal = ({ isOpen, onClose, exam, courseId, lessonId, unitId, examType
   const [examCompleted, setExamCompleted] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [timeTaken, setTimeTaken] = useState(0);
+  const [imageModalOpen, setImageModalOpen] = useState(false);
+  const [currentImage, setCurrentImage] = useState(null);
+  const [showDetailedReview, setShowDetailedReview] = useState(false);
+  const [examWithAnswers, setExamWithAnswers] = useState(null);
+  const [loadingAnswers, setLoadingAnswers] = useState(false);
   
   const timerRef = useRef(null);
   const startTimeRef = useRef(null);
@@ -98,6 +108,7 @@ const ExamModal = ({ isOpen, onClose, exam, courseId, lessonId, unitId, examType
   const handleStartExam = () => {
     setExamStarted(true);
     setIsTimerRunning(true);
+    setShowDetailedReview(false);
     startTimeRef.current = Date.now();
   };
 
@@ -118,6 +129,26 @@ const ExamModal = ({ isOpen, onClose, exam, courseId, lessonId, unitId, examType
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(prev => prev - 1);
     }
+  };
+
+  const fetchExamWithAnswers = async () => {
+    try {
+      setLoadingAnswers(true);
+      const response = await axiosInstance.get(`/exams/${exam._id}/details`);
+      setExamWithAnswers(response.data.data);
+    } catch (error) {
+      console.error('Failed to fetch exam details:', error);
+      toast.error('فشل في تحميل تفاصيل الامتحان');
+    } finally {
+      setLoadingAnswers(false);
+    }
+  };
+
+  const handleDetailedReview = async () => {
+    if (!examWithAnswers) {
+      await fetchExamWithAnswers();
+    }
+    setShowDetailedReview(true);
   };
 
   const handleSubmitExam = () => {
@@ -192,25 +223,33 @@ const ExamModal = ({ isOpen, onClose, exam, courseId, lessonId, unitId, examType
             </div>
           </div>
           
+          {/* Question Image - Positioned above the question */}
+          {question.image && (
+            <div className="mb-4 flex justify-center">
+              <div 
+                className="w-32 h-32 md:w-40 md:h-40 rounded-lg shadow-md overflow-hidden cursor-pointer hover:scale-105 transition-transform duration-200"
+                onClick={() => {
+                  setCurrentImage(generateImageUrl(question.image));
+                  setImageModalOpen(true);
+                }}
+              >
+                <img 
+                  src={generateImageUrl(question.image)}
+                  alt="صورة السؤال" 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    console.error('Failed to load image:', question.image);
+                    console.error('Attempted URL:', e.target.src);
+                    e.target.style.display = 'none';
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
           <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 leading-relaxed">
             {question.question}
           </h3>
-
-          {/* Question Image */}
-          {question.image && (
-            <div className="mb-4">
-              <img 
-                src={question.image.startsWith('http') ? question.image : `${axiosInstance.defaults.baseURL}${question.image}`}
-                alt="صورة السؤال" 
-                className="max-w-full h-auto rounded-lg shadow-md"
-                onError={(e) => {
-                  console.error('Failed to load image:', question.image);
-                  console.error('Attempted URL:', e.target.src);
-                  e.target.style.display = 'none';
-                }}
-              />
-            </div>
-          )}
         </div>
 
         <div className="space-y-3">
@@ -276,6 +315,176 @@ const ExamModal = ({ isOpen, onClose, exam, courseId, lessonId, unitId, examType
       </div>
     </div>
   );
+
+  const renderDetailedReview = () => {
+    if (!lastExamResult || !examWithAnswers) return null;
+
+    const questionsWithAnswers = examWithAnswers.questions || questions;
+
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200">مراجعة تفصيلية للامتحان</h3>
+          <button
+            onClick={() => setShowDetailedReview(false)}
+            className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+          >
+            العودة للنتائج
+          </button>
+        </div>
+
+        {loadingAnswers ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <span className="mr-3 text-gray-600 dark:text-gray-400">جاري تحميل تفاصيل الامتحان...</span>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {questionsWithAnswers.map((question, index) => {
+              const userAnswer = answers[index];
+              const isCorrect = userAnswer === question.correctAnswer;
+              const userAnswerText = userAnswer !== undefined ? question.options[userAnswer] : 'لم يتم الإجابة';
+              const correctAnswerText = question.options[question.correctAnswer];
+              const isAnswered = userAnswer !== undefined;
+
+            return (
+              <div key={index} className={`border rounded-lg p-4 ${
+                isCorrect ? 'border-green-200 bg-green-50 dark:bg-green-900/20' : 'border-red-200 bg-red-50 dark:bg-red-900/20'
+              }`}>
+                {/* Question Header */}
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    السؤال {index + 1} من {totalQuestions}
+                  </span>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    isCorrect 
+                      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                      : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                  }`}>
+                    {isCorrect ? 'صحيح' : 'خاطئ'}
+                  </span>
+                </div>
+
+                {/* Question Image */}
+                {question.image && (
+                  <div className="mb-3 flex justify-center">
+                    <div className="w-32 h-32 md:w-40 md:h-40 rounded-lg shadow-md overflow-hidden">
+                      <img 
+                        src={generateImageUrl(question.image)}
+                        alt="صورة السؤال" 
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          console.error('Failed to load image:', question.image);
+                          e.target.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Question Text */}
+                <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 leading-relaxed">
+                  {question.question}
+                </h4>
+
+                {/* Options with highlighting */}
+                <div className="space-y-2 mb-4">
+                  {question.options.map((option, optionIndex) => {
+                    let optionClass = "p-3 rounded-lg border-2 ";
+                    let textClass = "text-gray-700 dark:text-gray-300";
+                    
+                    if (optionIndex === question.correctAnswer) {
+                      optionClass += "border-green-500 bg-green-100 dark:bg-green-900/30";
+                      textClass = "text-green-800 dark:text-green-200 font-semibold";
+                    } else if (optionIndex === userAnswer && !isCorrect) {
+                      optionClass += "border-red-500 bg-red-100 dark:bg-red-900/30";
+                      textClass = "text-red-800 dark:text-red-200 font-semibold";
+                    } else {
+                      optionClass += "border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700";
+                    }
+
+                    return (
+                      <div key={optionIndex} className={optionClass}>
+                        <div className="flex items-center gap-3">
+                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                            optionIndex === question.correctAnswer
+                              ? 'border-green-500 bg-green-500'
+                              : optionIndex === userAnswer && !isCorrect
+                              ? 'border-red-500 bg-red-500'
+                              : 'border-gray-300 dark:border-gray-500'
+                          }`}>
+                            {optionIndex === question.correctAnswer && (
+                              <div className="w-2 h-2 bg-white rounded-full"></div>
+                            )}
+                            {optionIndex === userAnswer && !isCorrect && (
+                              <div className="w-2 h-2 bg-white rounded-full"></div>
+                            )}
+                          </div>
+                          <span className={textClass}>
+                            {option}
+                            {optionIndex === question.correctAnswer && (
+                              <span className="mr-2 text-green-600 dark:text-green-400">✓ (الإجابة الصحيحة)</span>
+                            )}
+                            {optionIndex === userAnswer && !isCorrect && (
+                              <span className="mr-2 text-red-600 dark:text-red-400">✗ (إجابتك)</span>
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Answer Summary */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                  <div className="bg-white dark:bg-gray-700 rounded-lg p-3">
+                    <span className="text-gray-600 dark:text-gray-400">إجابتك:</span>
+                    <span className={`mr-2 font-medium ${
+                      isCorrect ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                    }`}>
+                      {userAnswerText}
+                    </span>
+                  </div>
+                  <div className="bg-white dark:bg-gray-700 rounded-lg p-3">
+                    <span className="text-gray-600 dark:text-gray-400">الإجابة الصحيحة:</span>
+                    <span className="mr-2 font-medium text-green-600 dark:text-green-400">
+                      {correctAnswerText}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Explanation if available */}
+                {question.explanation && (
+                  <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                    <span className="text-sm font-medium text-blue-800 dark:text-blue-200">شرح:</span>
+                    <p className="text-sm text-blue-700 dark:text-blue-300 mt-1 text-right">
+                      {question.explanation}
+                    </p>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        )}
+
+        <div className="mt-6 flex gap-3">
+          <button
+            onClick={() => setShowDetailedReview(false)}
+            className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-3 px-4 rounded-lg font-medium transition-colors"
+          >
+            العودة للنتائج
+          </button>
+          <button
+            onClick={onClose}
+            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-medium transition-colors"
+          >
+            إغلاق
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   const renderResults = () => {
     if (!lastExamResult) return null;
@@ -345,14 +554,16 @@ const ExamModal = ({ isOpen, onClose, exam, courseId, lessonId, unitId, examType
             <span className="text-gray-700 dark:text-gray-300">الإجابات الخاطئة</span>
             <span className="font-semibold text-red-600 dark:text-red-400">{wrongAnswers}</span>
           </div>
-          
-          <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-            <span className="text-gray-700 dark:text-gray-300">الوقت المستغرق</span>
-            <span className="font-semibold text-blue-600 dark:text-blue-400">{timeTaken} دقيقة</span>
-          </div>
         </div>
 
         <div className="mt-6 flex gap-3">
+          <button
+            onClick={handleDetailedReview}
+            disabled={loadingAnswers}
+            className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-50"
+          >
+            {loadingAnswers ? 'جاري التحميل...' : 'مراجعة تفصيلية'}
+          </button>
           <button
             onClick={onClose}
             className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-medium transition-colors"
@@ -363,6 +574,7 @@ const ExamModal = ({ isOpen, onClose, exam, courseId, lessonId, unitId, examType
             onClick={() => {
               setExamStarted(false);
               setShowResults(false);
+              setShowDetailedReview(false);
               dispatch(clearLastExamResult());
             }}
             className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-3 px-4 rounded-lg font-medium transition-colors"
@@ -439,50 +651,79 @@ const ExamModal = ({ isOpen, onClose, exam, courseId, lessonId, unitId, examType
             </div>
           ) : showResults ? (
             // Results Screen
-            renderResults()
+            showDetailedReview ? renderDetailedReview() : renderResults()
           ) : (
             // Exam Interface
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-              <div className="lg:col-span-3">
-                {renderQuestion()}
-                
-                <div className="flex items-center justify-between mt-6">
-                  <button
-                    onClick={handlePreviousQuestion}
-                    disabled={currentQuestionIndex === 0}
-                    className="flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors disabled:opacity-50"
-                  >
-                    <FaChevronLeft />
-                    السابق
-                  </button>
-                  
-                  <button
-                    onClick={handleSubmitExam}
-                    disabled={loading || Object.keys(answers).length === 0}
-                    className="flex items-center gap-2 px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
-                  >
-                    {loading ? 'جاري الإرسال...' : 'إنهاء الامتحان'}
-                    <FaCheck />
-                  </button>
-                  
-                  <button
-                    onClick={handleNextQuestion}
-                    disabled={currentQuestionIndex === totalQuestions - 1}
-                    className="flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors disabled:opacity-50"
-                  >
-                    التالي
-                    <FaChevronRight />
-                  </button>
-                </div>
+            <div className="space-y-6">
+              {/* Question Navigation - Shown at top on mobile, right side on desktop */}
+              <div className="block lg:hidden">
+                {renderQuestionNavigation()}
               </div>
               
-              <div className="lg:col-span-1">
-                {renderQuestionNavigation()}
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <div className="lg:col-span-3">
+                  {renderQuestion()}
+                  
+                  <div className="flex items-center justify-between mt-6">
+                    <button
+                      onClick={handlePreviousQuestion}
+                      disabled={currentQuestionIndex === 0}
+                      className="flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      <FaChevronLeft />
+                      السابق
+                    </button>
+                    
+                    <button
+                      onClick={handleSubmitExam}
+                      disabled={loading || Object.keys(answers).length === 0}
+                      className="flex items-center gap-2 px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
+                    >
+                      {loading ? 'جاري الإرسال...' : 'إنهاء الامتحان'}
+                      <FaCheck />
+                    </button>
+                    
+                    <button
+                      onClick={handleNextQuestion}
+                      disabled={currentQuestionIndex === totalQuestions - 1}
+                      className="flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      التالي
+                      <FaChevronRight />
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="hidden lg:block lg:col-span-1">
+                  {renderQuestionNavigation()}
+                </div>
               </div>
             </div>
           )}
         </div>
       </div>
+
+      {/* Image Modal */}
+      {imageModalOpen && currentImage && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-80 backdrop-blur-sm">
+          <div className="relative max-w-4xl max-h-[90vh] p-4">
+            <button
+              onClick={() => {
+                setImageModalOpen(false);
+                setCurrentImage(null);
+              }}
+              className="absolute top-2 right-2 z-10 bg-white dark:bg-gray-800 rounded-full p-2 shadow-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            >
+              <FaTimes className="text-gray-600 dark:text-gray-300 text-xl" />
+            </button>
+            <img
+              src={currentImage}
+              alt="صورة السؤال"
+              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

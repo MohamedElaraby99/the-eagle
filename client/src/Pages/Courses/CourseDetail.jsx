@@ -479,7 +479,7 @@ export default function CourseDetail() {
             <div className="p-6 border-b border-gray-200 dark:border-gray-700">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                 <FaList />
-                <span>هيكل الدرس</span>
+                <span>هيكل المادة</span>
               </h2>
             </div>
 

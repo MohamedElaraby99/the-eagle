@@ -358,7 +358,7 @@ input::placeholder, textarea::placeholder {
 /* Drawer toggle mechanism - when checkbox is checked */
 .drawer-toggle:checked ~ .drawer-side {
   transform: translateX(0) !important;
-  width: 320px !important;
+  width: 100% !important;
   z-index: 50 !important;
 }
 
@@ -700,4 +700,25 @@ html.light ::-webkit-scrollbar-thumb:hover {
 
 .animate-spin-slow {
   animation: spin-slow 8s linear infinite;
+}
+
+/* Light mode form controls fix */
+html.light input,
+html.light select,
+html.light textarea {
+  background-color: #ffffff !important;
+  color: #111827 !important; /* gray-900 */
+}
+
+html.light input::placeholder,
+html.light textarea::placeholder {
+  color: #6b7280; /* gray-500 */
+}
+
+html.light .form-control,
+html.light .input,
+html.light .select,
+html.light .textarea {
+  background-color: #ffffff !important;
+  color: #111827 !important;
 }

@@ -2,6 +2,7 @@ import subjectModel from '../models/subject.model.js';
 import AppError from '../utils/error.utils.js';
 import { v2 as cloudinary } from 'cloudinary';
 import fs from 'fs';
+import path from 'path';
 
 // Get all subjects
 export const getAllSubjects = async (req, res, next) => {
@@ -83,7 +84,7 @@ export const createSubject = async (req, res, next) => {
             grade
         } = req.body;
         
-        if (!title || !description || !instructor || !stage) {
+        if (!title || !description || !instructor) {
             return next(new AppError('All required fields must be provided', 400));
         }
         
@@ -95,7 +96,7 @@ export const createSubject = async (req, res, next) => {
             title,
             description,
             instructor,
-            stage,
+            stage: stage || null,
             featured: featured === 'true',
             grade: grade || null
         };
@@ -119,10 +120,29 @@ export const createSubject = async (req, res, next) => {
         } catch (error) {
             console.error('Cloudinary upload error:', error);
             // If Cloudinary fails, use local file
-            subjectData.image = {
-                public_id: req.file.filename,
-                secure_url: `/uploads/${req.file.filename}`
-            };
+            try {
+                // Move file to uploads/images directory
+                const uploadsDir = path.join('uploads', 'images');
+                if (!fs.existsSync(uploadsDir)) {
+                    fs.mkdirSync(uploadsDir, { recursive: true });
+                }
+                
+                const destPath = path.join(uploadsDir, req.file.filename);
+                fs.renameSync(req.file.path, destPath);
+                
+                subjectData.image = {
+                    public_id: req.file.filename,
+                    secure_url: `/uploads/images/${req.file.filename}`
+                };
+                
+                console.log('✅ Subject image saved locally:', destPath);
+            } catch (e) {
+                console.log('❌ Local file save error:', e.message);
+                subjectData.image = {
+                    public_id: req.file.filename,
+                    secure_url: `/uploads/images/${req.file.filename}`
+                };
+            }
         }
         
         const subject = await subjectModel.create(subjectData);
@@ -193,10 +213,38 @@ export const updateSubject = async (req, res, next) => {
             } catch (error) {
                 console.error('Cloudinary upload error:', error);
                 // If Cloudinary fails, use local file
-                updateData.image = {
-                    public_id: req.file.filename,
-                    secure_url: `/uploads/${req.file.filename}`
-                };
+                try {
+                    // Delete old image if exists (local file)
+                    if (subject.image.public_id && subject.image.public_id !== 'placeholder') {
+                        const oldImagePath = path.join('uploads', 'images', subject.image.public_id);
+                        if (fs.existsSync(oldImagePath)) {
+                            fs.rmSync(oldImagePath);
+                            console.log('🗑️ Deleted old subject image:', oldImagePath);
+                        }
+                    }
+                    
+                    // Move new file to uploads/images directory
+                    const uploadsDir = path.join('uploads', 'images');
+                    if (!fs.existsSync(uploadsDir)) {
+                        fs.mkdirSync(uploadsDir, { recursive: true });
+                    }
+                    
+                    const destPath = path.join(uploadsDir, req.file.filename);
+                    fs.renameSync(req.file.path, destPath);
+                    
+                    updateData.image = {
+                        public_id: req.file.filename,
+                        secure_url: `/uploads/images/${req.file.filename}`
+                    };
+                    
+                    console.log('✅ Subject image updated locally:', destPath);
+                } catch (e) {
+                    console.log('❌ Local file save error:', e.message);
+                    updateData.image = {
+                        public_id: req.file.filename,
+                        secure_url: `/uploads/images/${req.file.filename}`
+                    };
+                }
             }
         }
         

@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { getAllInstructors, getFeaturedInstructors } from '../Redux/Slices/InstructorSlice';
 import Layout from '../Layout/Layout';
+import { generateImageUrl } from '../utils/fileUtils';
 import { 
   FaStar, 
   FaUsers, 
@@ -117,7 +118,7 @@ export default function Instructors() {
                       <div className="flex items-center">
                         {instructor.profileImage?.secure_url ? (
                           <img
-                            src={instructor.profileImage.secure_url}
+                            src={generateImageUrl(instructor.profileImage.secure_url)}
                             alt={instructor.name}
                             className="w-12 h-12 rounded-full border-2 border-white object-cover"
                             onError={(e) => {
@@ -259,7 +260,7 @@ export default function Instructors() {
                   <div className="md:col-span-1">
                     {selectedInstructor.profileImage?.secure_url ? (
                       <img
-                        src={selectedInstructor.profileImage.secure_url}
+                        src={generateImageUrl(selectedInstructor.profileImage.secure_url)}
                         alt={selectedInstructor.name}
                         className="w-full h-64 object-cover rounded-lg"
                       />

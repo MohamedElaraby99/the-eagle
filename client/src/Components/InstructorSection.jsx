@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { getFeaturedInstructors } from '../Redux/Slices/InstructorSlice';
 import { FaGraduationCap, FaStar, FaUsers, FaBook, FaClock, FaLinkedin, FaTwitter, FaGlobe, FaTimes, FaAward, FaArrowRight } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
+import { generateImageUrl } from '../utils/fileUtils';
 
 const InstructorSection = () => {
   const dispatch = useDispatch();
@@ -90,17 +91,21 @@ const InstructorSection = () => {
               >
                 {/* Large Instructor Photo */}
                 <div className="relative w-full h-48 overflow-hidden">
-                  {instructor.profileImage?.secure_url ? (
-                    <img
-                      src={instructor.profileImage.secure_url}
-                      alt={instructor.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                        e.target.nextSibling.style.display = 'flex';
-                      }}
-                    />
-                  ) : (
+                                     {instructor.profileImage?.secure_url ? (
+                     <img
+                       src={generateImageUrl(instructor.profileImage.secure_url)}
+                       alt={instructor.name}
+                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                       onError={(e) => {
+                         if (e.target && e.target.style) {
+                           e.target.style.display = 'none';
+                         }
+                         if (e.target && e.target.nextSibling && e.target.nextSibling.style) {
+                           e.target.nextSibling.style.display = 'flex';
+                         }
+                       }}
+                     />
+                   ) : (
                     <div className="w-full h-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
                       <FaGraduationCap className="text-gray-400 dark:text-gray-500 text-6xl" />
                     </div>
@@ -167,17 +172,21 @@ const InstructorSection = () => {
             <div className="p-6">
               {/* Instructor Header */}
               <div className="text-center mb-8">
-                {selectedInstructor.profileImage?.secure_url ? (
-                  <img
-                    src={selectedInstructor.profileImage.secure_url}
-                    alt={selectedInstructor.name}
-                    className="w-32 h-32 rounded-full object-cover mx-auto mb-4 border-4 border-gray-200 dark:border-gray-600 shadow-lg"
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                      e.target.nextSibling.style.display = 'flex';
-                    }}
-                  />
-                ) : (
+                                 {selectedInstructor.profileImage?.secure_url ? (
+                   <img
+                     src={generateImageUrl(selectedInstructor.profileImage.secure_url)}
+                     alt={selectedInstructor.name}
+                     className="w-32 h-32 rounded-full object-cover mx-auto mb-4 border-4 border-gray-200 dark:border-gray-600 shadow-lg"
+                     onError={(e) => {
+                       if (e.target && e.target.style) {
+                         e.target.style.display = 'none';
+                       }
+                       if (e.target && e.target.nextSibling && e.target.nextSibling.style) {
+                         e.target.nextSibling.style.display = 'flex';
+                       }
+                     }}
+                   />
+                 ) : (
                   <div className="w-32 h-32 bg-gray-200 dark:bg-gray-600 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-gray-200 dark:border-gray-600 shadow-lg">
                     <FaGraduationCap className="text-gray-400 dark:text-gray-500 text-4xl" />
                   </div>

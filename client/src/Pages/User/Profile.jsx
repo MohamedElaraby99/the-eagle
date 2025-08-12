@@ -9,6 +9,7 @@ import Layout from "../../Layout/Layout";
 import { useNavigate } from "react-router-dom";
 import { axiosInstance } from "../../Helpers/axiosInstance";
 import { egyptianGovernorates, getArabicGovernorate } from "../../utils/governorateMapping";
+import { generateImageUrl } from "../../utils/fileUtils";
 
 
 export default function Profile() {
@@ -258,7 +259,7 @@ export default function Profile() {
                   src={
                     userInput.previewImage
                       ? userInput.previewImage
-                      : userData?.avatar?.secure_url
+                      : generateImageUrl(userData?.avatar?.secure_url)
                   }
                   alt="avatar"
                   className="h-full w-full"

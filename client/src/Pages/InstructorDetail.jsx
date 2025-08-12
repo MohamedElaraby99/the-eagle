@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { getInstructorById } from '../Redux/Slices/InstructorSlice';
 import Layout from '../Layout/Layout';
+import { generateImageUrl } from '../utils/fileUtils';
 import { 
   FaStar, 
   FaUsers, 
@@ -100,17 +101,21 @@ export default function InstructorDetail() {
               
               {/* Profile Image */}
               <div className="absolute -bottom-16 right-8">
-                {instructor.profileImage?.secure_url ? (
-                  <img
-                    src={instructor.profileImage.secure_url}
-                    alt={instructor.name}
-                    className="w-32 h-32 rounded-full border-4 border-white shadow-lg object-cover"
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                      e.target.nextSibling.style.display = 'flex';
-                    }}
-                  />
-                ) : (
+                                 {instructor.profileImage?.secure_url ? (
+                   <img
+                     src={generateImageUrl(instructor.profileImage.secure_url)}
+                     alt={instructor.name}
+                     className="w-32 h-32 rounded-full border-4 border-white shadow-lg object-cover"
+                     onError={(e) => {
+                       if (e.target && e.target.style) {
+                         e.target.style.display = 'none';
+                       }
+                       if (e.target && e.target.nextSibling && e.target.nextSibling.style) {
+                         e.target.nextSibling.style.display = 'flex';
+                       }
+                     }}
+                   />
+                 ) : (
                   <div className="w-32 h-32 bg-white/20 rounded-full border-4 border-white shadow-lg flex items-center justify-center">
                     <FaGraduationCap className="text-white text-4xl" />
                   </div>

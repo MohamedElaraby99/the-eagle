@@ -4,14 +4,14 @@ const blogSchema = new Schema({
     title: {
         type: String,
         required: [true, 'Title is required'],
-        minLength: [5, 'Title must be at least 5 characters'],
+        minLength: [3, 'Title must be at least 3 characters'],
         maxLength: [100, 'Title should be less than 100 characters'],
         trim: true
     },
     content: {
         type: String,
         required: [true, 'Content is required'],
-        minLength: [10, 'Content must be at least 10 characters'],
+        minLength: [5, 'Content must be at least 5 characters'],
         maxLength: [5000, 'Content should be less than 5000 characters']
     },
     excerpt: {
@@ -34,7 +34,10 @@ const blogSchema = new Schema({
     category: {
         type: String,
         required: [true, 'Category is required'],
-        enum: ['Technology', 'Education', 'Programming', 'Design', 'Business', 'Other']
+        enum: [
+            'Technology', 'Education', 'Programming', 'Design', 'Business', 'Other',
+            'تكنولوجيا', 'تعليم', 'برمجة', 'تصميم', 'أعمال', 'أخرى'
+        ]
     },
     tags: [{
         type: String,
