@@ -59,33 +59,33 @@ const AnimatedHero = ({ onGetStarted }) => {
 
               {/* Main Heading */}
               <h1 className="text-3xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-gray-900 dark:text-white leading-tight font-sans">
-                <span className="text-amber-600">انضم لأول مرة</span>
+                <span className="text-amber-600">ولأول مرة في تاريخ التعليم 🔺🔺</span>
                 <br />
                 <span className="bg-gradient-to-r from-amber-600 via-yellow-500 to-orange-500 bg-clip-text text-transparent">
-                  إلى سلسلة "إيجل" في الرياضيات
+                  سلسلة إيجل في الرياضيات 🦅📚
                 </span>
                 <br />
                 <span className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl text-gray-700 dark:text-gray-300">
-                  مع مستر مايكل روماني — العقلية التي تصنع الأوائل! 
+                  مع أستاذ الأوائل: مستر مايكل روماني
+                </span>
+                <br />
+                <span className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl text-gray-700 dark:text-gray-300">
+                  الاسم الذي صنع الفرق 💥 والعقلية التي تصنع الأوائل 💯
                 </span>
               </h1>
               
               {/* Description */}
               <p className="text-base md:text-lg lg:text-xl text-gray-600 dark:text-gray-400 leading-relaxed max-w-lg font-sans">
-                اكتشف طريقتك للوصول للقمة بأسلوب قوي، منظم، وبسيط يجعل أصعب المفاهيم أسهل وأمتع!
+                🚀 لو بتدور على فهم حقيقي مش حفظ!
               </p>
 
               {/* Additional Description */}
               <p className="text-base md:text-lg text-gray-600 dark:text-gray-400 leading-relaxed max-w-lg font-sans">
-                 سواء كنت تسعى للتفوق أو لفهم حقيقي، هنا مش مجرد حفظ… هنا هتفهم الرياضيات وتحترفها بثقة.
+                🚀 لو عايز تحب الرياضيات وتتفوق فيها!
               </p>
 
               <p className="text-base md:text-lg text-gray-600 dark:text-gray-400 leading-relaxed max-w-lg font-sans">
-                جاهز تبدأ رحلتك نحو القمة؟
-              </p>
-
-              <p className="text-base md:text-lg text-gray-600 dark:text-gray-400 leading-relaxed max-w-lg font-sans">
-                ابدأ الآن وتعلّم بأسلوب يخليك تفهم، تحب، وتتفوّق في الرياضيات زي ما عمرك ما تخيلت!
+                🚀 لو مستني منهج قوي ومنظم بأسلوب عبقري ومبسط!
               </p>
 
               {/* CTA Buttons */}
