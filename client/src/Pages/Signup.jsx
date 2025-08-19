@@ -277,7 +277,7 @@ export default function Signup() {
                 <div className="relative bg-white dark:bg-gray-800 rounded-full p-4 shadow-2xl border-4 border-purple-200 dark:border-purple-700 transform hover:scale-110 transition-all duration-500">
                   <img 
                     src={logo} 
-                    alt="4G Logo" 
+                    alt="The Eagle Logo" 
                     className="w-16 h-16 object-contain drop-shadow-lg"
                   />
                 </div>

@@ -86,7 +86,7 @@ export default function Login() {
                 <div className="relative bg-white dark:bg-gray-800 rounded-full p-4 shadow-2xl border-4 border-blue-200 dark:border-blue-700 transform hover:scale-110 transition-all duration-500">
                   <img 
                     src={logo} 
-                    alt="4G Logo" 
+                    alt="The Eagle Logo" 
                     className="w-16 h-16 object-contain drop-shadow-lg"
                   />
                 </div>
@@ -199,7 +199,7 @@ export default function Login() {
                 </div>
                 <div className="relative flex justify-center text-sm">
                   <span className="px-4 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-medium">
-                    جديد في 4G؟
+                    جديد في The Eagle؟
                   </span>
                 </div>
               </div>
