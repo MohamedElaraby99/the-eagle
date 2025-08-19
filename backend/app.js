@@ -49,11 +49,11 @@ const allowedOrigins = new Set([
   process.env.FRONTEND_URL,
   'http://localhost:5173',
   'http://127.0.0.1:5173',
-  'http://localhost:5190',
-  'http://127.0.0.1:5190',
-  'https://the4g.live',
-  'https://www.the4g.live',
-  'https://api.the4g.live'
+  'http://localhost:5185',
+  'http://127.0.0.1:5185',
+  'https://the-eagle.fikra.solutions',
+  'https://www.the-eagle.fikra.solutions',
+  'https://api.the-eagle.fikra.solutions'
 ]);
 
 // Add any additional origins from environment variables
@@ -65,7 +65,7 @@ if (process.env.ADDITIONAL_CORS_ORIGINS) {
 // Extend allowed origins with IPv6 localhost variants
 const moreLocalOrigins = [
   'http://[::1]:5173',
-  'http://[::1]:5190',
+  'http://[::1]:5185',
   'http://[::1]:3000'
 ];
 moreLocalOrigins.forEach(o => allowedOrigins.add(o));
@@ -145,7 +145,7 @@ app.get('/api/v1/test-uploads', (req, res) => {
   
   try {
     const files = fs.readdirSync(uploadsDir);
-    const baseUrl = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 4015}`;
+    const baseUrl = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 4003}`;
     
     res.json({ 
       message: 'Uploads directory accessible',
