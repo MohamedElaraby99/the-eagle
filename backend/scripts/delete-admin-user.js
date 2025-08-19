@@ -24,7 +24,7 @@ const askQuestion = (question) => {
 
 const connectToDb = async () => {
     try {
-        const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/theeagle', {
+        const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/the4g', {
             useNewUrlParser: true,
             useUnifiedTopology: true,
         });
@@ -37,7 +37,7 @@ const connectToDb = async () => {
 };
 
 const deleteAdminUser = async () => {
-    console.log("🗑️ LMS Admin User Deletion Tool");
+    console.log("🗑️ api Admin User Deletion Tool");
     console.log("===============================\n");
     
     try {

@@ -12,9 +12,12 @@ export default function Navbar() {
     localStorage.getItem("theme") === "light" ? false : true
   );
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, role } = useSelector((state) => state.auth);
+  const { data: user, role } = useSelector((state) => state.auth);
   const location = useLocation();
   const dispatch = useDispatch();
+
+  // Debug: Simple check to see what's happening
+  console.log("🔍 Navbar - User state:", { user, role, hasUser: !!user?.fullName });
 
   // Use scroll to top utility
   useScrollToTop();
@@ -90,7 +93,7 @@ export default function Navbar() {
 
   const menuItems = [
     { name: "الرئيسية", path: "/", icon: FaHome },
-    { name: "الكورسات", path: "/subjects", icon: FaGraduationCap },
+    { name: "الكورسات ", path: "/subjects", icon: FaGraduationCap },
     { name: "الدورات", path: "/courses", icon: FaList },
     
     { name: "المدونة", path: "/blogs", icon: FaBlog },
@@ -112,10 +115,10 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 shadow-xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-20">
+                 <div className="flex justify-between items-center h-16 md:h-20">
           {/* Modern Logo */}
-          <Link to="/" onClick={handleLogoClick} className="flex items-center space-x-4 group logo-hover">
-          
+                     <Link to="/" onClick={handleLogoClick} className="flex items-center space-x-2 md:space-x-4 group logo-hover">
+        
             <div className="relative">
               {/* Logo Image */}
               <img 
@@ -139,81 +142,42 @@ export default function Navbar() {
             {/* Theme Toggle */}
             <button
               onClick={toggleDarkMode}
-              className="p-3 rounded-xl bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 hover:from-blue-100 hover:to-purple-100 dark:hover:from-blue-900 dark:hover:to-purple-900 transition-all duration-300 group shadow-lg hover:shadow-xl"
+              className="p-2.5 md:p-3 rounded-xl bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 hover:from-blue-100 hover:to-purple-100 dark:hover:from-blue-900 dark:hover:to-purple-900 transition-all duration-300 group shadow-lg hover:shadow-xl"
             >
               {darkMode ? (
-                <FaSun className="w-5 h-5 text-yellow-500 group-hover:scale-110 transition-transform duration-300" />
+                <FaSun className="w-4 h-4 md:w-5 md:h-5 text-yellow-500 group-hover:scale-110 transition-transform duration-300" />
               ) : (
-                <FaMoon className="w-5 h-5 text-gray-700 group-hover:scale-110 transition-transform duration-300" />
+                <FaMoon className="w-4 h-4 md:w-5 md:h-5 text-gray-700 group-hover:scale-110 transition-transform duration-300" />
               )}
             </button>
 
-            {/* Desktop User Menu */}
-            {user && user.fullName ? (
-              <div className="hidden md:flex items-center space-x-4">
-                <div className="flex items-center space-x-3 p-3 rounded-xl bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 hover:from-blue-100 hover:to-purple-100 dark:hover:from-blue-900 dark:hover:to-purple-900 transition-all duration-300 shadow-lg hover:shadow-xl">
-                  <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg transform hover:scale-110 transition-transform duration-300">
-                    <span className="text-white text-sm font-bold">
-                      {user.fullName?.charAt(0)?.toUpperCase() || "U"}
-                    </span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    {user.fullName}
-                  </span>
-                    <span className="text-xs text-gray-500 dark:text-gray-400 capitalize">
-                      {user.role}
-                    </span>
-                  </div>
-                </div>
-                
-                {/* Desktop Dropdown Menu */}
-                <div className="relative group">
-                  <button className="p-3 rounded-xl bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 hover:from-blue-100 hover:to-purple-100 dark:hover:from-blue-900 dark:hover:to-purple-900 transition-all duration-300 shadow-lg hover:shadow-xl">
-                    <FaUser className="w-5 h-5 text-gray-700 dark:text-gray-300" />
-                  </button>
-                  
-                  {/* Dropdown Content */}
-                  <div className="absolute right-0 mt-3 w-56 bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200/50 dark:border-gray-700/50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:translate-y-0 translate-y-2">
-                    <div className="py-3">
-                      <Link
-                        to="/profile"
-                        className="flex items-center space-x-3 px-4 py-3 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 dark:hover:from-blue-900/20 dark:hover:to-purple-900/20 transition-all duration-300 rounded-xl mx-2"
-                      >
-                        <FaUser className="w-4 h-4" />
-                        <span className="font-medium">الملف الشخصي</span>
-                      </Link>
-                      <button
-                        onClick={handleLogout}
-                        className="flex items-center space-x-3 px-4 py-3 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-gradient-to-r hover:from-red-50 hover:to-pink-50 dark:hover:from-red-900/20 dark:hover:to-pink-900/20 transition-all duration-300 w-full text-left rounded-xl mx-2"
-                      >
-                        <FaSignOutAlt className="w-4 h-4" />
-                        <span className="font-medium">تسجيل الخروج</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : null}
+            {/* Sign Up Button - ONLY show when NO user is logged in */}
+            {!user?.fullName && (
+              <Link
+                to="/signup"
+                className="px-2 py-1 md:px-4 md:py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl font-semibold text-sm md:text-base transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+              >
+                سجل الآن
+              </Link>
+            )}
+
+{!user?.fullName && (
+              <Link
+                to="/login"
+                className="px-2 py-1 md:px-4 md:py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl font-semibold text-sm md:text-base transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+              >
+                تسجيل الدخول
+              </Link>
+            )}
 
             {/* Menu Button - Visible on all devices */}
-            <div className="flex items-center space-x-3">
-              {user && (
-                <div className="flex items-center space-x-3 p-3 rounded-xl bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700">
-                  <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                    <span className="text-white text-sm font-bold">
-                      {user.fullName?.charAt(0)?.toUpperCase() || "U"}
-                    </span>
-                  </div>
-                </div>
-              )}
-              
+            <div className="flex items-center space-x-3">  
               {/* Burger Menu Button */}
               <button
                 onClick={toggleMenu}
-                className="p-3 rounded-xl bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 hover:from-blue-100 hover:to-purple-100 dark:hover:from-blue-900 dark:hover:to-purple-900 transition-all duration-300 shadow-lg hover:shadow-xl"
+                className="p-2.5 md:p-3 rounded-xl bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 hover:from-blue-100 hover:to-purple-100 dark:hover:from-blue-900 dark:hover:to-purple-900 transition-all duration-300 shadow-lg hover:shadow-xl"
               >
-                <FaBars className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+                <FaBars className="w-4 h-4 md:w-5 md:h-5 text-gray-700 dark:text-gray-300" />
               </button>
             </div>
           </div>
@@ -346,17 +310,28 @@ export default function Navbar() {
             {/* Guest Actions */}
             {!user && (
               <div className="space-y-4 px-6">
+                <div className="text-center mb-4">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                    انضم إلينا الآن
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    ابدأ رحلة التعلم مع 4G
+                  </p>
+                </div>
+                
                 <Link
                   to="/login"
-                  className="block w-full px-8 py-4 text-center bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-2xl font-bold transition-all duration-300 transform hover:scale-105 mobile-menu-item shadow-lg hover:shadow-xl"
+                  className="flex items-center justify-center gap-3 w-full px-8 py-4 text-center bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-2xl font-bold transition-all duration-300 transform hover:scale-105 mobile-menu-item shadow-lg hover:shadow-xl"
                 >
+                  <FaUser className="w-5 h-5" />
                   تسجيل الدخول
                 </Link>
                 <Link
                   to="/signup"
-                  className="block w-full px-8 py-4 text-center border-2 border-blue-600 text-blue-600 dark:text-blue-400 hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600 hover:text-white rounded-2xl font-bold transition-all duration-300 mobile-menu-item shadow-lg hover:shadow-xl"
+                  className="flex items-center justify-center gap-3 w-full px-8 py-4 text-center border-2 border-blue-600 text-blue-600 dark:text-blue-400 hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600 hover:text-white rounded-2xl font-bold transition-all duration-300 mobile-menu-item shadow-lg hover:shadow-xl"
                 >
-                  إنشاء حساب
+                  <FaPlus className="w-5 h-5" />
+                  إنشاء حساب جديد
                 </Link>
               </div>
             )}

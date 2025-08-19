@@ -47,7 +47,6 @@ export default function WhatsAppServiceDashboard() {
         name: "",
         description: "",
         category: "course",
-        price: "",
         currency: "EGP",
         icon: "📞",
         instructions: "",
@@ -59,7 +58,6 @@ export default function WhatsAppServiceDashboard() {
         name: "",
         description: "",
         category: "course",
-        price: "",
         currency: "EGP",
         icon: "📞",
         instructions: "",
@@ -134,7 +132,7 @@ export default function WhatsAppServiceDashboard() {
     const handleCreateService = async (e) => {
         e.preventDefault();
         
-        if (!createForm.name || !createForm.description || !createForm.price) {
+        if (!createForm.name || !createForm.description) {
             toast.error("يرجى ملء جميع الحقول المطلوبة");
             return;
         }
@@ -152,7 +150,7 @@ export default function WhatsAppServiceDashboard() {
                 name: "",
                 description: "",
                 category: "course",
-                price: "",
+    
                 currency: "EGP",
                 icon: "📞",
                 instructions: "",
@@ -167,7 +165,7 @@ export default function WhatsAppServiceDashboard() {
     const handleEditService = async (e) => {
         e.preventDefault();
         
-        if (!editForm.name || !editForm.description || !editForm.price) {
+        if (!editForm.name || !editForm.description) {
             toast.error("يرجى ملء جميع الحقول المطلوبة");
             return;
         }
@@ -240,7 +238,7 @@ export default function WhatsAppServiceDashboard() {
             name: service.name,
             description: service.description,
             category: service.category,
-            price: service.price.toString(),
+
             currency: service.currency,
             icon: service.icon,
             instructions: service.instructions,
@@ -266,8 +264,7 @@ export default function WhatsAppServiceDashboard() {
         switch (sortBy) {
             case "name":
                 return a.name.localeCompare(b.name);
-            case "price":
-                return a.price - b.price;
+            
             case "category":
                 return a.category.localeCompare(b.category);
             case "createdAt":
@@ -333,7 +330,7 @@ export default function WhatsAppServiceDashboard() {
                             >
                                 <option value="createdAt">الأحدث أولاً</option>
                                 <option value="name">الاسم أ-ي</option>
-                                <option value="price">السعر منخفض-عالي</option>
+                                
                                 <option value="category">الفئة</option>
                             </select>
                             <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center justify-center">
@@ -400,7 +397,7 @@ export default function WhatsAppServiceDashboard() {
                                         <div className="flex items-center justify-between mb-4">
                                             <div>
                                                 <span className="text-2xl font-bold text-green-600 dark:text-green-400">
-                                                    {service.price} {service.currency}
+            
                                                 </span>
                                             </div>
                                             <span className="text-sm text-gray-500 dark:text-gray-400 capitalize">
@@ -494,24 +491,6 @@ export default function WhatsAppServiceDashboard() {
                                                 required
                                             />
                                         </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                الفئة *
-                                            </label>
-                                            <select
-                                                name="category"
-                                                value={createForm.category}
-                                                onChange={handleCreateFormChange}
-                                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                                                required
-                                            >
-                                                {categories.map(category => (
-                                                    <option key={category} value={category}>
-                                                        {category.charAt(0).toUpperCase() + category.slice(1)}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
                                     </div>
 
                                     <div>
@@ -528,37 +507,7 @@ export default function WhatsAppServiceDashboard() {
                                         />
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                السعر *
-                                            </label>
-                                            <input
-                                                type="number"
-                                                name="price"
-                                                value={createForm.price}
-                                                onChange={handleCreateFormChange}
-                                                min="0"
-                                                step="0.01"
-                                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                                                required
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                العملة
-                                            </label>
-                                            <select
-                                                name="currency"
-                                                value={createForm.currency}
-                                                onChange={handleCreateFormChange}
-                                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                                            >
-                                                <option value="EGP">EGP</option>
-                                                <option value="USD">USD</option>
-                                                <option value="EUR">EUR</option>
-                                            </select>
-                                        </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                                 الأيقونة
@@ -764,22 +713,7 @@ export default function WhatsAppServiceDashboard() {
                                         />
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                Price *
-                                            </label>
-                                            <input
-                                                type="number"
-                                                name="price"
-                                                value={editForm.price}
-                                                onChange={handleEditFormChange}
-                                                min="0"
-                                                step="0.01"
-                                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                                                required
-                                            />
-                                        </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                                 Currency

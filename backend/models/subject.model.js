@@ -17,11 +17,6 @@ const subjectSchema = new Schema({
         ref: 'Instructor',
         required: [true, 'Instructor is required']
     },
-    stage: {
-        type: Schema.Types.ObjectId,
-        ref: 'Stage',
-        default: null
-    },
     image: {
         public_id: {
             type: String,
@@ -32,33 +27,9 @@ const subjectSchema = new Schema({
             default: null
         }
     },
-    status: {
-        type: String,
-        enum: ['active', 'inactive', 'featured'],
-        default: 'active'
-    },
-    rating: {
-        type: Number,
-        default: 0,
-        min: 0,
-        max: 5
-    },
-    studentsEnrolled: {
-        type: Number,
-        default: 0
-    },
-    lessons: {
-        type: Number,
-        default: 0
-    },
     featured: {
         type: Boolean,
         default: false
-    },
-    grade: {
-        type: Schema.Types.ObjectId,
-        ref: 'Grade',
-        default: null
     }
 }, {
     timestamps: true

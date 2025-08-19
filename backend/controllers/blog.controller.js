@@ -7,7 +7,19 @@ import path from 'path';
 // Get all blogs (public - only published)
 export const getAllBlogs = async (req, res, next) => {
     try {
+        console.log('=== GET ALL BLOGS ===');
+        
+        // Check if blogModel is available
+        if (!blogModel) {
+            console.error('Blog model not available');
+            return res.status(500).json({
+                success: false,
+                message: 'Database model not available'
+            });
+        }
+        
         const { page = 1, limit = 10, category, search } = req.query;
+        console.log('Query params:', { page, limit, category, search });
         
         let query = { status: 'published' };
         
@@ -21,6 +33,8 @@ export const getAllBlogs = async (req, res, next) => {
             query.$text = { $search: search };
         }
         
+        console.log('Database query:', JSON.stringify(query, null, 2));
+        
         const blogs = await blogModel.find(query)
             .sort({ createdAt: -1 })
             .limit(limit * 1)
@@ -28,6 +42,8 @@ export const getAllBlogs = async (req, res, next) => {
             .exec();
             
         const total = await blogModel.countDocuments(query);
+        
+        console.log(`Found ${blogs.length} blogs out of ${total} total`);
         
         res.status(200).json({
             success: true,
@@ -38,7 +54,15 @@ export const getAllBlogs = async (req, res, next) => {
             total
         });
     } catch (e) {
-        return next(new AppError(e.message, 500));
+        console.error('❌ Error in getAllBlogs:', e);
+        console.error('Error stack:', e.stack);
+        
+        // Return error response instead of crashing
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to fetch blogs',
+            error: process.env.NODE_ENV === 'development' ? e.message : 'Internal server error'
+        });
     }
 };
 

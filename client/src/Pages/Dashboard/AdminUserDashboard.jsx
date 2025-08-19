@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-hot-toast";
 import Layout from "../../Layout/Layout";
-import BulkUser1Creator from "../../Components/BulkUser1Creator";
 import { 
     getAllUsers, 
     createUser,
@@ -10,6 +9,11 @@ import {
     toggleUserStatus, 
     deleteUser, 
     updateUserRole,
+    updateUser,
+    updateUserPassword,
+    resetAllUserWallets,
+    resetUserWallet,
+    resetAllRechargeCodes,
     getUserActivities,
     getUserStats,
     clearAdminUserError 
@@ -48,8 +52,7 @@ import {
     FaPlus,
     FaSave,
     FaTimes,
-    FaKey,
-    FaFileExcel
+    FaIdCard
 } from "react-icons/fa";
 import { axiosInstance } from "../../Helpers/axiosInstance";
 import { egyptianGovernorates } from "../../utils/governorateMapping";
@@ -80,14 +83,17 @@ export default function AdminUserDashboard() {
     const [showUserDetails, setShowUserDetails] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [userToDelete, setUserToDelete] = useState(null);
+    const [userToDeleteInfo, setUserToDeleteInfo] = useState(null);
     const [showCreateModal, setShowCreateModal] = useState(false);
-    const [showPasswordResetModal, setShowPasswordResetModal] = useState(false);
-    const [userToResetPassword, setUserToResetPassword] = useState(null);
-    const [newPassword, setNewPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [showNewPassword, setShowNewPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const [showBulkUser1Modal, setShowBulkUser1Modal] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editForm, setEditForm] = useState({});
+    const [passwordForm, setPasswordForm] = useState({
+        newPassword: '',
+        confirmPassword: ''
+    });
+    const [showPasswordChange, setShowPasswordChange] = useState(false);
+    const [showResetWalletsConfirm, setShowResetWalletsConfirm] = useState(false);
+    const [showResetCodesConfirm, setShowResetCodesConfirm] = useState(false);
     const [createUserForm, setCreateUserForm] = useState({
         fullName: '',
         username: '',
@@ -102,9 +108,6 @@ export default function AdminUserDashboard() {
     });
     const [activeTab, setActiveTab] = useState("users");
     const [stages, setStages] = useState([]);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [pageSize, setPageSize] = useState(20);
-    const [isChangingPage, setIsChangingPage] = useState(false);
 
     // Fetch stages on component mount
     useEffect(() => {
@@ -138,13 +141,31 @@ export default function AdminUserDashboard() {
         console.log('LocalStorage isLoggedIn:', localStorage.getItem('isLoggedIn'));
         
         if (isLoggedIn && role === "ADMIN") {
-            console.log('User is admin, ready to fetch users');
+            console.log('Dispatching getAllUsers...');
+            let roleFilter = "";
+            if (activeTab === "users") {
+                roleFilter = "USER";
+            } else if (activeTab === "admins") {
+                roleFilter = "ADMIN";
+            }
+            
+            console.log('Initial role filter:', roleFilter);
+            console.log('Initial filters:', filters);
+            
+            dispatch(getAllUsers({ 
+                page: 1, 
+                limit: 20, 
+                role: roleFilter,
+                status: filters.status,
+                stage: filters.stage,
+                search: filters.search 
+            }));
         } else {
             console.log('User not admin or not logged in');
             console.log('isLoggedIn:', isLoggedIn);
             console.log('role:', role);
         }
-    }, [dispatch, user, isLoggedIn, role]);
+    }, [dispatch, user, isLoggedIn, role, activeTab]);
 
     useEffect(() => {
         if (error) {
@@ -182,291 +203,32 @@ export default function AdminUserDashboard() {
         console.log('Role filter:', roleFilter);
         console.log('Final filter params:', { 
             page: 1, 
-            limit: pageSize, 
+            limit: 20, 
             role: roleFilter,
             status: filters.status,
             stage: filters.stage,
             search: filters.search 
         });
         
-        setCurrentPage(1); // Reset to first page when filters change
-        
         dispatch(getAllUsers({ 
             page: 1, 
-            limit: pageSize, 
+            limit: 20, 
             role: roleFilter,
             status: filters.status,
             stage: filters.stage,
             search: filters.search 
         }));
     };
-
-    const handlePageChange = async (page) => {
-        setIsChangingPage(true);
-        setCurrentPage(page);
-        
-        let roleFilter = "";
-        if (activeTab === "users") {
-            roleFilter = "USER";
-        } else if (activeTab === "user1") {
-            roleFilter = "USER1";
-        } else if (activeTab === "admins") {
-            roleFilter = "ADMIN";
-        } else {
-            roleFilter = filters.role;
-        }
-        
-        try {
-            await dispatch(getAllUsers({ 
-                page, 
-                limit: pageSize, 
-                role: roleFilter,
-                status: filters.status,
-                stage: filters.stage,
-                search: filters.search 
-            })).unwrap();
-        } catch (error) {
-            console.error('Error changing page:', error);
-        } finally {
-            setIsChangingPage(false);
-        }
-    };
-
-    const handlePageSizeChange = (newPageSize) => {
-        setPageSize(newPageSize);
-        setCurrentPage(1); // Reset to first page when page size changes
-        
-        let roleFilter = "";
-        if (activeTab === "users") {
-            roleFilter = "USER";
-        } else if (activeTab === "user1") {
-            roleFilter = "USER";
-        } else if (activeTab === "admins") {
-            roleFilter = "ADMIN";
-        } else {
-            roleFilter = filters.role;
-        }
-        
-        dispatch(getAllUsers({ 
-            page: 1, 
-            limit: newPageSize, 
-            role: roleFilter,
-            status: filters.status,
-            stage: filters.stage,
-            search: filters.search 
-        }));
-    };
-
-    const generateEnglishName = (arabicName) => {
-        if (!arabicName) return 'Content User';
-        
-        // Common Arabic name mappings to English
-        const nameMappings = {
-            'مستخدم': 'User',
-            'محتوى': 'Content',
-            'طالب': 'Student',
-            'مدرس': 'Teacher',
-            'أحمد': 'Ahmed',
-            'محمد': 'Mohammed',
-            'علي': 'Ali',
-            'فاطمة': 'Fatima',
-            'عائشة': 'Aisha',
-            'خديجة': 'Khadija',
-            'عمر': 'Omar',
-            'عثمان': 'Othman',
-            'عبدالله': 'Abdullah',
-            'يوسف': 'Yusuf',
-            'إبراهيم': 'Ibrahim',
-            'إسماعيل': 'Ismail',
-            'داود': 'David',
-            'سليمان': 'Solomon',
-            'موسى': 'Moses',
-            'عيسى': 'Jesus',
-            'نوح': 'Noah',
-            'آدم': 'Adam'
-        };
-        
-        // Replace Arabic words with English equivalents
-        let englishName = arabicName;
-        Object.entries(nameMappings).forEach(([arabic, english]) => {
-            englishName = englishName.replace(new RegExp(arabic, 'g'), english);
-        });
-        
-        // If the name still contains Arabic characters, generate a generic English name
-        if (/[\u0600-\u06FF]/.test(englishName)) {
-            const randomNumber = Math.floor(Math.random() * 1000);
-            return `Content User ${randomNumber}`;
-        }
-        
-        return englishName || 'Content User';
-    };
-
-    const exportUser1ToExcel = async (exportFiltered = false) => {
-        try {
-            // Show loading state with progress
-            toast.loading('جاري جلب بيانات المستخدمين...', { id: 'export' });
-            
-            let allUsers = [];
-            let currentPage = 1;
-            const pageSize = 100; // Fetch 100 users at a time
-            
-            // Prepare export parameters
-            const exportParams = {
-                role: 'USER1',
-                limit: pageSize,
-                page: 1
-            };
-            
-            // Add filters if exporting filtered results
-            if (exportFiltered) {
-                if (filters.search) exportParams.search = filters.search;
-                if (filters.status) exportParams.status = filters.status;
-                if (filters.stage) exportParams.stage = filters.stage;
-            }
-            
-            // First, get total count to show progress
-            const countResponse = await axiosInstance.get('/admin/users', {
-                params: exportParams
-            });
-            
-            const totalUsers = countResponse.data.data.pagination?.total || 0;
-            
-            if (totalUsers === 0) {
-                const message = exportFiltered ? 'لا توجد نتائج تطابق الفلاتر المحددة' : 'لا يوجد مستخدمي محتوى للتصدير';
-                toast.error(message, { id: 'export' });
-                return;
-            }
-            
-            // Fetch all USER1 users in batches
-            while (true) {
-                const response = await axiosInstance.get('/admin/users', {
-                    params: {
-                        ...exportParams,
-                        page: currentPage
-                    }
-                });
-
-                if (response.data.success && response.data.data.users.length > 0) {
-                    allUsers = [...allUsers, ...response.data.data.users];
-                    
-                    // Update progress
-                    const progress = Math.round((allUsers.length / totalUsers) * 100);
-                    toast.loading(`جاري جلب البيانات... ${progress}% (${allUsers.length}/${totalUsers})`, { id: 'export' });
-                    
-                    // If we got less than pageSize users, we've reached the end
-                    if (response.data.data.users.length < pageSize) {
-                        break;
-                    }
-                    
-                    currentPage++;
-                } else {
-                    break;
-                }
-            }
-
-            if (allUsers.length > 0) {
-                // Create CSV content with English headers
-                const headers = [
-                    'Full Name',
-                    'Email', 
-                    'Phone Number',
-                    'Father Phone Number',
-                    'Governorate',
-                    'Study Stage',
-                    'Age',
-                    'Status',
-                    'Creation Date',
-                    'Wallet Balance',
-                    'Transaction Count'
-                ];
-                
-                const csvContent = [
-                    headers.join(','),
-                    ...allUsers.map(user => [
-                        `"${generateEnglishName(user.fullName) || 'Content User'}"`,
-                        `"${user.email || ''}"`,
-                        `"${user.phoneNumber || ''}"`,
-                        `"${user.fatherPhoneNumber || ''}"`,
-                        `"${user.governorate || ''}"`,
-                        `"${user.stage?.name || ''}"`,
-                        `"${user.age || ''}"`,
-                        `"${user.isActive ? 'Active' : 'Inactive'}"`,
-                        `"${new Date(user.createdAt).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric'
-                        })}"`,
-                        `"${user.walletBalance || 0}"`,
-                        `"${user.totalTransactions || 0}"`
-                    ].join(','))
-                ].join('\n');
-
-                // Create and download file with BOM for proper Arabic text display
-                const blob = new Blob(['\ufeff' + csvContent], { 
-                    type: 'text/csv;charset=utf-8;' 
-                });
-                const link = document.createElement('a');
-                const url = URL.createObjectURL(blob);
-                link.setAttribute('href', url);
-                const filename = exportFiltered 
-                    ? `Content_Users_Filtered_${new Date().toISOString().split('T')[0]}.csv`
-                    : `Content_Users_${new Date().toISOString().split('T')[0]}.csv`;
-                link.setAttribute('download', filename);
-                link.style.visibility = 'hidden';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                
-                // Clean up the URL object
-                URL.revokeObjectURL(url);
-                
-                const successMessage = exportFiltered 
-                    ? `تم تصدير ${allUsers.length} مستخدم (نتائج مفلترة) بنجاح!`
-                    : `تم تصدير ${allUsers.length} مستخدم بنجاح!`;
-                toast.success(successMessage, { id: 'export' });
-            } else {
-                toast.error('لا يوجد مستخدمي محتوى للتصدير', { id: 'export' });
-            }
-        } catch (error) {
-            console.error('Error exporting USER1 users:', error);
-            toast.error('حدث خطأ أثناء التصدير', { id: 'export' });
-        }
-    };
-
-    // Fetch users when tab changes or component mounts
-    useEffect(() => {
-        if (isLoggedIn && role === "ADMIN") {
-            let roleFilter = "";
-            if (activeTab === "users") {
-                roleFilter = "USER";
-            } else if (activeTab === "user1") {
-                roleFilter = "USER1";
-            } else if (activeTab === "admins") {
-                roleFilter = "ADMIN";
-            } else {
-                roleFilter = filters.role;
-            }
-            
-            console.log('Tab changed or component mounted, fetching users with role filter:', roleFilter);
-            console.log('Active tab:', activeTab);
-            
-            setCurrentPage(1); // Reset to first page when tab changes
-            
-            dispatch(getAllUsers({ 
-                page: 1, 
-                limit: pageSize, 
-                role: roleFilter,
-                status: filters.status,
-                stage: filters.stage,
-                search: filters.search 
-            }));
-        }
-    }, [activeTab, dispatch, isLoggedIn, role, filters.status, filters.stage, filters.search, pageSize]);
 
     const handleViewUser = async (userId) => {
         setSelectedUserId(userId);
         setShowUserDetails(true);
-        setActiveTab("details");
+        setIsEditing(false);
+        setEditForm({});
+        setPasswordForm({ newPassword: '', confirmPassword: '' });
+        setShowPasswordChange(false);
+        setShowResetWalletsConfirm(false);
+        setShowResetCodesConfirm(false);
         
         try {
             await dispatch(getUserDetails(userId)).unwrap();
@@ -506,43 +268,126 @@ export default function AdminUserDashboard() {
         
         try {
             await dispatch(deleteUser(userToDelete)).unwrap();
-            toast.success("User deleted successfully!");
+            toast.success("تم حذف المستخدم بنجاح!");
             setShowDeleteConfirm(false);
             setUserToDelete(null);
+            setUserToDeleteInfo(null);
         } catch (error) {
             // Error is handled in useEffect
         }
     };
 
-    const handlePasswordReset = async () => {
-        if (!userToResetPassword || !newPassword || !confirmPassword) return;
-        
-        if (newPassword !== confirmPassword) {
-            toast.error("Passwords do not match!");
-            return;
-        }
-        
-        if (newPassword.length < 6) {
-            toast.error("Password must be at least 6 characters long!");
-            return;
-        }
-        
+    const handleEditUser = async () => {
         try {
-            const response = await axiosInstance.patch(`/admin/users/${userToResetPassword}/password`, {
-                newPassword
+            // Prepare the data, ensuring stage is properly handled
+            const userData = {
+                ...editForm,
+                stage: editForm.stage || null, // Convert empty string to null for stage
+                age: editForm.age ? parseInt(editForm.age) : undefined // Convert age to number
+            };
+
+            // Remove empty string values and undefined values that could cause validation issues
+            Object.keys(userData).forEach(key => {
+                if (userData[key] === '' || userData[key] === undefined) {
+                    delete userData[key];
+                }
             });
-            
-            if (response.data.success) {
-                toast.success("Password reset successfully!");
-                setShowPasswordResetModal(false);
-                setUserToResetPassword(null);
-                setNewPassword('');
-                setConfirmPassword('');
-                setShowNewPassword(false);
-                setShowConfirmPassword(false);
+
+            // Ensure required fields are present
+            if (!userData.fullName || !userData.username) {
+                toast.error("الاسم الكامل واسم المستخدم مطلوبان");
+                return;
             }
+
+            await dispatch(updateUser({ 
+                userId: selectedUserId, 
+                userData: userData
+            })).unwrap();
+            toast.success("تم تحديث معلومات المستخدم بنجاح!");
+            setIsEditing(false);
+            setEditForm({});
+            
+            // Refresh user details to show updated information
+            await dispatch(getUserDetails(selectedUserId)).unwrap();
         } catch (error) {
-            toast.error(error.response?.data?.message || "Failed to reset password");
+            console.error('Update user error:', error);
+            toast.error("فشل في تحديث معلومات المستخدم");
+        }
+    };
+
+    const handleStartEdit = (user) => {
+        setEditForm({
+            fullName: user.fullName || '',
+            username: user.username || '',
+            email: user.email || '',
+            phoneNumber: user.phoneNumber || '',
+            fatherPhoneNumber: user.fatherPhoneNumber || '',
+            governorate: user.governorate || '',
+            stage: user.stage?._id || null,
+            age: user.age || '',
+            role: user.role || 'USER',
+            isActive: user.isActive
+        });
+        setIsEditing(true);
+    };
+
+    const handleCancelEdit = () => {
+        setIsEditing(false);
+        setEditForm({});
+    };
+
+    const handlePasswordChange = async () => {
+        if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+            toast.error("كلمات المرور غير متطابقة");
+            return;
+        }
+        
+        if (passwordForm.newPassword.length < 6) {
+            toast.error("كلمة المرور يجب أن تكون 6 أحرف على الأقل");
+            return;
+        }
+
+        try {
+            await dispatch(updateUserPassword({ 
+                userId: selectedUserId, 
+                password: passwordForm.newPassword 
+            })).unwrap();
+            
+            toast.success("تم تغيير كلمة المرور بنجاح!");
+            setPasswordForm({ newPassword: '', confirmPassword: '' });
+            setShowPasswordChange(false);
+        } catch (error) {
+            console.error('Password change error:', error);
+            toast.error("فشل في تغيير كلمة المرور");
+        }
+    };
+
+    const handleResetAllWallets = async () => {
+        try {
+            await dispatch(resetAllUserWallets()).unwrap();
+            toast.success("تم إعادة تعيين جميع محافظ المستخدمين بنجاح!");
+            setShowResetWalletsConfirm(false);
+        } catch (error) {
+            toast.error("فشل في إعادة تعيين المحافظ");
+        }
+    };
+
+    const handleResetUserWallet = async (userId, userName) => {
+        try {
+            await dispatch(resetUserWallet(userId)).unwrap();
+            toast.success(`تم إعادة تعيين محفظة المستخدم ${userName} بنجاح!`);
+        } catch (error) {
+            toast.error("فشل في إعادة تعيين محفظة المستخدم");
+        }
+    };
+
+    const handleResetAllCodes = async () => {
+        try {
+            await dispatch(resetAllRechargeCodes()).unwrap();
+            toast.success("تم حذف جميع رموز الشحن بنجاح!");
+            setShowResetCodesConfirm(false);
+        } catch (error) {
+            toast.error("فشل في حذف رموز الشحن");
         }
     };
 
@@ -558,24 +403,14 @@ export default function AdminUserDashboard() {
 
     const getStatusColor = (isActive) => {
         return isActive 
-            ? 'text-green-600 bg-green-50 dark:bg-green-900/20'  
+            ? 'text-green-600 bg-green-50 dark:bg-green-900/20' 
             : 'text-red-600 bg-red-50 dark:bg-red-900/20';
     };
 
     const getRoleColor = (role) => {
-        if (role === 'ADMIN') {
-            return 'text-purple-600 bg-purple-50 dark:bg-purple-900/20';
-        } else if (role === 'USER1') {
-            return 'text-orange-600 bg-orange-50 dark:bg-orange-900/20';
-        } else {
-            return 'text-blue-600 bg-blue-50 dark:bg-blue-900/20';
-        }
-    };
-
-    const getNextRole = (currentRole) => {
-        if (currentRole === 'USER') return 'USER1';
-        if (currentRole === 'USER1') return 'ADMIN';
-        return 'USER';
+        return role === 'ADMIN' 
+            ? 'text-purple-600 bg-purple-50 dark:bg-purple-900/20' 
+            : 'text-blue-600 bg-blue-50 dark:bg-blue-900/20';
     };
 
     const getTransactionIcon = (type) => {
@@ -669,27 +504,12 @@ export default function AdminUserDashboard() {
                                 </div>
                             </div>
                         </div>
-
-                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
-                            <div className="flex items-center">
-                                <div className="p-3 rounded-full bg-orange-100 dark:bg-orange-900/20">
-                                    <FaUser className="h-6 w-6 text-orange-600" />
-                                </div>
-                                <div className="mr-4">
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">مستخدمي المحتوى</p>
-                                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.user1Users || 0}</p>
-                                </div>
-                            </div>
-                        </div>
                     </div>
 
                     {/* Tabs */}
                     <div className="flex space-x-4 space-x-reverse mb-6">
                         <button
-                            onClick={() => {
-                                console.log('Switching to users tab');
-                                setActiveTab("users");
-                            }}
+                            onClick={() => setActiveTab("users")}
                             className={`px-6 py-3 rounded-lg font-medium transition-colors ${
                                 activeTab === "users"
                                     ? "bg-indigo-600 text-white"
@@ -700,24 +520,7 @@ export default function AdminUserDashboard() {
                             الطلاب
                         </button>
                         <button
-                            onClick={() => {
-                                console.log('Switching to user1 tab');
-                                setActiveTab("user1");
-                            }}
-                            className={`px-6 py-3 rounded-lg font-medium transition-colors ${
-                                activeTab === "user1"
-                                    ? "bg-orange-600 text-white"
-                                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                            }`}
-                        >
-                            <FaUser className="inline mr-2" />
-                            مستخدمي المحتوى
-                        </button>
-                        <button
-                            onClick={() => {
-                                console.log('Switching to admins tab');
-                                setActiveTab("admins");
-                            }}
+                            onClick={() => setActiveTab("admins")}
                             className={`px-6 py-3 rounded-lg font-medium transition-colors ${
                                 activeTab === "admins"
                                     ? "bg-purple-600 text-white"
@@ -728,11 +531,8 @@ export default function AdminUserDashboard() {
                             المديرون
                         </button>
                         <button
-                            onClick={() => {
-                                console.log('Switching to all tab');
-                                setActiveTab("all");
-                            }}
-                            className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                            onClick={() => setActiveTab("all")}
+                            className={`px-6 py-3 rounded-lg font-medium transition-colors ${
                                 activeTab === "all"
                                     ? "bg-green-600 text-white"
                                     : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
@@ -743,64 +543,48 @@ export default function AdminUserDashboard() {
                         </button>
                     </div>
 
-                    {/* Page Size Selector and Create User Buttons */}
+                    {/* Create User Button */}
                     <div className="mb-6 flex justify-between items-center">
-                        <div className="flex items-center gap-3">
-                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                عدد العناصر في الصفحة:
-                            </label>
-                            <select
-                                value={pageSize}
-                                onChange={(e) => handlePageSizeChange(parseInt(e.target.value))}
-                                disabled={isChangingPage}
-                                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                <option value={10}>10</option>
-                                <option value={20}>20</option>
-                                <option value={50}>50</option>
-                                <option value={100}>100</option>
-                            </select>
-                            {isChangingPage && (
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600"></div>
-                            )}
-                        </div>
-                        
-                        <div className="flex gap-3">
+                        <div className="flex space-x-3 space-x-reverse">
                             <button
-                                onClick={() => setShowBulkUser1Modal(true)}
-                                className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg font-medium flex items-center gap-2 transition-colors duration-200 shadow-lg hover:shadow-xl"
+                                onClick={() => setShowResetWalletsConfirm(true)}
+                                disabled={actionLoading}
+                                className="bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white px-6 py-3 rounded-lg font-medium flex items-center gap-2 transition-colors duration-200 shadow-lg hover:shadow-xl"
+                                title="إعادة تعيين جميع محافظ المستخدمين"
                             >
-                                <FaUsers />
-                                إنشاء حسابات  متعددة لمستخدمي المحتوى
+                                <FaWallet />
+                                إعادة تعيين المحافظ
                             </button>
                             <button
-                                onClick={() => setShowCreateModal(true)}
-                                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium flex items-center gap-2 transition-colors duration-200 shadow-lg hover:shadow-xl"
+                                onClick={() => setShowResetCodesConfirm(true)}
+                                disabled={actionLoading}
+                                className="bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 text-white px-6 py-3 rounded-lg font-medium flex items-center gap-2 transition-colors duration-200 shadow-lg hover:shadow-xl"
+                                title="حذف جميع رموز الشحن"
                             >
-                                <FaPlus />
-                                إنشاء مستخدم جديد
+                                <FaTrash />
+                                حذف جميع الرموز
                             </button>
                         </div>
+                        <button
+                            onClick={() => setShowCreateModal(true)}
+                            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium flex items-center gap-2 transition-colors duration-200 shadow-lg hover:shadow-xl"
+                        >
+                            <FaPlus />
+                            إنشاء مستخدم جديد
+                        </button>
                     </div>
 
                     {/* Tab Content */}
                     <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700">
                         {activeTab === "users" && (
                             <div className="p-6">
-                                <div className="flex justify-between items-center mb-6">
-                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                                        الطلاب ومستخدمي المحتوى
-                                    </h3>
-                                    {pagination.total > 0 && (
-                                        <div className="text-sm text-gray-600 dark:text-gray-400">
-                                            إجمالي المستخدمين: {pagination.total} | الصفحة {pagination.currentPage} من {pagination.totalPages}
-                                        </div>
-                                    )}
-                                </div>
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
+                                    جميع المستخدمين
+                                </h3>
 
                                 {/* Filters */}
                                 <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                                 البحث
@@ -814,22 +598,23 @@ export default function AdminUserDashboard() {
                                                 placeholder="البحث بالاسم أو البريد الإلكتروني"
                                             />
                                         </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                الدور
-                                            </label>
-                                            <select
-                                                name="role"
-                                                value={filters.role}
-                                                onChange={handleFilterChange}
-                                                className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                            >
-                                                <option value="">جميع الأدوار</option>
-                                                <option value="USER">مستخدم</option>
-                                                <option value="USER1">مستخدم محتوى</option>
-                                                <option value="ADMIN">مدير</option>
-                                            </select>
-                                        </div>
+                                        {activeTab === "all" && (
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    الدور
+                                                </label>
+                                                <select
+                                                    name="role"
+                                                    value={filters.role}
+                                                    onChange={handleFilterChange}
+                                                    className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                >
+                                                    <option value="">جميع الأدوار</option>
+                                                    <option value="USER">مستخدم</option>
+                                                    <option value="ADMIN">مدير</option>
+                                                </select>
+                                            </div>
+                                        )}
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                                 الحالة
@@ -906,260 +691,6 @@ export default function AdminUserDashboard() {
                                                             <h4 className="font-semibold text-gray-900 dark:text-white">
                                                                 {user.fullName}
                                                             </h4>
-                                                            <span className={`inline-flex items-center px-2 py-2 rounded-full text-xs font-medium ${getRoleColor(user.role)}`}>
-                                                                {user.role}
-                                                            </span>
-                                                        </div>
-                                                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                                                            {user.email}
-                                                        </p>
-                                                        <p className="text-xs text-gray-400 dark:text-gray-500">
-                                                            {user.role === 'USER' && (
-                                                                <>
-                                                                    المحفظة: {user.walletBalance} جنيه مصري • المعاملات: {user.totalTransactions}
-                                                                    {user.stage && (
-                                                                        <span className="ml-2">• المرحلة: {user.stage.name}</span>
-                                                                    )}
-                                                                </>
-                                                            )}
-                                                            {user.role === 'ADMIN' && (
-                                                                <span>مدير النظام</span>
-                                                            )}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center space-x-2">
-                                                    <button
-                                                        onClick={() => {
-                                                            setUserToResetPassword(user);
-                                                            setShowPasswordResetModal(true);
-                                                        }}
-                                                        className="p-2 text-gray-500 hover:text-blue-600 transition-colors"
-                                                        title="إعادة تعيين كلمة المرور"
-                                                    >
-                                                        <FaKey />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleToggleStatus(user.id, user.isActive)}
-                                                        className="p-2 text-gray-500 hover:text-yellow-600 transition-colors"
-                                                        title={user.isActive ? "إلغاء التفعيل" : "تفعيل"}
-                                                    >
-                                                        {user.isActive ? <FaToggleOn /> : <FaToggleOff />}
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleUpdateRole(user.id, user.role === 'ADMIN' ? 'USER' : 'ADMIN')}
-                                                        className="p-2 text-gray-500 hover:text-purple-600 transition-colors"
-                                                        title="تغيير الدور"
-                                                    >
-                                                        <FaUserCog />
-                                                    </button>
-                                                    {user.role !== 'ADMIN' && (
-                                                        <button
-                                                            onClick={() => {
-                                                                setUserToDelete(user.id);
-                                                                setShowDeleteConfirm(true);
-                                                            }}
-                                                            className="p-2 text-gray-500 hover:text-red-600 transition-colors"
-                                                            title="حذف المستخدم"
-                                                        >
-                                                            <FaTrash />
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-
-                                {/* Pagination */}
-                                {pagination.totalPages > 1 && (
-                                    <div className="mt-6 flex flex-col items-center gap-4">
-                                        {/* Page Info */}
-                                        <div className="text-sm text-gray-600 dark:text-gray-400">
-                                            عرض {((pagination.currentPage - 1) * pageSize) + 1} إلى {Math.min(pagination.currentPage * pageSize, pagination.total)} من أصل {pagination.total} مستخدم
-                                        </div>
-                                        
-                                        {/* Pagination Controls */}
-                                        <div className="flex items-center gap-2">
-                                            {/* Previous Page */}
-                                            <button
-                                                onClick={() => handlePageChange(pagination.currentPage - 1)}
-                                                disabled={pagination.currentPage === 1}
-                                                className="px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                                            >
-                                                السابق
-                                            </button>
-                                            
-                                            {/* Page Numbers */}
-                                            <div className="flex space-x-1">
-                                                {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
-                                                    let pageNum;
-                                                    if (pagination.totalPages <= 5) {
-                                                        pageNum = i + 1;
-                                                    } else if (pagination.currentPage <= 3) {
-                                                        pageNum = i + 1;
-                                                    } else if (pagination.currentPage >= pagination.totalPages - 2) {
-                                                        pageNum = pagination.totalPages - 4 + i;
-                                                    } else {
-                                                        pageNum = pagination.currentPage - 2 + i;
-                                                    }
-                                                    
-                                                    return (
-                                                        <button
-                                                            key={pageNum}
-                                                            onClick={() => handlePageChange(pageNum)}
-                                                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                                                                pagination.currentPage === pageNum
-                                                                    ? "bg-indigo-600 text-white"
-                                                                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                                                            }`}
-                                                        >
-                                                            {pageNum}
-                                                        </button>
-                                                    );
-                                                })}
-                                            </div>
-                                            
-                                            {/* Next Page */}
-                                            <button
-                                                onClick={() => handlePageChange(pagination.currentPage + 1)}
-                                                disabled={pagination.currentPage === pagination.totalPages}
-                                                className="px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                                            >
-                                                التالي
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {activeTab === "user1" && (
-                            <div className="p-6">
-                                <div className="flex justify-between items-center mb-6">
-                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                                        مستخدمي المحتوى
-                                    </h3>
-                                    <div className="flex items-center gap-3">
-                                        {pagination.total > 0 && (
-                                            <div className="text-sm text-gray-600 dark:text-gray-400">
-                                                إجمالي المستخدمين: {pagination.total} | الصفحة {pagination.currentPage} من {pagination.totalPages}
-                                            </div>
-                                        )}
-                                        <div className="flex gap-2">
-                                            <button
-                                                onClick={exportUser1ToExcel}
-                                                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors duration-200 shadow-lg hover:shadow-xl"
-                                                title="تصدير جميع مستخدمي المحتوى إلى Excel"
-                                            >
-                                                <FaFileExcel />
-                                                تصدير الكل
-                                            </button>
-                                            {(filters.search || filters.status || filters.stage) && (
-                                                <button
-                                                    onClick={() => exportUser1ToExcel(true)}
-                                                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors duration-200 shadow-lg hover:shadow-xl"
-                                                    title="تصدير النتائج المفلترة فقط"
-                                                >
-                                                    <FaFileExcel />
-                                                    تصدير النتائج
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                {/* Filters */}
-                                <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                البحث
-                                            </label>
-                                            <input
-                                                type="text"
-                                                name="search"
-                                                value={filters.search}
-                                                onChange={handleFilterChange}
-                                                className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                                                placeholder="البحث بالاسم أو البريد الإلكتروني"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                الحالة
-                                            </label>
-                                            <select
-                                                name="status"
-                                                value={filters.status}
-                                                onChange={handleFilterChange}
-                                                className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
-                                            >
-                                                <option value="">جميع الحالات</option>
-                                                <option value="active">نشط</option>
-                                                <option value="inactive">غير نشط</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                المرحلة الدراسية
-                                            </label>
-                                            <select
-                                                name="stage"
-                                                value={filters.stage}
-                                                onChange={handleFilterChange}
-                                                className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
-                                            >
-                                                <option value="">جميع المراحل</option>
-                                                {stages.map(stage => (
-                                                    <option key={stage._id} value={stage._id}>{stage.name}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                        <div className="flex items-end">
-                                            <button
-                                                onClick={() => {
-                                                    console.log('Filter button clicked (user1)!');
-                                                    handleApplyFilters();
-                                                }}
-                                                className="w-full px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm transition-colors"
-                                            >
-                                                <FaFilter className="inline mr-2" />
-                                                تطبيق المرشحات
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* USER1 Users List */}
-                                {loading ? (
-                                    <div className="flex justify-center items-center py-8">
-                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
-                                        <span className="mr-3 text-gray-600 dark:text-gray-400">جاري تحميل مستخدمي المحتوى...</span>
-                                    </div>
-                                ) : users.length === 0 ? (
-                                    <div className="text-center py-8">
-                                        <FaUser className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                                        <p className="text-gray-500 dark:text-gray-400">
-                                            لا يوجد مستخدمي محتوى حالياً
-                                        </p>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-4">
-                                        {users.map((user) => (
-                                            <div
-                                                key={user.id}
-                                                className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600"
-                                            >
-                                                <div className="flex items-center space-x-4">
-                                                    <div className={`p-2 rounded-full ${getStatusColor(user.isActive)}`}>
-                                                        {user.isActive ? <FaUserCheck /> : <FaUserTimes />}
-                                                    </div>
-                                                    <div>
-                                                        <div className="flex items-center space-x-2">
-                                                            <h4 className="font-semibold text-gray-900 dark:text-white">
-                                                                {user.fullName}
-                                                            </h4>
                                                             <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getRoleColor(user.role)}`}>
                                                                 {user.role}
                                                             </span>
@@ -1168,30 +699,23 @@ export default function AdminUserDashboard() {
                                                             {user.email}
                                                         </p>
                                                         <p className="text-xs text-gray-400 dark:text-gray-500">
-                                                            {(user.role === 'USER' || user.role === 'USER1') && (
-                                                                <>
-                                                                    المحفظة: {user.walletBalance} جنيه مصري • المعاملات: {user.totalTransactions}
-                                                                    {user.stage && (
-                                                                        <span className="ml-2">• المرحلة: {user.stage.name}</span>
-                                                                    )}
-                                                                </>
+                                                            المحفظة: {user.walletBalance} جنيه مصري • المعاملات: {user.totalTransactions}
+                                                            {user.stage && user.stage.name && (
+                                                                <span className="ml-2">• المرحلة: {user.stage.name}</span>
                                                             )}
-                                                            {user.role === 'ADMIN' && (
-                                                                <span>مدير النظام</span>
+                                                            {user.category && user.category.name && (
+                                                                <span className="ml-2">• الفئة: {user.category.name}</span>
                                                             )}
                                                         </p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center space-x-2">
                                                     <button
-                                                        onClick={() => {
-                                                            setUserToResetPassword(user);
-                                                            setShowPasswordResetModal(true);
-                                                        }}
+                                                        onClick={() => handleViewUser(user.id)}
                                                         className="p-2 text-gray-500 hover:text-blue-600 transition-colors"
-                                                        title="إعادة تعيين كلمة المرور"
+                                                        title="عرض التفاصيل"
                                                     >
-                                                        <FaKey />
+                                                        <FaEye />
                                                     </button>
                                                     <button
                                                         onClick={() => handleToggleStatus(user.id, user.isActive)}
@@ -1207,81 +731,51 @@ export default function AdminUserDashboard() {
                                                     >
                                                         <FaUserCog />
                                                     </button>
-                                                    {user.role !== 'ADMIN' && (
-                                                        <button
-                                                            onClick={() => {
-                                                                setUserToDelete(user.id);
-                                                                setShowDeleteConfirm(true);
-                                                            }}
-                                                            className="p-2 text-gray-500 hover:text-red-600 transition-colors"
-                                                            title="حذف المستخدم"
-                                                        >
-                                                            <FaTrash />
-                                                        </button>
-                                                    )}
+                                                    <button
+                                                        onClick={() => handleResetUserWallet(user.id, user.fullName)}
+                                                        className="p-2 text-gray-500 hover:text-orange-600 transition-colors"
+                                                        title="إعادة تعيين المحفظة"
+                                                    >
+                                                        <FaWallet />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            setUserToDelete(user.id);
+                                                            setUserToDeleteInfo(user);
+                                                            setShowDeleteConfirm(true);
+                                                        }}
+                                                        className="p-2 text-gray-500 hover:text-red-600 transition-colors"
+                                                        title="حذف المستخدم"
+                                                    >
+                                                        <FaTrash />
+                                                    </button>
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
                                 )}
 
-                                {/* Pagination for USER1 */}
+                                {/* Pagination */}
                                 {pagination.totalPages > 1 && (
-                                    <div className="mt-6 flex flex-col items-center gap-4">
-                                        {/* Page Info */}
-                                        <div className="text-sm text-gray-600 dark:text-gray-400">
-                                            عرض {((pagination.currentPage - 1) * pageSize) + 1} إلى {Math.min(pagination.currentPage * pageSize, pagination.total)} من أصل {pagination.total} مستخدم
-                                        </div>
-                                        
-                                        {/* Pagination Controls */}
-                                        <div className="flex items-center gap-2">
-                                            {/* Previous Page */}
-                                            <button
-                                                onClick={() => handlePageChange(pagination.currentPage - 1)}
-                                                disabled={pagination.currentPage === 1}
-                                                className="px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                                            >
-                                                السابق
-                                            </button>
-                                            
-                                            {/* Page Numbers */}
-                                            <div className="flex space-x-1">
-                                                {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
-                                                    let pageNum;
-                                                    if (pagination.totalPages <= 5) {
-                                                        pageNum = i + 1;
-                                                    } else if (pagination.currentPage <= 3) {
-                                                        pageNum = i + 1;
-                                                    } else if (pagination.currentPage >= pagination.totalPages - 2) {
-                                                        pageNum = pagination.totalPages - 4 + i;
-                                                    } else {
-                                                        pageNum = pagination.currentPage - 2 + i;
-                                                    }
-                                                    
-                                                    return (
-                                                        <button
-                                                            key={pageNum}
-                                                            onClick={() => handlePageChange(pageNum)}
-                                                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                                                                pagination.currentPage === pageNum
-                                                                    ? "bg-orange-600 text-white"
-                                                                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                                                            }`}
-                                                        >
-                                                            {pageNum}
-                                                        </button>
-                                                    );
-                                                })}
-                                            </div>
-                                            
-                                            {/* Next Page */}
-                                            <button
-                                                onClick={() => handlePageChange(pagination.currentPage + 1)}
-                                                disabled={pagination.currentPage === pagination.totalPages}
-                                                className="px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                                            >
-                                                التالي
-                                            </button>
+                                    <div className="mt-6 flex justify-center">
+                                        <div className="flex space-x-2">
+                                            {Array.from({ length: pagination.totalPages }, (_, i) => (
+                                                <button
+                                                    key={i + 1}
+                                                    onClick={() => dispatch(getAllUsers({ 
+                                                        page: i + 1, 
+                                                        limit: 20, 
+                                                        ...filters 
+                                                    }))}
+                                                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                                        pagination.currentPage === i + 1
+                                                            ? "bg-indigo-600 text-white"
+                                                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                                                    }`}
+                                                >
+                                                    {i + 1}
+                                                </button>
+                                            ))}
                                         </div>
                                     </div>
                                 )}
@@ -1290,16 +784,10 @@ export default function AdminUserDashboard() {
 
                         {activeTab === "admins" && (
                             <div className="p-6">
-                                <div className="flex justify-between items-center mb-6">
-                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                                        المديرون
-                                    </h3>
-                                    {pagination.total > 0 && (
-                                        <div className="text-sm text-gray-600 dark:text-gray-400">
-                                            إجمالي المستخدمين: {pagination.total} | الصفحة {pagination.currentPage} من {pagination.totalPages}
-                                        </div>
-                                    )}
-                                </div>
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
+                                    المديرون
+                                </h3>
+
                                 {/* Filters */}
                                 <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -1350,16 +838,12 @@ export default function AdminUserDashboard() {
                                 {loading ? (
                                     <div className="flex justify-center items-center py-8">
                                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
-                                        <span className="mr-3 text-gray-600 dark:text-gray-400">جاري تحميل المديرين...</span>
                                     </div>
                                 ) : users.length === 0 ? (
                                     <div className="text-center py-8">
                                         <FaCrown className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                                         <p className="text-gray-500 dark:text-gray-400">
                                             لا يوجد مديرون حالياً
-                                        </p>
-                                        <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">
-                                            تم البحث عن المستخدمين بدور ADMIN
                                         </p>
                                     </div>
                                 ) : (
@@ -1386,19 +870,18 @@ export default function AdminUserDashboard() {
                                                             {user.email}
                                                         </p>
                                                         <p className="text-xs text-gray-400 dark:text-gray-500">
-                                                            {user.role === 'USER' && (
-                                                                <>
-                                                                    المحفظة: {user.walletBalance} جنيه مصري • المعاملات: {user.totalTransactions}
-                                                                </>
-                                                            )}
-                                                            {user.role === 'ADMIN' && (
-                                                                <span>مدير النظام</span>
-                                                            )}
+                                                            المحفظة: {user.walletBalance} جنيه مصري • المعاملات: {user.totalTransactions}
                                                         </p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center space-x-2">
-                                                   
+                                                    <button
+                                                        onClick={() => handleViewUser(user.id)}
+                                                        className="p-2 text-gray-500 hover:text-blue-600 transition-colors"
+                                                        title="عرض التفاصيل"
+                                                    >
+                                                        <FaEye />
+                                                    </button>
                                                     <button
                                                         onClick={() => handleToggleStatus(user.id, user.isActive)}
                                                         className="p-2 text-gray-500 hover:text-yellow-600 transition-colors"
@@ -1413,70 +896,16 @@ export default function AdminUserDashboard() {
                                                     >
                                                         <FaUserCog />
                                                     </button>
+                                                    <button
+                                                        onClick={() => handleResetUserWallet(user.id, user.fullName)}
+                                                        className="p-2 text-gray-500 hover:text-orange-600 transition-colors"
+                                                        title="إعادة تعيين المحفظة"
+                                                    >
+                                                        <FaWallet />
+                                                    </button>
                                                 </div>
                                             </div>
                                         ))}
-                                    </div>
-                                )}
-
-                                {/* Pagination for Admins */}
-                                {pagination.totalPages > 1 && (
-                                    <div className="mt-6 flex flex-col items-center gap-4">
-                                        {/* Page Info */}
-                                        <div className="text-sm text-gray-600 dark:text-gray-400">
-                                            عرض {((pagination.currentPage - 1) * pageSize) + 1} إلى {Math.min(pagination.currentPage * pageSize, pagination.total)} من أصل {pagination.total} مستخدم
-                                        </div>
-                                        
-                                        {/* Pagination Controls */}
-                                        <div className="flex items-center gap-2">
-                                            {/* Previous Page */}
-                                            <button
-                                                onClick={() => handlePageChange(pagination.currentPage - 1)}
-                                                disabled={pagination.currentPage === 1}
-                                                className="px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                                            >
-                                                السابق
-                                            </button>
-                                            
-                                            {/* Page Numbers */}
-                                            <div className="flex space-x-1">
-                                                {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
-                                                    let pageNum;
-                                                    if (pagination.totalPages <= 5) {
-                                                        pageNum = i + 1;
-                                                    } else if (pagination.currentPage <= 3) {
-                                                        pageNum = i + 1;
-                                                    } else if (pagination.currentPage >= pagination.totalPages - 2) {
-                                                        pageNum = pagination.totalPages - 4 + i;
-                                                    } else {
-                                                        pageNum = pagination.currentPage - 2 + i;
-                                                    }
-                                                    
-                                                    return (
-                                                        <button
-                                                            key={pageNum}
-                                                            onClick={() => handlePageChange(pageNum)}
-                                                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                                                                pagination.currentPage === pageNum
-                                                                    ? "bg-purple-600 text-white"
-                                                                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                                                            }`}
-                                                        >
-                                                            {pageNum}
-                                                        </button>
-                                                    );
-                                                })}
-                                            </div>
-                                            
-                                            {/* Next Page */}
-                                            <button
-                                                onClick={() => handlePageChange(pagination.currentPage + 1)}
-                                                disabled={pagination.currentPage === pagination.totalPages}
-                                                className="px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                                            >
-                                                التالي
-                                            </button>
-                                        </div>
                                     </div>
                                 )}
                             </div>
@@ -1484,20 +913,13 @@ export default function AdminUserDashboard() {
 
                         {activeTab === "all" && (
                             <div className="p-6">
-                                <div className="flex justify-between items-center mb-6">
-                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                                        جميع المستخدمين
-                                    </h3>
-                                    {pagination.total > 0 && (
-                                        <div className="text-sm text-gray-600 dark:text-gray-400">
-                                            إجمالي المستخدمين: {pagination.total} | الصفحة {pagination.currentPage} من {pagination.totalPages}
-                                        </div>
-                                    )}
-                                </div>
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
+                                    جميع المستخدمين
+                                </h3>
 
                                 {/* Filters */}
                                 <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                                 البحث
@@ -1523,7 +945,6 @@ export default function AdminUserDashboard() {
                                             >
                                                 <option value="">جميع الأدوار</option>
                                                 <option value="USER">مستخدم</option>
-                                                <option value="USER1">مستخدم محتوى</option>
                                                 <option value="ADMIN">مدير</option>
                                             </select>
                                         </div>
@@ -1543,7 +964,7 @@ export default function AdminUserDashboard() {
                                             </select>
                                         </div>
                                         <div>
-                                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                                 المرحلة الدراسية
                                             </label>
                                             <select
@@ -1609,30 +1030,23 @@ export default function AdminUserDashboard() {
                                                             {user.email}
                                                         </p>
                                                         <p className="text-xs text-gray-400 dark:text-gray-500">
-                                                            {user.role === 'USER' && (
-                                                                <>
-                                                                    المحفظة: {user.walletBalance} جنيه مصري • المعاملات: {user.totalTransactions}
-                                                                    {user.stage && (
-                                                                        <span className="ml-2">• المرحلة: {user.stage.name}</span>
-                                                                    )}
-                                                                </>
+                                                            المحفظة: {user.walletBalance} جنيه مصري • المعاملات: {user.totalTransactions}
+                                                            {user.stage && user.stage.name && (
+                                                                <span className="ml-2">• المرحلة: {user.stage.name}</span>
                                                             )}
-                                                            {user.role === 'ADMIN' && (
-                                                                <span>مدير النظام</span>
+                                                            {user.category && user.category.name && (
+                                                                <span className="ml-2">• الفئة: {user.category.name}</span>
                                                             )}
                                                         </p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center space-x-2">
                                                     <button
-                                                        onClick={() => {
-                                                            setUserToResetPassword(user);
-                                                            setShowPasswordResetModal(true);
-                                                        }}
+                                                        onClick={() => handleViewUser(user.id)}
                                                         className="p-2 text-gray-500 hover:text-blue-600 transition-colors"
-                                                        title="إعادة تعيين كلمة المرور"
+                                                        title="عرض التفاصيل"
                                                     >
-                                                        <FaKey />
+                                                        <FaEye />
                                                     </button>
                                                     <button
                                                         onClick={() => handleToggleStatus(user.id, user.isActive)}
@@ -1648,82 +1062,27 @@ export default function AdminUserDashboard() {
                                                     >
                                                         <FaUserCog />
                                                     </button>
-                                                    {user.role !== 'ADMIN' && (
-                                                        <button
-                                                            onClick={() => {
-                                                                setUserToDelete(user.id);
-                                                                setShowDeleteConfirm(true);
-                                                            }}
-                                                            className="p-2 text-gray-500 hover:text-red-600 transition-colors"
-                                                            title="حذف المستخدم"
-                                                        >
-                                                            <FaTrash />
-                                                        </button>
-                                                    )}
+                                                    <button
+                                                        onClick={() => handleResetUserWallet(user.id, user.fullName)}
+                                                        className="p-2 text-gray-500 hover:text-orange-600 transition-colors"
+                                                        title="إعادة تعيين المحفظة"
+                                                    >
+                                                        <FaWallet />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            setUserToDelete(user.id);
+                                                            setUserToDeleteInfo(user);
+                                                            setShowDeleteConfirm(true);
+                                                        }}
+                                                        className="p-2 text-gray-500 hover:text-red-600 transition-colors"
+                                                        title="حذف المستخدم"
+                                                    >
+                                                        <FaTrash />
+                                                    </button>
                                                 </div>
                                             </div>
                                         ))}
-                                    </div>
-                                )}
-
-                                {/* Pagination for All Users */}
-                                {pagination.totalPages > 1 && (
-                                    <div className="mt-6 flex flex-col items-center gap-4">
-                                        {/* Page Info */}
-                                        <div className="text-sm text-gray-600 dark:text-gray-400">
-                                            عرض {((pagination.currentPage - 1) * pageSize) + 1} إلى {Math.min(pagination.currentPage * pageSize, pagination.total)} من أصل {pagination.total} مستخدم
-                                        </div>
-                                        
-                                        {/* Pagination Controls */}
-                                        <div className="flex items-center gap-2">
-                                            {/* Previous Page */}
-                                            <button
-                                                onClick={() => handlePageChange(pagination.currentPage - 1)}
-                                                disabled={pagination.currentPage === 1}
-                                                className="px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                                            >
-                                                السابق
-                                            </button>
-                                            
-                                            {/* Page Numbers */}
-                                            <div className="flex space-x-1">
-                                                {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
-                                                    let pageNum;
-                                                    if (pagination.totalPages <= 5) {
-                                                        pageNum = i + 1;
-                                                    } else if (pagination.currentPage <= 3) {
-                                                        pageNum = i + 1;
-                                                    } else if (pagination.currentPage >= pagination.totalPages - 2) {
-                                                        pageNum = pagination.totalPages - 4 + i;
-                                                    } else {
-                                                        pageNum = pagination.currentPage - 2 + i;
-                                                    }
-                                                    
-                                                    return (
-                                                        <button
-                                                            key={pageNum}
-                                                            onClick={() => handlePageChange(pageNum)}
-                                                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                                                                pagination.currentPage === pageNum
-                                                                    ? "bg-green-600 text-white"
-                                                                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                                                            }`}
-                                                        >
-                                                            {pageNum}
-                                                        </button>
-                                                    );
-                                                })}
-                                            </div>
-                                            
-                                            {/* Next Page */}
-                                            <button
-                                                onClick={() => handlePageChange(pagination.currentPage + 1)}
-                                                disabled={pagination.currentPage === pagination.totalPages}
-                                                className="px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                                            >
-                                                التالي
-                                            </button>
-                                        </div>
                                     </div>
                                 )}
                             </div>
@@ -1790,17 +1149,6 @@ export default function AdminUserDashboard() {
                                                 className="ml-2"
                                             />
                                             طالب (USER)
-                                        </label>
-                                        <label className="flex items-center">
-                                            <input
-                                                type="radio"
-                                                name="role"
-                                                value="USER1"
-                                                checked={createUserForm.role === 'USER1'}
-                                                onChange={(e) => setCreateUserForm({...createUserForm, role: e.target.value})}
-                                                className="ml-2"
-                                            />
-                                            مستخدم محتوى (USER1)
                                         </label>
                                         <label className="flex items-center">
                                             <input
@@ -1876,11 +1224,9 @@ export default function AdminUserDashboard() {
                                 </div>
 
                                 {/* User-specific fields */}
-                                {(createUserForm.role === 'USER' || createUserForm.role === 'USER1') && (
+                                {createUserForm.role === 'USER' && (
                                     <div className="space-y-4 border-t pt-4">
-                                        <h4 className="font-medium text-gray-900 dark:text-white">
-                                            {createUserForm.role === 'USER' ? 'معلومات إضافية للطلاب' : 'معلومات إضافية لمستخدمي المحتوى'}
-                                        </h4>
+                                        <h4 className="font-medium text-gray-900 dark:text-white">معلومات إضافية للطلاب</h4>
                                         
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
@@ -2007,128 +1353,595 @@ export default function AdminUserDashboard() {
                             <div className="flex items-center space-x-3 mb-4">
                                 <FaExclamationTriangle className="h-8 w-8 text-red-500" />
                                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                                    Delete User
+                                    حذف المستخدم
                                 </h3>
                             </div>
-                            <p className="text-gray-600 dark:text-gray-300 mb-6">
-                                Are you sure you want to delete this user? This action cannot be undone.
-                            </p>
+                            <div className="mb-6">
+                                {userToDeleteInfo && (
+                                    <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                                        <p className="font-medium text-gray-900 dark:text-white">
+                                            {userToDeleteInfo.fullName}
+                                        </p>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                                            {userToDeleteInfo.email}
+                                        </p>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                                            الدور: {userToDeleteInfo.role === 'ADMIN' ? 'مدير' : 'مستخدم'}
+                                        </p>
+                                    </div>
+                                )}
+                                <p className="text-gray-600 dark:text-gray-300">
+                                    {userToDeleteInfo?.role === 'ADMIN' 
+                                        ? 'هل أنت متأكد من حذف هذا المدير؟ هذا الإجراء لا يمكن التراجع عنه.'
+                                        : 'هل أنت متأكد من حذف هذا المستخدم؟ هذا الإجراء لا يمكن التراجع عنه.'
+                                    }
+                                </p>
+                                {userToDeleteInfo?.role === 'ADMIN' && (
+                                    <p className="text-sm text-orange-600 dark:text-orange-400 mt-2">
+                                        ⚠️ تحذير: حذف مدير قد يؤثر على إدارة النظام
+                                    </p>
+                                )}
+                            </div>
                             <div className="flex space-x-3">
                                 <button
-                                    onClick={() => setShowDeleteConfirm(false)}
-                                    className="flex-1 px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-lg transition-colors"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={handleDeleteUser}
-                                    className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
-                                >
-                                    Delete
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Password Reset Modal */}
-                {showPasswordResetModal && userToResetPassword && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" dir="rtl">
-                        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
-                            <div className="flex items-center space-x-3 mb-4">
-                                <FaKey className="h-8 w-8 text-blue-500" />
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                                    إعادة تعيين كلمة المرور
-                                </h3>
-                            </div>
-                            <p className="text-gray-600 dark:text-gray-300 mb-4">
-                                إعادة تعيين كلمة المرور للمستخدم: <strong>{userToResetPassword.fullName}</strong>
-                            </p>
-                            
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        كلمة المرور الجديدة
-                                    </label>
-                                    <div className="relative">
-                                        <input
-                                            type={showNewPassword ? "text" : "password"}
-                                            value={newPassword}
-                                            onChange={(e) => setNewPassword(e.target.value)}
-                                            className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-                                            placeholder="أدخل كلمة المرور الجديدة"
-                                            minLength={6}
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowNewPassword(!showNewPassword)}
-                                            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-                                        >
-                                            {showNewPassword ? <FaEyeSlash /> : <FaEye />}
-                                        </button>
-                                    </div>
-                                </div>
-                                
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        تأكيد كلمة المرور
-                                    </label>
-                                    <div className="relative">
-                                        <input
-                                            type={showConfirmPassword ? "text" : "password"}
-                                            value={confirmPassword}
-                                            onChange={(e) => setConfirmPassword(e.target.value)}
-                                            className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-                                            placeholder="أعد إدخال كلمة المرور الجديدة"
-                                            minLength={6}
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-                                        >
-                                            {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div className="flex space-x-3 space-x-reverse mt-6">
-                                <button
                                     onClick={() => {
-                                        setShowPasswordResetModal(false);
-                                        setUserToResetPassword(null);
-                                        setNewPassword('');
-                                        setConfirmPassword('');
-                                        setShowNewPassword(false);
-                                        setShowConfirmPassword(false);
+                                        setShowDeleteConfirm(false);
+                                        setUserToDeleteInfo(null);
                                     }}
                                     className="flex-1 px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-lg transition-colors"
                                 >
                                     إلغاء
                                 </button>
                                 <button
-                                    onClick={handlePasswordReset}
-                                    disabled={!newPassword || !confirmPassword || newPassword !== confirmPassword || newPassword.length < 6}
-                                    className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    onClick={handleDeleteUser}
+                                    className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
                                 >
-                                    إعادة تعيين كلمة المرور
+                                    حذف
                                 </button>
                             </div>
                         </div>
                     </div>
                 )}
 
-                {/* Bulk USER1 Creation Modal */}
-                {showBulkUser1Modal && (
-                    <BulkUser1Creator
-                        onClose={() => setShowBulkUser1Modal(false)}
-                        onSuccess={() => {
-                            setShowBulkUser1Modal(false);
-                            // Refresh users list
-                            handleApplyFilters();
-                        }}
-                    />
+                {/* User Details Modal */}
+                {showUserDetails && selectedUser && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" dir="rtl">
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+                            {/* Modal Header */}
+                            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center space-x-4">
+                                        <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
+                                            <span className="text-white text-2xl font-bold">
+                                                {selectedUser.fullName?.charAt(0)?.toUpperCase() || "U"}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                                                {selectedUser.fullName}
+                                            </h3>
+                                            <p className="text-gray-600 dark:text-gray-400">
+                                                {selectedUser.email}
+                                            </p>
+                                            <div className="flex items-center space-x-2 mt-2">
+                                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getRoleColor(selectedUser.role)}`}>
+                                                    {selectedUser.role === 'ADMIN' ? 'مدير' : 'مستخدم'}
+                                                </span>
+                                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(selectedUser.isActive)}`}>
+                                                    {selectedUser.isActive ? 'نشط' : 'غير نشط'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        {!isEditing ? (
+                                            <button
+                                                onClick={() => handleStartEdit(selectedUser)}
+                                                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                                            >
+                                                <FaEdit />
+                                                تعديل
+                                            </button>
+                                        ) : (
+                                            <>
+                                                <button
+                                                    onClick={handleEditUser}
+                                                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                                                >
+                                                    <FaSave />
+                                                    حفظ
+                                                </button>
+                                                <button
+                                                    onClick={handleCancelEdit}
+                                                    className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                                                >
+                                                    <FaTimes />
+                                                    إلغاء
+                                                </button>
+                                            </>
+                                        )}
+                                        <button
+                                            onClick={() => {
+                                                setShowUserDetails(false);
+                                                setIsEditing(false);
+                                                setEditForm({});
+                                                setPasswordForm({ newPassword: '', confirmPassword: '' });
+                                                setShowPasswordChange(false);
+                                                setShowResetWalletsConfirm(false);
+                                                setShowResetCodesConfirm(false);
+                                            }}
+                                            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                                        >
+                                            ×
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Modal Content */}
+                            <div className="p-6 space-y-6">
+                                {/* User Statistics */}
+                                {userStats && (
+                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                        <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-200 dark:border-blue-800">
+                                            <div className="flex items-center space-x-3">
+                                                <FaWallet className="text-blue-600 text-xl" />
+                                                <div>
+                                                    <p className="text-sm text-blue-600 dark:text-blue-400">رصيد المحفظة</p>
+                                                    <p className="text-lg font-bold text-blue-900 dark:text-blue-100">
+                                                        {userStats.walletBalance || 0} جنيه مصري
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-xl border border-green-200 dark:border-green-800">
+                                            <div className="flex items-center space-x-3">
+                                                <FaCreditCard className="text-green-600 text-xl" />
+                                                <div>
+                                                    <p className="text-sm text-green-600 dark:text-green-400">إجمالي المعاملات</p>
+                                                    <p className="text-lg font-bold text-green-900 dark:text-green-100">
+                                                        {userStats.totalTransactions || 0}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-xl border border-purple-200 dark:border-purple-800">
+                                            <div className="flex items-center space-x-3">
+                                                <FaGraduationCap className="text-purple-600 text-xl" />
+                                                <div>
+                                                    <p className="text-sm text-purple-600 dark:text-purple-400">الكورسات المشتراة</p>
+                                                    <p className="text-lg font-bold text-purple-900 dark:text-purple-100">
+                                                        {userStats.purchasedCourses || 0}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-xl border border-orange-200 dark:border-orange-800">
+                                            <div className="flex items-center space-x-3">
+                                                <FaCalendarAlt className="text-orange-600 text-xl" />
+                                                <div>
+                                                    <p className="text-sm text-orange-600 dark:text-orange-400">تاريخ التسجيل</p>
+                                                    <p className="text-lg font-bold text-orange-900 dark:text-orange-100">
+                                                        {formatDate(selectedUser.createdAt)}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Personal Information */}
+                                <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-6">
+                                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center space-x-2">
+                                        <FaUser className="text-blue-600" />
+                                        <span>المعلومات الشخصية</span>
+                                    </h4>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-gray-600 dark:text-gray-400">الاسم الكامل</label>
+                                            {isEditing ? (
+                                                <input
+                                                    type="text"
+                                                    value={editForm.fullName}
+                                                    onChange={(e) => setEditForm({...editForm, fullName: e.target.value})}
+                                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                                />
+                                            ) : (
+                                                <p className="text-gray-900 dark:text-white font-medium">{selectedUser.fullName || 'غير محدد'}</p>
+                                            )}
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-gray-600 dark:text-gray-400">اسم المستخدم</label>
+                                            {isEditing ? (
+                                                <input
+                                                    type="text"
+                                                    value={editForm.username}
+                                                    onChange={(e) => setEditForm({...editForm, username: e.target.value})}
+                                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                                />
+                                            ) : (
+                                                <p className="text-gray-900 dark:text-white font-medium">{selectedUser.username || 'غير محدد'}</p>
+                                            )}
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-gray-600 dark:text-gray-400">البريد الإلكتروني</label>
+                                            {isEditing ? (
+                                                <input
+                                                    type="email"
+                                                    value={editForm.email}
+                                                    onChange={(e) => setEditForm({...editForm, email: e.target.value})}
+                                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                                />
+                                            ) : (
+                                                <p className="text-gray-900 dark:text-white font-medium">{selectedUser.email}</p>
+                                            )}
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-gray-600 dark:text-gray-400">رقم الهاتف</label>
+                                            {isEditing ? (
+                                                <input
+                                                    type="tel"
+                                                    value={editForm.phoneNumber}
+                                                    onChange={(e) => setEditForm({...editForm, phoneNumber: e.target.value})}
+                                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                                />
+                                            ) : (
+                                                <p className="text-gray-900 dark:text-white font-medium">{selectedUser.phoneNumber || 'غير محدد'}</p>
+                                            )}
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-gray-600 dark:text-gray-400">رقم هاتف ولي الأمر</label>
+                                            {isEditing ? (
+                                                <input
+                                                    type="tel"
+                                                    value={editForm.fatherPhoneNumber}
+                                                    onChange={(e) => setEditForm({...editForm, fatherPhoneNumber: e.target.value})}
+                                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                                />
+                                            ) : (
+                                                <p className="text-gray-900 dark:text-white font-medium">{selectedUser.fatherPhoneNumber || 'غير محدد'}</p>
+                                            )}
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-gray-600 dark:text-gray-400">المحافظة</label>
+                                            {isEditing ? (
+                                                <select
+                                                    value={editForm.governorate}
+                                                    onChange={(e) => setEditForm({...editForm, governorate: e.target.value})}
+                                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                                >
+                                                    <option value="">اختر المحافظة</option>
+                                                    {egyptianGovernorates.map((gov) => (
+                                                        <option key={gov.value} value={gov.value}>
+                                                            {gov.label}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            ) : (
+                                                <p className="text-gray-900 dark:text-white font-medium">{selectedUser.governorate || 'غير محدد'}</p>
+                                            )}
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-gray-600 dark:text-gray-400">المرحلة الدراسية</label>
+                                            {isEditing ? (
+                                                <select
+                                                    value={editForm.stage || ""}
+                                                    onChange={(e) => setEditForm({...editForm, stage: e.target.value || null})}
+                                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                                >
+                                                    <option value="">اختر المرحلة الدراسية</option>
+                                                    {stages.map((stage) => (
+                                                        <option key={stage._id} value={stage._id}>
+                                                            {stage.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            ) : (
+                                                <p className="text-gray-900 dark:text-white font-medium">
+                                                    {selectedUser.stage && selectedUser.stage.name ? selectedUser.stage.name : 'غير محدد'}
+                                                </p>
+                                            )}
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-gray-600 dark:text-gray-400">العمر</label>
+                                            {isEditing ? (
+                                                <input
+                                                    type="number"
+                                                    min="10"
+                                                    max="25"
+                                                    value={editForm.age || ""}
+                                                    onChange={(e) => setEditForm({...editForm, age: e.target.value || null})}
+                                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                                />
+                                            ) : (
+                                                <p className="text-gray-900 dark:text-white font-medium">
+                                                    {selectedUser.age && selectedUser.age > 0 ? `${selectedUser.age} سنة` : 'غير محدد'}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Account Information */}
+                                <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-6">
+                                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center space-x-2">
+                                        <FaIdCard className="text-purple-600" />
+                                        <span>معلومات الحساب</span>
+                                    </h4>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-gray-600 dark:text-gray-400">نوع الحساب</label>
+                                            {isEditing ? (
+                                                <select
+                                                    value={editForm.role}
+                                                    onChange={(e) => setEditForm({...editForm, role: e.target.value})}
+                                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                                >
+                                                    <option value="USER">مستخدم</option>
+                                                    <option value="ADMIN">مدير</option>
+                                                </select>
+                                            ) : (
+                                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getRoleColor(selectedUser.role)}`}>
+                                                    {selectedUser.role === 'ADMIN' ? 'مدير' : 'مستخدم'}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-gray-600 dark:text-gray-400">حالة الحساب</label>
+                                            {isEditing ? (
+                                                <select
+                                                    value={editForm.isActive ? 'active' : 'inactive'}
+                                                    onChange={(e) => setEditForm({...editForm, isActive: e.target.value === 'active'})}
+                                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                                >
+                                                    <option value="active">نشط</option>
+                                                    <option value="inactive">غير نشط</option>
+                                                </select>
+                                            ) : (
+                                                <span className={`inline-flex items-center px-3 py-2 rounded-full text-sm font-medium ${getStatusColor(selectedUser.isActive)}`}>
+                                                    {selectedUser.isActive ? 'نشط' : 'غير نشط'}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-gray-600 dark:text-gray-400">تاريخ التسجيل</label>
+                                            <p className="text-gray-900 dark:text-white font-medium">{formatDate(selectedUser.createdAt)}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Password Change Section */}
+                                <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-6">
+                                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center space-x-2">
+                                        <FaUserSecret className="text-red-600" />
+                                        <span>تغيير كلمة المرور</span>
+                                    </h4>
+                                    <div className="space-y-4">
+                                        {!showPasswordChange ? (
+                                            <div className="text-center">
+                                                <button
+                                                    onClick={() => setShowPasswordChange(true)}
+                                                    className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
+                                                >
+                                                    تغيير كلمة المرور
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                            كلمة المرور الجديدة
+                                                        </label>
+                                                        <input
+                                                            type="password"
+                                                            value={passwordForm.newPassword}
+                                                            onChange={(e) => setPasswordForm({...passwordForm, newPassword: e.target.value})}
+                                                            placeholder="أدخل كلمة المرور الجديدة"
+                                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                                            minLength="6"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                            تأكيد كلمة المرور
+                                                        </label>
+                                                        <input
+                                                            type="password"
+                                                            value={passwordForm.confirmPassword}
+                                                            onChange={(e) => setPasswordForm({...passwordForm, confirmPassword: e.target.value})}
+                                                            placeholder="أكد كلمة المرور الجديدة"
+                                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                                            minLength="6"
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div className="flex justify-end space-x-3 space-x-reverse">
+                                                    <button
+                                                        onClick={() => {
+                                                            setShowPasswordChange(false);
+                                                            setPasswordForm({ newPassword: '', confirmPassword: '' });
+                                                        }}
+                                                        className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors"
+                                                    >
+                                                        إلغاء
+                                                    </button>
+                                                    <button
+                                                        onClick={handlePasswordChange}
+                                                        className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
+                                                    >
+                                                        تغيير كلمة المرور
+                                                    </button>
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Reset Wallet Section */}
+                                <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-6">
+                                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center space-x-2">
+                                        <FaWallet className="text-orange-600" />
+                                        <span>إعادة تعيين المحفظة</span>
+                                    </h4>
+                                    <div className="text-center">
+                                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                                            إعادة تعيين رصيد المحفظة إلى صفر وحذف جميع المعاملات
+                                        </p>
+                                        <button
+                                            onClick={() => handleResetUserWallet(selectedUser.id, selectedUser.fullName)}
+                                            className="px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-colors"
+                                        >
+                                            إعادة تعيين المحفظة
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Recent Activities */}
+                                {userActivities && userActivities.length > 0 && (
+                                    <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-6">
+                                        <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center space-x-2">
+                                            <FaHistory className="text-green-600" />
+                                            <span>الأنشطة الأخيرة</span>
+                                        </h4>
+                                        <div className="space-y-3">
+                                            {userActivities.slice(0, 5).map((activity, index) => (
+                                                <div key={index} className="flex items-center space-x-3 p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600">
+                                                    <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/20">
+                                                        {getTransactionIcon(activity.type)}
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                                            {activity.description || 'نشاط غير محدد'}
+                                                        </p>
+                                                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                            {formatDate(activity.createdAt)}
+                                                        </p>
+                                                    </div>
+                                                    {activity.amount && (
+                                                        <span className={`text-sm font-medium ${
+                                                            activity.type === 'recharge' ? 'text-green-600' : 'text-red-600'
+                                                        }`}>
+                                                            {activity.type === 'recharge' ? '+' : '-'}{activity.amount} جنيه مصري
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Action Buttons */}
+                                <div className="flex justify-end space-x-3 space-x-reverse pt-4 border-t border-gray-200 dark:border-gray-700">
+                                    <button
+                                        onClick={() => handleToggleStatus(selectedUser.id, selectedUser.isActive)}
+                                        className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                                            selectedUser.isActive
+                                                ? 'bg-yellow-600 hover:bg-yellow-700 text-white'
+                                                : 'bg-green-600 hover:bg-green-700 text-white'
+                                        }`}
+                                    >
+                                        {selectedUser.isActive ? 'إلغاء التفعيل' : 'تفعيل'}
+                                    </button>
+                                    <button
+                                        onClick={() => handleUpdateRole(selectedUser.id, selectedUser.role === 'ADMIN' ? 'USER' : 'ADMIN')}
+                                        className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
+                                    >
+                                        تغيير الدور
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setUserToDelete(selectedUser.id);
+                                            setUserToDeleteInfo(selectedUser);
+                                            setShowDeleteConfirm(true);
+                                            setShowUserDetails(false);
+                                        }}
+                                        className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
+                                    >
+                                        حذف المستخدم
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Reset All Wallets Confirmation Modal */}
+                {showResetWalletsConfirm && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" dir="rtl">
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+                            <div className="flex items-center space-x-3 mb-4">
+                                <FaExclamationTriangle className="h-8 w-8 text-red-500" />
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                    إعادة تعيين جميع المحافظ
+                                </h3>
+                            </div>
+                            <div className="mb-6">
+                                <p className="text-gray-600 dark:text-gray-300">
+                                    هل أنت متأكد من إعادة تعيين جميع محافظ المستخدمين؟ هذا الإجراء سيقوم بـ:
+                                </p>
+                                <ul className="mt-3 text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                                    <li>• إعادة تعيين رصيد جميع المستخدمين إلى 0</li>
+                                    <li>• حذف جميع المعاملات</li>
+                                    <li>• هذا الإجراء لا يمكن التراجع عنه!</li>
+                                </ul>
+                            </div>
+                            <div className="flex space-x-3 space-x-reverse">
+                                <button
+                                    onClick={() => setShowResetWalletsConfirm(false)}
+                                    className="flex-1 px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-lg transition-colors"
+                                >
+                                    إلغاء
+                                </button>
+                                <button
+                                    onClick={handleResetAllWallets}
+                                    disabled={actionLoading}
+                                    className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {actionLoading ? 'جاري التنفيذ...' : 'تأكيد'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Reset All Codes Confirmation Modal */}
+                {showResetCodesConfirm && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" dir="rtl">
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+                            <div className="flex items-center space-x-3 mb-4">
+                                <FaExclamationTriangle className="h-8 w-8 text-orange-500" />
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                    حذف جميع رموز الشحن
+                                </h3>
+                            </div>
+                            <div className="mb-6">
+                                <p className="text-gray-600 dark:text-gray-300">
+                                    هل أنت متأكد من حذف جميع رموز الشحن؟ هذا الإجراء سيقوم بـ:
+                                </p>
+                                <ul className="mt-3 text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                                    <li>• حذف جميع رموز الشحن من النظام</li>
+                                    <li>• عدم إمكانية استخدام أي رمز شحن</li>
+                                    <li>• هذا الإجراء لا يمكن التراجع عنه!</li>
+                                </ul>
+                            </div>
+                            <div className="flex space-x-3 space-x-reverse">
+                                <button
+                                    onClick={() => setShowResetCodesConfirm(false)}
+                                    className="flex-1 px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-lg transition-colors"
+                                >
+                                    إلغاء
+                                </button>
+                                <button
+                                    onClick={handleResetAllCodes}
+                                    disabled={actionLoading}
+                                    className="flex-1 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {actionLoading ? 'جاري التنفيذ...' : 'تأكيد'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 )}
             </div>
         </Layout>

@@ -4,10 +4,11 @@ const router = Router();
 import { register, login, logout, getProfile, forgotPassword, resetPassword, changePassword, updateUser } from '../controllers/user.controller.js';
 import { requireCaptchaVerification } from '../controllers/captcha.controller.js';
 import { isLoggedIn } from "../middleware/auth.middleware.js";
-import upload from '../middleware/multer.middleware.js'
+import upload from '../middleware/multer.middleware.js';
+import { requireDeviceFingerprint, logDeviceFingerprint } from '../middleware/deviceFingerprint.middleware.js';
 
-router.post('/register', upload.single("avatar"), requireCaptchaVerification, register);
-router.post('/login', login);
+router.post('/register', upload.single("avatar"), requireCaptchaVerification, logDeviceFingerprint, requireDeviceFingerprint, register);
+router.post('/login', logDeviceFingerprint, requireDeviceFingerprint, login);
 router.get('/logout', logout);
 router.get('/me', isLoggedIn, getProfile);
 router.post('/reset', forgotPassword);

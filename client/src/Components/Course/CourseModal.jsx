@@ -21,6 +21,7 @@ const CourseModal = ({ course, onClose, isOpen }) => {
     subject: ''
   });
 
+
   const [thumbnail, setThumbnail] = useState(null);
 
   useEffect(() => {
@@ -49,6 +50,10 @@ const CourseModal = ({ course, onClose, isOpen }) => {
     dispatch(getAllStages());
     dispatch(getAllSubjects());
   }, [dispatch]);
+
+
+
+
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -81,6 +86,8 @@ const CourseModal = ({ course, onClose, isOpen }) => {
         stage: formData.stage,
         subject: formData.subject
       };
+
+
 
       if (thumbnail) {
         courseData.thumbnail = thumbnail;
@@ -160,6 +167,8 @@ const CourseModal = ({ course, onClose, isOpen }) => {
               ))}
             </select>
           </div>
+
+
 
           <div>
             <label className="block text-sm font-medium mb-1">المرحلة *</label>

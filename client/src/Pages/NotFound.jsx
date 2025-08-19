@@ -170,14 +170,14 @@ function NotFound() {
                 <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
                   {role === "USER" 
                     ? "استكشف دوراتك الشخصية" 
-                    : "استكشف كتالوج الدورات الشامل"
+                    : "استكشف كتالوج الكورسات الشامل"
                   }
                 </p>
                 <button 
                   onClick={() => navigate("/courses")}
                   className="text-blue-600 dark:text-blue-400 hover:underline font-medium text-sm"
                 >
-                  {role === "USER" ? "عرض كورساتي →" : "عرض جميع الدورات →"}
+                  {role === "USER" ? "عرض كورساتي →" : "عرض جميع الكورسات →"}
                 </button>
               </div>
             </div>

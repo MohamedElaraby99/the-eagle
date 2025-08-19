@@ -49,7 +49,7 @@ const createAdminAccount = async () => {
         const adminData = {
             fullName: "Admin User",
             username: "admin",
-            email: "admin@lms.com",
+            email: "admin@api.com",
             password: "admin123456",
             role: "ADMIN",
             isActive: true

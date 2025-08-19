@@ -69,7 +69,6 @@ const createService = async (req, res, next) => {
             description,
             category,
             whatsappNumbers,
-            price,
             currency,
             icon,
             instructions,
@@ -77,8 +76,8 @@ const createService = async (req, res, next) => {
         } = req.body;
 
         // Validate required fields
-        if (!name || !description || !category || !whatsappNumbers || !price) {
-            return next(new AppError("Name, description, category, WhatsApp numbers, and price are required", 400));
+        if (!name || !description || !category || !whatsappNumbers) {
+            return next(new AppError("Name, description, category, and WhatsApp numbers are required", 400));
         }
 
         // Validate WhatsApp numbers array
@@ -98,7 +97,6 @@ const createService = async (req, res, next) => {
             description,
             category,
             whatsappNumbers,
-            price: parseFloat(price),
             currency: currency || 'EGP',
             icon: icon || '📞',
             instructions: instructions || 'Contact us on WhatsApp for this service',
@@ -144,10 +142,7 @@ const updateService = async (req, res, next) => {
             }
         }
 
-        // Convert price to number if provided
-        if (updateData.price) {
-            updateData.price = parseFloat(updateData.price);
-        }
+
 
         const updatedService = await WhatsAppService.findByIdAndUpdate(
             id,

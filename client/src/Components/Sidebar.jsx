@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../Redux/Slices/AuthSlice";
 import { getWalletBalance } from "../Redux/Slices/WalletSlice";
 import { Link, useNavigate } from "react-router-dom";
-import { generateImageUrl } from "../utils/fileUtils";
 import { AiFillCloseCircle } from "react-icons/ai";
 import {
   FaHome,
@@ -35,9 +34,9 @@ export default function Sidebar({ hideBar = false }) {
   const { isLoggedIn, role, data } = useSelector((state) => state.auth);
   const { balance } = useSelector((state) => state.wallet);
 
-  // Fetch wallet balance when user is logged in (not for ADMIN or USER1)
+  // Fetch wallet balance when user is logged in
   useEffect(() => {
-    if (isLoggedIn && role !== "ADMIN" && role !== "USER1") {
+    if (isLoggedIn && role !== "ADMIN") {
       dispatch(getWalletBalance());
     }
   }, [dispatch, isLoggedIn, role]);
@@ -85,7 +84,7 @@ export default function Sidebar({ hideBar = false }) {
           </div>
 
           {/* Wallet Balance */}
-          {isLoggedIn && role !== "ADMIN" && role !== "USER1" && (
+          {isLoggedIn && role !== "ADMIN" && (
             <div className="mb-4">
               <div className="bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 rounded-lg p-3 text-white shadow-md">
                 <div className="flex items-center justify-between mb-2">
@@ -120,6 +119,16 @@ export default function Sidebar({ hideBar = false }) {
               </Link>
             </li>
 
+            {role === "ADMIN" && (
+              <li>
+                <Link to="/admin/dashboard" className="flex gap-3 items-center text-gray-700 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-right py-2" onClick={closeSidebar}>
+                <FaUserCircle size={16} className="text-gray-500 dark:text-slate-100" />
+                  لوحة تحكم الإدارة
+                  
+                </Link>
+              </li>
+            )}
+
             {/* Courses Section */}
             <li>
               <Link to="/courses" className="flex gap-3 items-center text-gray-700 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-right py-2" onClick={closeSidebar}>
@@ -129,7 +138,7 @@ export default function Sidebar({ hideBar = false }) {
               </Link>
             </li>
 
-            {isLoggedIn && role !== "ADMIN" && role !== "USER1" && (
+            {isLoggedIn && role !== "ADMIN" && (
               <li>
                 <Link to="/wallet" className="flex gap-3 items-center text-gray-700 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-right py-2" onClick={closeSidebar}>
                 <FaWallet size={16} className="text-gray-500 dark:text-slate-100" />
@@ -149,60 +158,7 @@ export default function Sidebar({ hideBar = false }) {
               </li>
             )}
 
-            {role === "ADMIN" && (
-              <li>
-                <Link to="/admin/dashboard" className="flex gap-3 items-center text-gray-700 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-right py-2" onClick={closeSidebar}>
-                <FaUserCircle size={16} className="text-gray-500 dark:text-slate-100" />
-                  لوحة تحكم الإدارة
-                  
-                </Link>
-              </li>
-            )}
-
-            {role === "ADMIN" && (
-              <li>
-                <Link to="/admin/recharge-codes" className="flex gap-3 items-center text-gray-700 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2" onClick={closeSidebar}>
-                  <FaCreditCard size={16} className="text-gray-500 dark:text-slate-100" />
-                  رموز الشحن
-                </Link>
-              </li>
-            )}
-
-            {role === "ADMIN" && (
-              <li>
-                <Link to="/admin/users" className="flex gap-3 items-center text-gray-700 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2" onClick={closeSidebar}>
-                  <FaUsers size={16} className="text-gray-500 dark:text-slate-100" />
-                  إدارة المستخدمين
-                </Link>
-              </li>
-            )}
-
-            {role === "ADMIN" && (
-              <li>
-                <Link to="/admin/device-management" className="flex gap-3 items-center text-gray-700 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2" onClick={closeSidebar}>
-                  <FaServer size={16} className="text-gray-500 dark:text-slate-100" />
-                  إدارة الأجهزة
-                </Link>
-              </li>
-            )}
-
-            {role === "ADMIN" && (
-              <li>
-                <Link to="/admin/instructors" className="flex gap-3 items-center text-gray-700 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2" onClick={closeSidebar}>
-                  <FaChalkboardTeacher size={16} className="text-gray-500 dark:text-slate-100" />
-                  إدارة المدرسين
-                </Link>
-              </li>
-            )}
-
-            {role === "ADMIN" && (
-              <li>
-                <Link to="/admin/stages" className="flex gap-3 items-center text-gray-700 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2" onClick={closeSidebar}>
-                  <FaGraduationCap size={16} className="text-gray-500 dark:text-slate-100" />
-                  إدارة المراحل
-                </Link>
-              </li>
-            )}
+            {/* Admin management sections moved to admin dashboard */}
 
             <li>
               <Link to="/instructors" className="flex gap-3 items-center text-gray-700 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2" onClick={closeSidebar}>
@@ -288,7 +244,7 @@ export default function Sidebar({ hideBar = false }) {
                         onClick={closeSidebar}
                       >
                         <FaInfoCircle size={14} className="text-gray-500 dark:text-slate-100" />
-                        عننا
+                        عنا
                       </Link>
                     </li>
                     <li>
@@ -340,7 +296,7 @@ export default function Sidebar({ hideBar = false }) {
                 <li>
                   <Link to="/about" className="flex gap-3 items-center text-gray-700 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2" onClick={closeSidebar}>
                     <FaInfoCircle size={16} className="text-gray-500 dark:text-slate-100" />
-                    عننا
+                    عنا
                   </Link>
                 </li>
               </>
@@ -359,7 +315,7 @@ export default function Sidebar({ hideBar = false }) {
                 >
                   {data?.avatar?.secure_url ? (
                     <img 
-                      src={generateImageUrl(data.avatar.secure_url)} 
+                      src={data.avatar.secure_url} 
                       alt="Profile" 
                       className="w-full h-full rounded-full object-cover"
                     />

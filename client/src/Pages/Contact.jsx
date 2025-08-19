@@ -7,17 +7,12 @@ import TextArea from "../Components/InputBox/TextArea";
 import Layout from "../Layout/Layout";
 import { 
   FaPhone, 
-  FaEnvelope, 
-  FaMapMarkerAlt, 
   FaFacebook, 
-  FaTwitter, 
   FaInstagram, 
   FaLinkedin, 
   FaYoutube,
   FaWhatsapp,
-  FaTelegram,
   FaGlobe,
-  FaClock,
   FaUser,
   FaComments
 } from "react-icons/fa";
@@ -68,20 +63,23 @@ export default function Contact() {
   }
 
   const contactInfo = {
-    phone: "+201207039410",
-    whatsapp: "+201207039410",
+    phone: "+201143982522",
+    whatsapp: "+201143982522",
+    whatsapp1: "+966547803289",
     email: "softwarefikra@gmail.com",
     support: "softwarefikra@gmail.com",
     address: "Mansoura, 18 Street Torel, Egypt",
-    website: "https://the-eagle.fikra.solutions/",
+    website: "https://fikra.solutions/",
     workingHours: "Monday - Friday: 9:00 AM - 6:00 PM"
   };
 
   const socialMedia = [
-    { name: "Facebook", icon: FaFacebook, url: "https://www.facebook.com/people/Fikra-Software-%D9%81%D9%83%D8%B1%D8%A9/61572824761047/", color: "hover:text-blue-600" },
-    { name: "LinkedIn", icon: FaLinkedin, url: "https://www.linkedin.com/company/fikra-software-%D9%81%D9%83%D8%B1%D8%A9-%D9%84%D9%84%D8%A8%D8%B1%D9%85%D8%AC%D9%8A%D8%A7%D8%AA/", color: "hover:text-blue-700" },
-    { name: "WhatsApp", icon: FaWhatsapp, url: "https://wa.me/201207039410", color: "hover:text-green-500" },
-    { name: "Website", icon: FaGlobe, url: "https://the-eagle.fikra.solutions/", color: "hover:text-purple-600" }
+    { name: "Facebook", icon: FaFacebook, url: "https://www.facebook.com/ali.alyan.92", color: "hover:text-blue-600" },
+    { name: "LinkedIn", icon: FaLinkedin, url: "https://www.linkedin.com/in/%D8%B9%D9%84%D9%8A-%D9%85%D8%AD%D9%85%D8%AF-%D9%85%D8%B9%D9%84%D9%8A%D8%A7%D9%86-a42859105/", color: "hover:text-blue-700" },
+    { name: "Instagram", icon: FaInstagram, url: "https://www.instagram.com/ali23121982/", color: "hover:text-pink-500" },
+    { name: "YouTube", icon: FaYoutube, url: "https://www.youtube.com/@%D8%A3.%D8%B9%D9%84%D9%8A%D9%85%D8%AD%D9%85%D8%AF%D8%B9%D9%84%D9%8A%D8%A7%D9%86", color: "hover:text-red-500" },
+    { name: "WhatsApp", icon: FaWhatsapp, url: `https://wa.me/${contactInfo.whatsapp.replace('+', '')}`, color: "hover:text-green-500" },
+    { name: "WhatsApp 2", icon: FaWhatsapp, url: `https://wa.me/${contactInfo.whatsapp1.replace('+', '')}`, color: "hover:text-green-500" }
   ];
 
   return (
@@ -132,63 +130,93 @@ export default function Contact() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 dark:text-white">واتساب</h3>
-                    <a href={contactInfo.whatsapp} className="text-green-600 dark:text-green-400 hover:underline">
+                    <a href={`https://wa.me/${contactInfo.whatsapp.replace('+', '')}`} className="text-green-600 dark:text-green-400 hover:underline">
                       {contactInfo.whatsapp}
                     </a>
                   </div>
                 </div>
 
-                {/* Email */}
+                {/* WhatsApp 2 */}
                 <div className="flex items-center p-4 bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
-                  <div className="flex-shrink-0 w-12 h-12 bg-purple-100 dark:bg-purple-900/20 rounded-full flex items-center justify-center mr-4">
-                    <FaEnvelope className="text-purple-600 dark:text-purple-400 text-xl" />
+                  <div className="flex-shrink-0 w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mr-4">
+                    <FaWhatsapp className="text-green-600 dark:text-green-400 text-xl" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900 dark:text-white">البريد الإلكتروني</h3>
-                    <a href={`mailto:${contactInfo.email}`} className="text-purple-600 dark:text-purple-400 hover:underline">
-                      {contactInfo.email}
+                    <h3 className="font-semibold text-gray-900 dark:text-white">واتساب 2</h3>
+                    <a href={`https://wa.me/${contactInfo.whatsapp1.replace('+', '')}`} className="text-green-600 dark:text-green-400 hover:underline">
+                      {contactInfo.whatsapp1}
                     </a>
                   </div>
                 </div>
+              </div>
 
-                {/* Support Email */}
-                <div className="flex items-center p-4 bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
-                  <div className="flex-shrink-0 w-12 h-12 bg-orange-100 dark:bg-orange-900/20 rounded-full flex items-center justify-center mr-4">
-                    <FaComments className="text-orange-600 dark:text-orange-400 text-xl" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900 dark:text-white">الدعم</h3>
-                    <a href={`mailto:${contactInfo.support}`} className="text-orange-600 dark:text-orange-400 hover:underline">
-                      {contactInfo.support}
-                    </a>
-                  </div>
+              {/* Contact Form */}
+              <div className="mt-12">
+                <div className="text-center mb-8">
+                  <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
+                    أرسل لنا رسالة
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-300">
+                    املأ النموذج أدناه وسنرد عليك في أقرب وقت ممكن
+                  </p>
                 </div>
-
-                {/* Address */}
-                <div className="flex items-center p-4 bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
-                  <div className="flex-shrink-0 w-12 h-12 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mr-4">
-                    <FaMapMarkerAlt className="text-red-600 dark:text-red-400 text-xl" />
-                  </div>
+                
+                <form onSubmit={onFormSubmit} className="max-w-2xl mx-auto space-y-6">
                   <div>
-                    <h3 className="font-semibold text-gray-900 dark:text-white">العنوان</h3>
-                    <p className="text-gray-600 dark:text-gray-300">
-                      {contactInfo.address}
-                    </p>
+                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      الاسم *
+                    </label>
+                    <InputBox
+                      id="name"
+                      name="name"
+                      type="text"
+                      placeholder="أدخل اسمك"
+                      value={userInput.name}
+                      onChange={handleInputChange}
+                      required
+                    />
                   </div>
-                </div>
-
-                {/* Working Hours */}
-                <div className="flex items-center p-4 bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
-                  <div className="flex-shrink-0 w-12 h-12 bg-indigo-100 dark:bg-indigo-900/20 rounded-full flex items-center justify-center mr-4">
-                    <FaClock className="text-indigo-600 dark:text-indigo-400 text-xl" />
-                  </div>
+                  
                   <div>
-                    <h3 className="font-semibold text-gray-900 dark:text-white">ساعات العمل</h3>
-                    <p className="text-gray-600 dark:text-gray-300">
-                      {contactInfo.workingHours}
-                    </p>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      البريد الإلكتروني *
+                    </label>
+                    <InputBox
+                      id="email"
+                      name="email"
+                      type="email"
+                      placeholder="أدخل بريدك الإلكتروني"
+                      value={userInput.email}
+                      onChange={handleInputChange}
+                      required
+                    />
                   </div>
-                </div>
+                  
+                  <div>
+                    <label htmlFor="message" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      الرسالة *
+                    </label>
+                    <TextArea
+                      id="message"
+                      name="message"
+                      placeholder="أدخل رسالتك"
+                      value={userInput.message}
+                      onChange={handleInputChange}
+                      rows={5}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="text-center">
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                    >
+                      {isLoading ? 'جاري الإرسال...' : 'إرسال الرسالة'}
+                    </button>
+                  </div>
+                </form>
               </div>
 
               {/* Social Media */}

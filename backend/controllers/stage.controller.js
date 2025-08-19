@@ -6,13 +6,16 @@ import AppError from '../utils/error.utils.js';
 // Get all stages
 export const getAllStages = async (req, res, next) => {
     try {
-        const { page = 1, limit = 50, status, search } = req.query;
+        const { page = 1, limit = 50, status, search, includeInactive } = req.query;
         
         let query = {};
         
-        // Filter by status
+        // Filter by status - by default only show active stages unless explicitly requested
         if (status) {
             query.status = status;
+        } else if (!includeInactive) {
+            // Default behavior: only show active stages
+            query.status = 'active';
         }
         
         // Search functionality
@@ -70,7 +73,7 @@ export const getStageById = async (req, res, next) => {
 // Create new stage
 export const createStage = async (req, res, next) => {
     try {
-        const { name, status } = req.body;
+        const { name, status, category } = req.body;
         
         if (!name) {
             return next(new AppError('Name is required', 400));
@@ -84,7 +87,8 @@ export const createStage = async (req, res, next) => {
         
         const stageData = {
             name,
-            status: status || 'active'
+            status: status || 'active',
+            category: category || null
         };
         
         const stage = await stageModel.create(stageData);
@@ -103,7 +107,7 @@ export const createStage = async (req, res, next) => {
 export const updateStage = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { name, status } = req.body;
+        const { name, status, category } = req.body;
         
         const stage = await stageModel.findById(id);
         
@@ -124,11 +128,13 @@ export const updateStage = async (req, res, next) => {
         
         if (status) updateData.status = status;
         
+        if (category !== undefined) updateData.category = category;
+        
         const updatedStage = await stageModel.findByIdAndUpdate(
             id,
             updateData,
             { new: true }
-        );
+        ).populate('category', 'name status');
         
         res.status(200).json({
             success: true,
@@ -152,7 +158,7 @@ export const deleteStage = async (req, res, next) => {
         }
         
         // Check if stage has associated subjects
-        const subjectsCount = await subjectModel.countDocuments({ stage: stage.name });
+        const subjectsCount = await subjectModel.countDocuments({ stage: stage._id });
         if (subjectsCount > 0) {
             return next(new AppError(`Cannot delete stage. It has ${subjectsCount} associated subjects`, 400));
         }
@@ -180,10 +186,10 @@ export const getStageStats = async (req, res, next) => {
         }
         
         // Get subjects count for this stage
-        const subjectsCount = await subjectModel.countDocuments({ stage: stage.name });
+        const subjectsCount = await subjectModel.countDocuments({ stage: stage._id });
         
         // Get total students enrolled in subjects of this stage
-        const subjects = await subjectModel.find({ stage: stage.name });
+        const subjects = await subjectModel.find({ stage: stage._id });
         const totalStudents = subjects.reduce((sum, subject) => sum + (subject.studentsEnrolled || 0), 0);
         
         // Update stage with current counts
@@ -246,6 +252,49 @@ export const getAllStagesWithStats = async (req, res, next) => {
         });
     } catch (e) {
         console.error('❌ Error in getAllStagesWithStats:', e);
+        return next(new AppError(e.message, 500));
+    }
+};
+
+// Get all stages including inactive ones (for admin purposes)
+export const getAllStagesAdmin = async (req, res, next) => {
+    try {
+        const { page = 1, limit = 50, status, search } = req.query;
+        
+        let query = {};
+        
+        // Filter by status if specified
+        if (status) {
+            query.status = status;
+        }
+        
+        // Search functionality
+        if (search) {
+            query.$text = { $search: search };
+        }
+        
+        const stages = await stageModel.find(query)
+            .sort({ createdAt: -1 })
+            .limit(limit * 1)
+            .skip((page - 1) * limit)
+            .exec();
+            
+        const total = await stageModel.countDocuments(query);
+        
+        res.status(200).json({
+            success: true,
+            message: 'All stages fetched successfully (including inactive)',
+            data: {
+                stages,
+                pagination: {
+                    page: parseInt(page),
+                    limit: parseInt(limit),
+                    total,
+                    pages: Math.ceil(total / limit)
+                }
+            }
+        });
+    } catch (e) {
         return next(new AppError(e.message, 500));
     }
 };

@@ -130,6 +130,32 @@ export const getDeviceStats = createAsyncThunk(
     }
 );
 
+// Get device limit (Admin)
+export const getDeviceLimit = createAsyncThunk(
+    "deviceManagement/getLimit",
+    async (_, { rejectWithValue }) => {
+        try {
+            const response = await axiosInstance.get("/device-management/limit");
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || "Failed to fetch device limit");
+        }
+    }
+);
+
+// Update device limit (Admin)
+export const updateDeviceLimit = createAsyncThunk(
+    "deviceManagement/updateLimit",
+    async (newLimit, { rejectWithValue }) => {
+        try {
+            const response = await axiosInstance.put("/device-management/limit", { newLimit });
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || "Failed to update device limit");
+        }
+    }
+);
+
 const deviceManagementSlice = createSlice({
     name: "deviceManagement",
     initialState,
@@ -274,6 +300,36 @@ const deviceManagementSlice = createSlice({
             .addCase(getDeviceStats.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
+            })
+
+            // Get device limit
+            .addCase(getDeviceLimit.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(getDeviceLimit.fulfilled, (state, action) => {
+                state.loading = false;
+                state.deviceStats.maxDevicesPerUser = action.payload.data.maxDevicesPerUser;
+            })
+            .addCase(getDeviceLimit.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+
+            // Update device limit
+            .addCase(updateDeviceLimit.pending, (state) => {
+                state.actionLoading = true;
+                state.actionError = null;
+            })
+            .addCase(updateDeviceLimit.fulfilled, (state, action) => {
+                state.actionLoading = false;
+                state.deviceStats.maxDevicesPerUser = action.payload.data.maxDevicesPerUser;
+                toast.success(action.payload.data.message || "Device limit updated successfully");
+            })
+            .addCase(updateDeviceLimit.rejected, (state, action) => {
+                state.actionLoading = false;
+                state.actionError = action.payload;
+                toast.error(action.payload);
             });
     }
 });

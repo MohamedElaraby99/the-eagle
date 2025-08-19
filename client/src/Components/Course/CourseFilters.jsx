@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { FaSearch, FaTimes } from 'react-icons/fa';
 
-const CourseFilters = ({ filters, onFilterChange }) => {
+const CourseFilters = ({ filters, onFilterChange, onClearFilters }) => {
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   const handleInputChange = (field, value) => {
@@ -9,17 +9,7 @@ const CourseFilters = ({ filters, onFilterChange }) => {
   };
 
   const clearFilters = () => {
-    onFilterChange({
-      search: '',
-      instructor: '',
-      subject: '',
-      grade: '',
-      stage: '',
-      featured: '',
-      isPublished: '',
-      level: '',
-      language: ''
-    });
+    onClearFilters();
   };
 
   const hasActiveFilters = Object.values(filters).some(value => value !== '');

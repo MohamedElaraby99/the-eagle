@@ -20,7 +20,8 @@ const stageSchema = new Schema({
     studentsCount: {
         type: Number,
         default: 0
-    }
+    },
+
 }, {
     timestamps: true
 });

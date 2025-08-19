@@ -20,7 +20,7 @@ const askQuestion = (question) => {
 };
 
 const setupEnvironment = async () => {
-    console.log("🔧 LMS Environment Setup");
+    console.log("🔧 api Environment Setup");
     console.log("========================\n");
     
     try {
@@ -58,12 +58,12 @@ const setupEnvironment = async () => {
             case "2":
                 dbType = "compass";
                 console.log("\n📊 MongoDB Compass Configuration");
-                dbUri = await askQuestion("Enter your MongoDB Compass connection string (default: mongodb://localhost:27017/theeagle): ") || "mongodb://localhost:27017/theeagle";
+                dbUri = await askQuestion("Enter your MongoDB Compass connection string (default: mongodb://localhost:27017/the4g): ") || "mongodb://localhost:27017/the4g";
                 break;
             case "3":
                 dbType = "community";
                 console.log("\n📊 MongoDB Community Configuration");
-                dbUri = await askQuestion("Enter your MongoDB Community connection string (default: mongodb://localhost:27017/theeagle): ") || "mongodb://localhost:27017/theeagle";
+                dbUri = await askQuestion("Enter your MongoDB Community connection string (default: mongodb://localhost:27017/the4g): ") || "mongodb://localhost:27017/the4g";
                 break;
             default:
                 console.log("❌ Invalid choice. Using MongoDB Atlas.");
@@ -77,13 +77,13 @@ const setupEnvironment = async () => {
         }
         
         // Server port
-        const port = await askQuestion("\nEnter server port (default: 4003): ") || "4003";
+        const port = await askQuestion("\nEnter server port (default: 4015): ") || "4015";
         
         // JWT secret
-        const jwtSecret = await askQuestion("\nEnter JWT secret (default: lms_jwt_secret_2024): ") || "lms_jwt_secret_2024";
+        const jwtSecret = await askQuestion("\nEnter JWT secret (default: api_jwt_secret_2024): ") || "api_jwt_secret_2024";
         
         // Client URL
-        const clientUrl = await askQuestion("\nEnter client URL (default: http://localhost:5180): ") || "http://localhost:5180";
+        const clientUrl = await askQuestion("\nEnter client URL (default: http://localhost:5173): ") || "http://localhost:5173";
         
         // Build .env content
         const envContent = `# Database Configuration

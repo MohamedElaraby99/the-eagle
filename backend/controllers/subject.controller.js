@@ -2,7 +2,6 @@ import subjectModel from '../models/subject.model.js';
 import AppError from '../utils/error.utils.js';
 import { v2 as cloudinary } from 'cloudinary';
 import fs from 'fs';
-import path from 'path';
 
 // Get all subjects
 export const getAllSubjects = async (req, res, next) => {
@@ -28,7 +27,6 @@ export const getAllSubjects = async (req, res, next) => {
         
         const subjects = await subjectModel.find(query)
             .populate('instructor', 'name specialization')
-            .populate('stage', 'name description')
             .sort({ featured: -1, createdAt: -1 })
             .limit(limit * 1)
             .skip((page - 1) * limit)
@@ -55,8 +53,7 @@ export const getSubjectById = async (req, res, next) => {
         const { id } = req.params;
         
         const subject = await subjectModel.findById(id)
-            .populate('instructor', 'name specialization bio')
-            .populate('stage', 'name description');
+            .populate('instructor', 'name specialization bio');
         
         if (!subject) {
             return next(new AppError('Subject not found', 404));
@@ -75,81 +72,50 @@ export const getSubjectById = async (req, res, next) => {
 // Create new subject
 export const createSubject = async (req, res, next) => {
     try {
-        const { 
-            title, 
-            description, 
-            instructor, 
-            stage,
-            featured,
-            grade
-        } = req.body;
+        const { title, description, instructor, featured } = req.body;
         
         if (!title || !description || !instructor) {
-            return next(new AppError('All required fields must be provided', 400));
+            return next(new AppError('Title, description and instructor are required', 400));
         }
         
-        if (!req.file) {
-            return next(new AppError('Subject image is required', 400));
+        const subjectData = { title, description, instructor };
+        if (typeof featured !== 'undefined') {
+            subjectData.featured = featured === 'true' || featured === true;
         }
         
-        const subjectData = {
-            title,
-            description,
-            instructor,
-            stage: stage || null,
-            featured: featured === 'true',
-            grade: grade || null
-        };
-        
-        // Handle image upload (required)
-        try {
-            const result = await cloudinary.uploader.upload(req.file.path, {
-                folder: 'subjects',
-                width: 300,
-                height: 200,
-                crop: 'fill'
-            });
-            
-            subjectData.image = {
-                public_id: result.public_id,
-                secure_url: result.secure_url
-            };
-            
-            // Remove file from uploads folder
-            fs.rmSync(req.file.path);
-        } catch (error) {
-            console.error('Cloudinary upload error:', error);
-            // If Cloudinary fails, use local file
+        // Handle image upload (optional)
+        if (req.file) {
             try {
-                // Move file to uploads/images directory
-                const uploadsDir = path.join('uploads', 'images');
-                if (!fs.existsSync(uploadsDir)) {
-                    fs.mkdirSync(uploadsDir, { recursive: true });
+                const result = await cloudinary.uploader.upload(req.file.path, {
+                    folder: 'subjects',
+                    width: 300,
+                    height: 200,
+                    crop: 'fill'
+                });
+                
+                subjectData.image = {
+                    public_id: result.public_id,
+                    secure_url: result.secure_url
+                };
+                
+                // Remove file from uploads folder
+                fs.rmSync(req.file.path);
+            } catch (error) {
+                console.error('Cloudinary upload error:', error);
+                // If Cloudinary fails, fall back to local file path
+                if (req.file?.filename) {
+                    subjectData.image = {
+                        public_id: req.file.filename,
+                        secure_url: `/uploads/${req.file.filename}`
+                    };
                 }
-                
-                const destPath = path.join(uploadsDir, req.file.filename);
-                fs.renameSync(req.file.path, destPath);
-                
-                subjectData.image = {
-                    public_id: req.file.filename,
-                    secure_url: `/uploads/images/${req.file.filename}`
-                };
-                
-                console.log('✅ Subject image saved locally:', destPath);
-            } catch (e) {
-                console.log('❌ Local file save error:', e.message);
-                subjectData.image = {
-                    public_id: req.file.filename,
-                    secure_url: `/uploads/images/${req.file.filename}`
-                };
             }
         }
         
         const subject = await subjectModel.create(subjectData);
         
-        // Populate instructor and stage data
+        // Populate instructor only
         await subject.populate('instructor', 'name specialization');
-        await subject.populate('stage', 'name description');
         
         res.status(201).json({
             success: true,
@@ -165,16 +131,7 @@ export const createSubject = async (req, res, next) => {
 export const updateSubject = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { 
-            title, 
-            description, 
-            category, 
-            instructor, 
-            stage,
-            featured,
-            status,
-            grade
-        } = req.body;
+        const { title, description, instructor, featured } = req.body;
         
         const subject = await subjectModel.findById(id);
         
@@ -183,15 +140,10 @@ export const updateSubject = async (req, res, next) => {
         }
         
         const updateData = {};
-        
         if (title) updateData.title = title;
         if (description) updateData.description = description;
-        if (category) updateData.category = category;
         if (instructor) updateData.instructor = instructor;
-        if (stage) updateData.stage = stage;
-        if (featured !== undefined) updateData.featured = featured === 'true';
-        if (status) updateData.status = status;
-        if (grade !== undefined) updateData.grade = grade;
+        if (typeof featured !== 'undefined') updateData.featured = featured === 'true' || featured === true;
         
         // Handle image upload
         if (req.file) {
@@ -212,37 +164,10 @@ export const updateSubject = async (req, res, next) => {
                 fs.rmSync(req.file.path);
             } catch (error) {
                 console.error('Cloudinary upload error:', error);
-                // If Cloudinary fails, use local file
-                try {
-                    // Delete old image if exists (local file)
-                    if (subject.image.public_id && subject.image.public_id !== 'placeholder') {
-                        const oldImagePath = path.join('uploads', 'images', subject.image.public_id);
-                        if (fs.existsSync(oldImagePath)) {
-                            fs.rmSync(oldImagePath);
-                            console.log('🗑️ Deleted old subject image:', oldImagePath);
-                        }
-                    }
-                    
-                    // Move new file to uploads/images directory
-                    const uploadsDir = path.join('uploads', 'images');
-                    if (!fs.existsSync(uploadsDir)) {
-                        fs.mkdirSync(uploadsDir, { recursive: true });
-                    }
-                    
-                    const destPath = path.join(uploadsDir, req.file.filename);
-                    fs.renameSync(req.file.path, destPath);
-                    
+                if (req.file?.filename) {
                     updateData.image = {
                         public_id: req.file.filename,
-                        secure_url: `/uploads/images/${req.file.filename}`
-                    };
-                    
-                    console.log('✅ Subject image updated locally:', destPath);
-                } catch (e) {
-                    console.log('❌ Local file save error:', e.message);
-                    updateData.image = {
-                        public_id: req.file.filename,
-                        secure_url: `/uploads/images/${req.file.filename}`
+                        secure_url: `/uploads/${req.file.filename}`
                     };
                 }
             }
@@ -289,12 +214,25 @@ export const deleteSubject = async (req, res, next) => {
 // Get featured subjects
 export const getFeaturedSubjects = async (req, res, next) => {
     try {
-        const featuredSubjects = await subjectModel.find({ 
-            featured: true, 
-            status: 'active' 
-        })
-        .sort({ createdAt: -1 })
-        .limit(6);
+        console.log('=== GET FEATURED SUBJECTS ===');
+        
+        // Check if subjectModel is available
+        if (!subjectModel) {
+            console.error('Subject model not available');
+            return res.status(500).json({
+                success: false,
+                message: 'Database model not available'
+            });
+        }
+        
+        console.log('Querying featured subjects...');
+        const featuredSubjects = await subjectModel
+          .find({ featured: true })
+          .populate('instructor', 'name specialization')
+          .sort({ createdAt: -1 })
+          .limit(6);
+        
+        console.log(`Found ${featuredSubjects.length} featured subjects`);
         
         res.status(200).json({
             success: true,
@@ -302,7 +240,15 @@ export const getFeaturedSubjects = async (req, res, next) => {
             subjects: featuredSubjects
         });
     } catch (e) {
-        return next(new AppError(e.message, 500));
+        console.error('Error in getFeaturedSubjects:', e);
+        console.error('Error stack:', e.stack);
+        
+        // Return error response instead of crashing
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to fetch featured subjects',
+            error: process.env.NODE_ENV === 'development' ? e.message : 'Internal server error'
+        });
     }
 };
 

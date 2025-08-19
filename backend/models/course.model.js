@@ -156,6 +156,7 @@ const courseSchema = new mongoose.Schema({
     ref: 'Subject',
     required: true
   },
+
   image: {
     public_id: {
       type: String
@@ -163,6 +164,10 @@ const courseSchema = new mongoose.Schema({
     secure_url: {
       type: String
     }
+  },
+  featured: {
+    type: Boolean,
+    default: false
   },
   units: [unitSchema],
   directLessons: [lessonSchema]

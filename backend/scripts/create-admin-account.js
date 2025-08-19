@@ -9,13 +9,22 @@ import User from "../models/user.model.js";
 // Load environment variables
 dotenv.config();
 
-// Create readline interface
+// Lightweight CLI args parsing
+const argv = process.argv.slice(2);
+const findArg = (key) => {
+  const pref = `--${key}=`;
+  const hit = argv.find((a) => a.startsWith(pref));
+  return hit ? hit.slice(pref.length) : undefined;
+};
+
+const flag = (key) => argv.includes(`--${key}`);
+
+// Create readline interface (only if interactive)
 const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
 });
 
-// Helper function to ask questions
 const askQuestion = (question) => {
     return new Promise((resolve) => {
         rl.question(question, (answer) => {
@@ -24,30 +33,19 @@ const askQuestion = (question) => {
     });
 };
 
-// Helper function to validate email
 const isValidEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
 };
 
-// Helper function to validate password strength
 const validatePassword = (password) => {
-    if (password.length < 6) {
-        return "Password must be at least 6 characters long";
-    }
-    if (!/[A-Z]/.test(password)) {
-        return "Password must contain at least one uppercase letter";
-    }
-    if (!/[a-z]/.test(password)) {
-        return "Password must contain at least one lowercase letter";
-    }
-    if (!/\d/.test(password)) {
-        return "Password must contain at least one number";
-    }
+    if (password.length < 6) return "Password must be at least 6 characters long";
+    if (!/[A-Z]/.test(password)) return "Password must contain at least one uppercase letter";
+    if (!/[a-z]/.test(password)) return "Password must contain at least one lowercase letter";
+    if (!/\d/.test(password)) return "Password must contain at least one number";
     return null;
 };
 
-// Helper function to generate random password
 const generateRandomPassword = (length = 12) => {
     const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
     let password = "";
@@ -58,65 +56,41 @@ const generateRandomPassword = (length = 12) => {
 };
 
 const createAdminAccount = async () => {
-    console.log("🚀 LMS Admin Account Creator");
+    console.log("🚀 api Admin Account Creator");
     console.log("=============================\n");
     
+    // Prefer CLI overrides first
+    let uri = findArg('uri');
+
     try {
-        // Get database connection string with fallbacks
-        let uri = process.env.MONGO_URI_ATLAS || 
-                  process.env.MONGO_URI_COMPASS || 
-                  process.env.MONGO_URI_COMMUNITY || 
-                  process.env.MONGO_URI || 
-                  process.env.MONGODB_URI;
+        // Determine DB connection string with reasonable fallbacks
+        uri = uri || process.env.MONGO_URI_ATLAS || 
+                    process.env.MONGO_URI_COMPASS || 
+                    process.env.MONGO_URI_COMMUNITY || 
+                    process.env.MONGO_URI || 
+                    process.env.MONGODB_URI ||
+                    'mongodb://localhost:27017/the4g
         
         const dbType = process.env.DB_TYPE || 'atlas';
         console.log(`📊 Database Type: ${dbType.toUpperCase()}`);
-        
-        // If no URI found, try to construct from individual variables
-        if (!uri) {
-            switch (dbType) {
-                case 'atlas':
-                    uri = process.env.MONGO_URI_ATLAS;
-                    break;
-                case 'compass':
-                    uri = process.env.MONGO_URI_COMPASS;
-                    break;
-                case 'community':
-                    uri = process.env.MONGO_URI_COMMUNITY;
-                    break;
-                default:
-                    // Try common environment variable names
-                    uri = process.env.MONGO_URI || process.env.MONGODB_URI;
-            }
-        }
-        
-        if (!uri) {
-            console.error("❌ No database connection string found!");
-            console.log("\n💡 Please set one of these environment variables:");
-            console.log("   - MONGO_URI_ATLAS");
-            console.log("   - MONGO_URI_COMPASS");
-            console.log("   - MONGO_URI_COMMUNITY");
-            console.log("   - MONGO_URI");
-            console.log("   - MONGODB_URI");
-            console.log("\n📝 Example .env file:");
-            console.log("   MONGO_URI_ATLAS=mongodb+srv://username:password@cluster.mongodb.net/lms");
-            console.log("   DB_TYPE=atlas");
-            console.log("\n🔧 Or run with environment variable:");
-            console.log("   MONGO_URI_ATLAS=your_connection_string node scripts/create-admin-account.js");
-            process.exit(1);
-        }
+        console.log(`🔗 Using Mongo URI: ${uri}`);
         
         console.log(`🔗 Connecting to database...`);
-        
-        // Connect to database
         await mongoose.connect(uri, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
         });
-        
         console.log("✅ Database connected successfully!\n");
         
-        // Choose creation mode
+        const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+
+        // Non-interactive environments: default to quick mode
+        const nonInteractive = !process.stdin.isTTY || flag('quick');
+        if (nonInteractive) {
+            await createQuickAdmin({ clientUrl });
+            return;
+        }
+        
         console.log("📋 Choose creation mode:");
         console.log("1. Quick Admin (default credentials)");
         console.log("2. Custom Admin (interactive)");
@@ -126,17 +100,17 @@ const createAdminAccount = async () => {
         
         switch (mode) {
             case "1":
-                await createQuickAdmin();
+                await createQuickAdmin({ clientUrl });
                 break;
             case "2":
-                await createCustomAdmin();
+                await createCustomAdmin({ clientUrl });
                 break;
             case "3":
-                await createBulkAdmins();
+                await createBulkAdmins({ clientUrl });
                 break;
             default:
                 console.log("❌ Invalid mode selected. Using Quick Admin mode.");
-                await createQuickAdmin();
+                await createQuickAdmin({ clientUrl });
         }
         
     } catch (error) {
@@ -155,16 +129,19 @@ const createAdminAccount = async () => {
     }
 };
 
-const createQuickAdmin = async () => {
+const createQuickAdmin = async ({ clientUrl }) => {
     console.log("\n⚡ Quick Admin Mode");
     console.log("==================\n");
     
-    // Default admin account details
+    const username = findArg('username') || 'admin';
+    const email = findArg('email') || 'admin@api.com';
+    const passwordArg = findArg('password');
+
     const adminData = {
         fullName: "System Administrator",
-        username: "admin",
-        email: "admin@lms.com",
-        password: "Admin123!",
+        username,
+        email,
+        password: passwordArg || "Admin123!",
         role: "ADMIN",
         isActive: true
     };
@@ -172,8 +149,8 @@ const createQuickAdmin = async () => {
     // Check if admin already exists
     const existingAdmin = await User.findOne({ 
         $or: [
-            { email: adminData.email },
-            { username: adminData.username }
+            { email: adminData.email.toLowerCase() },
+            { username: adminData.username.toLowerCase() }
         ]
     });
     
@@ -185,9 +162,12 @@ const createQuickAdmin = async () => {
         return;
     }
     
-    // Create admin account
     console.log("👤 Creating admin account...");
-    const admin = new User(adminData);
+    const admin = new User({
+        ...adminData,
+        username: adminData.username.toLowerCase(),
+        email: adminData.email.toLowerCase(),
+    });
     await admin.save();
     
     console.log("✅ Admin account created successfully!");
@@ -196,14 +176,13 @@ const createQuickAdmin = async () => {
     console.log(`🔑 Role: ${admin.role}`);
     console.log(`🔐 Password: ${adminData.password}`);
     console.log("\n💡 You can now login with these credentials");
-    console.log("🌐 Go to: http://localhost:5180/login");
+    console.log(`🌐 Go to: ${clientUrl}/login`);
 };
 
-const createCustomAdmin = async () => {
+const createCustomAdmin = async ({ clientUrl }) => {
     console.log("\n🎨 Custom Admin Mode");
     console.log("===================\n");
     
-    // Get admin details from user
     console.log("📝 Please enter admin details:");
     
     const fullName = await askQuestion("Full Name: ");
@@ -219,8 +198,6 @@ const createCustomAdmin = async () => {
         console.log(`🔐 Generated password: ${password}`);
     } else {
         password = await askQuestion("Password: ");
-        
-        // Validate password
         const passwordError = validatePassword(password);
         if (passwordError) {
             console.log(`⚠️ ${passwordError}`);
@@ -232,16 +209,13 @@ const createCustomAdmin = async () => {
         }
     }
     
-    // Validate input
     if (!fullName || !username || !email || !password) {
         throw new Error("All fields are required!");
     }
-    
     if (!isValidEmail(email)) {
         throw new Error("Invalid email format!");
     }
     
-    // Check if admin already exists
     const existingAdmin = await User.findOne({ 
         $or: [
             { email: email.toLowerCase() },
@@ -257,22 +231,12 @@ const createCustomAdmin = async () => {
         return;
     }
     
-    // Confirm creation
-    console.log("\n📋 Admin Account Details:");
-    console.log(`👤 Full Name: ${fullName}`);
-    console.log(`🔑 Username: ${username}`);
-    console.log(`📧 Email: ${email}`);
-    console.log(`🔐 Password: ${password}`);
-    console.log(`👑 Role: ADMIN`);
-    
     const confirm = await askQuestion("\n❓ Do you want to create this admin account? (y/n): ");
-    
     if (confirm.toLowerCase() !== 'y' && confirm.toLowerCase() !== 'yes') {
         console.log("❌ Admin account creation cancelled.");
         return;
     }
     
-    // Create admin account
     console.log("\n👤 Creating admin account...");
     const admin = new User({
         fullName: fullName,
@@ -282,7 +246,6 @@ const createCustomAdmin = async () => {
         role: "ADMIN",
         isActive: true
     });
-    
     await admin.save();
     
     console.log("✅ Admin account created successfully!");
@@ -291,59 +254,50 @@ const createCustomAdmin = async () => {
     console.log(`🔑 Role: ${admin.role}`);
     console.log(`🔐 Password: ${password}`);
     console.log("\n💡 You can now login with these credentials");
-    console.log("🌐 Go to: http://localhost:5180/login");
+    console.log(`🌐 Go to: ${clientUrl}/login`);
 };
 
-const createBulkAdmins = async () => {
+const createBulkAdmins = async ({ clientUrl }) => {
     console.log("\n📦 Bulk Admin Mode");
     console.log("==================\n");
     
     const count = parseInt(await askQuestion("How many admin accounts to create? (default: 3): ") || "3");
-    
     if (count < 1 || count > 10) {
         console.log("❌ Please enter a number between 1 and 10.");
         return;
     }
     
     console.log(`\n📝 Creating ${count} admin accounts...\n`);
-    
     const createdAdmins = [];
     
     for (let i = 1; i <= count; i++) {
         console.log(`\n--- Admin Account ${i}/${count} ---`);
-        
         const fullName = await askQuestion(`Full Name for Admin ${i}: `);
         const username = await askQuestion(`Username for Admin ${i}: `);
         const email = await askQuestion(`Email for Admin ${i}: `);
-        
-        // Generate random password for bulk creation
         const password = generateRandomPassword();
         
         if (!fullName || !username || !email) {
             console.log(`⚠️ Skipping Admin ${i} - missing required fields`);
             continue;
         }
-        
         if (!isValidEmail(email)) {
             console.log(`⚠️ Skipping Admin ${i} - invalid email format`);
             continue;
         }
         
-        // Check if admin already exists
         const existingAdmin = await User.findOne({ 
             $or: [
                 { email: email.toLowerCase() },
                 { username: username.toLowerCase() }
             ]
         });
-        
         if (existingAdmin) {
             console.log(`⚠️ Admin ${i} already exists!`);
             continue;
         }
         
         try {
-            // Create admin account
             const admin = new User({
                 fullName: fullName,
                 username: username.toLowerCase(),
@@ -352,27 +306,17 @@ const createBulkAdmins = async () => {
                 role: "ADMIN",
                 isActive: true
             });
-            
             await admin.save();
-            
-            createdAdmins.push({
-                fullName,
-                username: admin.username,
-                email: admin.email,
-                password
-            });
-            
+            createdAdmins.push({ fullName, username: admin.username, email: admin.email, password });
             console.log(`✅ Admin ${i} created successfully!`);
             console.log(`   📧 Email: ${admin.email}`);
             console.log(`   👤 Username: ${admin.username}`);
             console.log(`   🔐 Password: ${password}`);
-            
         } catch (error) {
             console.log(`❌ Error creating Admin ${i}: ${error.message}`);
         }
     }
     
-    // Summary
     console.log("\n📊 Summary:");
     console.log(`✅ Successfully created ${createdAdmins.length} admin accounts`);
     console.log(`❌ Failed to create ${count - createdAdmins.length} admin accounts`);
@@ -385,9 +329,8 @@ const createBulkAdmins = async () => {
             console.log(`   👤 Username: ${admin.username}`);
             console.log(`   🔐 Password: ${admin.password}`);
         });
-        
         console.log("\n💡 You can now login with any of these credentials");
-        console.log("🌐 Go to: http://localhost:5180/login");
+        console.log(`🌐 Go to: ${clientUrl}/login`);
     }
 };
 

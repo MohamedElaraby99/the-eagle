@@ -1,40 +1,41 @@
-// Simple CORS test script
-// Run this to test if CORS headers are working
+// Test script to verify CORS configuration
+import { configDotenv } from 'dotenv';
+configDotenv();
 
-import http from 'http';
+console.log('=== CORS Configuration Test ===');
+console.log('CLIENT_URL:', process.env.CLIENT_URL);
+console.log('FRONTEND_URL:', process.env.FRONTEND_URL);
+console.log('NODE_ENV:', process.env.NODE_ENV);
 
-const options = {
-    hostname: 'localhost',
-    port: 4003,
-    path: '/api/test',
-    method: 'GET',
-    headers: {
-        'Origin': 'https://www.the-eagle.fikra.solutions',
-        'User-Agent': 'CORS-Test-Script'
-    }
-};
+// Test allowed origins
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  process.env.FRONTEND_URL,
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://localhost:5190',
+  'http://127.0.0.1:5190',
+  'https://the4g.live',
+  'https://www.the4g.live',
+  'https://api.the4g.live'
+];
 
-const req = http.request(options, (res) => {
-    console.log('Status:', res.statusCode);
-    console.log('Headers:', res.headers);
-    
-    let data = '';
-    res.on('data', (chunk) => {
-        data += chunk;
-    });
-    
-    res.on('end', () => {
-        console.log('Response Body:', data);
-        console.log('\nCORS Headers Check:');
-        console.log('Access-Control-Allow-Origin:', res.headers['access-control-allow-origin']);
-        console.log('Access-Control-Allow-Methods:', res.headers['access-control-allow-methods']);
-        console.log('Access-Control-Allow-Headers:', res.headers['access-control-allow-headers']);
-        console.log('Access-Control-Allow-Credentials:', res.headers['access-control-allow-credentials']);
-    });
+console.log('\nAllowed Origins:');
+allowedOrigins.forEach((origin, index) => {
+  console.log(`${index + 1}. ${origin || 'undefined'}`);
 });
 
-req.on('error', (e) => {
-    console.error('Request error:', e);
+// Test specific problematic origins
+const testOrigins = [
+  'https://the4g.live',
+  'https://api.the4g.live',
+  'https://www.the4g.live'
+];
+
+console.log('\nTesting specific origins:');
+testOrigins.forEach(origin => {
+  const isAllowed = allowedOrigins.includes(origin);
+  console.log(`${origin}: ${isAllowed ? '✅ ALLOWED' : '❌ NOT ALLOWED'}`);
 });
 
-req.end();
+console.log('\n=== End CORS Test ===');

@@ -48,8 +48,34 @@ export default function CourseDashboard() {
   };
 
   const handleFilterChange = (newFilters) => {
-    setFilters(prev => ({ ...prev, ...newFilters }));
-    // Admin dashboard uses full course data without filters for now
+    const updatedFilters = { ...filters, ...newFilters };
+    setFilters(updatedFilters);
+    
+    // Apply filters by calling backend with filter parameters
+    const queryParams = new URLSearchParams();
+    Object.entries(updatedFilters).forEach(([key, value]) => {
+      if (value && value !== '') {
+        queryParams.append(key, value);
+      }
+    });
+    
+    // Call backend with filters
+    dispatch(getAdminCourses(queryParams.toString()));
+  };
+
+  const clearFilters = () => {
+    const resetFilters = {
+      search: '',
+      instructor: '',
+      subject: '',
+      grade: '',
+      stage: '',
+      featured: '',
+      isPublished: '',
+      level: '',
+      language: ''
+    };
+    setFilters(resetFilters);
     dispatch(getAdminCourses());
   };
 
@@ -66,7 +92,7 @@ export default function CourseDashboard() {
               إدارة الدورات
             </h1>
             <p className="text-gray-600 dark:text-gray-300">
-              إدارة الدورات التعليمية وإضافة محتوى جديد
+              إدارة الكورسات التعليمية وإضافة محتوى جديد
             </p>
           </div>
 
@@ -96,7 +122,8 @@ export default function CourseDashboard() {
             
             <CourseFilters 
               filters={filters} 
-              onFilterChange={handleFilterChange} 
+              onFilterChange={handleFilterChange}
+              onClearFilters={clearFilters}
             />
           </div>
 

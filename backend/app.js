@@ -21,6 +21,11 @@ import videoProgressRoutes from './routes/videoProgress.routes.js';
 import deviceManagementRoutes from './routes/deviceManagement.routes.js';
 import liveMeetingRoutes from './routes/liveMeeting.routes.js';
 import captchaRoutes from './routes/captcha.routes.js';
+import courseAccessRoutes from './routes/courseAccess.routes.js';
+
+
+
+
 
 import gradeRoutes from './routes/grade.routes.js';
 import instructorRoutes from './routes/instructor.routes.js';
@@ -28,49 +33,9 @@ import stageRoutes from './routes/stage.routes.js';
 import express from 'express';
 import connectToDb from './config/db.config.js';
 import errorMiddleware from './middleware/error.middleware.js';
+import { checkDeviceAuthorization, logDeviceAccess } from './middleware/deviceAuth.middleware.js';
 
 const app = express();
-
-// CORS Configuration - Clean and Simple
-const corsOptions = {
-    origin: function (origin, callback) {
-        // Allow requests with no origin (like mobile apps or curl requests)
-        if (!origin) return callback(null, true);
-        
-        const allowedOrigins = [
-            'http://localhost:5173',
-            'http://localhost:5180',
-            'https://the-eagle.fikra.solutions',
-            'https://www.the-eagle.fikra.solutions',
-            'https://api.the-eagle.fikra.solutions'
-        ];
-        
-        // Check if origin is allowed
-        if (allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            // Allow subdomains of the-eagle.fikra.solutions
-            if (origin.endsWith('.the-eagle.fikra.solutions')) {
-                callback(null, true);
-            } else {
-                console.log(`🚫 CORS blocked origin: ${origin}`);
-                callback(new Error('Not allowed by CORS'));
-            }
-        }
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token', 'Origin', 'Accept', 'X-Requested-With'],
-    exposedHeaders: ['Content-Length', 'X-Foo', 'X-Bar'],
-    preflightContinue: false,
-    optionsSuccessStatus: 204
-};
-
-// Apply CORS middleware
-app.use(cors(corsOptions));
-
-// Handle preflight requests explicitly
-app.options('*', cors(corsOptions));
 
 // middleware
 app.use(express.json());
@@ -78,52 +43,236 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(morgan('dev'));
 
-// Serve uploaded files
-app.use('/api/v1/uploads', express.static('uploads', {
-    setHeaders: (res, path) => {
-        res.set('Access-Control-Allow-Origin', '*');
-        res.set('Access-Control-Allow-Methods', 'GET');
-        res.set('Access-Control-Allow-Headers', 'Content-Type');
-        res.set('Cache-Control', 'public, max-age=31536000');
-    }
-}));
+// Explicit CORS headers to guarantee preflight success and credentials support
+const allowedOrigins = new Set([
+  process.env.CLIENT_URL,
+  process.env.FRONTEND_URL,
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://localhost:5190',
+  'http://127.0.0.1:5190',
+  'https://the4g.live',
+  'https://www.the4g.live',
+  'https://api.the4g.live'
+]);
 
-// Backward compatibility
-app.use('/uploads', express.static('uploads', {
-    setHeaders: (res, path) => {
-        res.set('Access-Control-Allow-Origin', '*');
-        res.set('Access-Control-Allow-Methods', 'GET');
-        res.set('Access-Control-Allow-Headers', 'Content-Type');
-        res.set('Cache-Control', 'public, max-age=31536000');
-    }
-}));
+// Add any additional origins from environment variables
+if (process.env.ADDITIONAL_CORS_ORIGINS) {
+  const additionalOrigins = process.env.ADDITIONAL_CORS_ORIGINS.split(',').map(o => o.trim());
+  additionalOrigins.forEach(o => allowedOrigins.add(o));
+}
 
-// Test routes
-app.get('/api/test', (req, res) => {
-    console.log('=== API TEST ROUTE HIT ===');
-    console.log('Origin:', req.headers.origin);
-    console.log('User-Agent:', req.headers['user-agent']);
-    res.json({ 
-        message: 'API is working!',
-        origin: req.headers.origin,
-        timestamp: new Date().toISOString()
-    });
+// Extend allowed origins with IPv6 localhost variants
+const moreLocalOrigins = [
+  'http://[::1]:5173',
+  'http://[::1]:5190',
+  'http://[::1]:3000'
+];
+moreLocalOrigins.forEach(o => allowedOrigins.add(o));
+
+// Log allowed origins for debugging
+console.log('Allowed CORS origins:', Array.from(allowedOrigins));
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  
+  // Log CORS attempts for debugging
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('CORS request from origin:', origin);
+    if (origin && !allowedOrigins.has(origin)) {
+      console.log('CORS origin not in allowlist:', origin);
+    }
+  }
+  
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    // Set CORS headers for preflight
+    if (origin && allowedOrigins.has(origin)) {
+      res.header('Access-Control-Allow-Origin', origin);
+    } else if (!origin) {
+      // If no origin header, allow the request (for same-origin requests)
+      res.header('Access-Control-Allow-Origin', '*');
+    }
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-auth-token, x-device-info');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Max-Age', '86400'); // 24 hours
+    res.status(200).end();
+    return;
+  }
+  
+  // Set CORS headers for actual requests
+  if (origin && allowedOrigins.has(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  } else if (!origin) {
+    // If no origin header, allow the request (for same-origin requests)
+    res.header('Access-Control-Allow-Origin', '*');
+  }
+  
+  res.header('Vary', 'Origin');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-auth-token, x-device-info');
+  
+  next();
 });
 
-app.get('/api/cors-test', (req, res) => {
-    console.log('=== CORS TEST ROUTE HIT ===');
-    console.log('Origin:', req.headers.origin);
-    console.log('Headers:', req.headers);
+// Serve uploaded files - accessible via /api/v1/uploads/ for production
+app.use('/api/v1/uploads', express.static('uploads', {
+  setHeaders: (res, path) => {
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Methods', 'GET');
+    res.set('Access-Control-Allow-Headers', 'Content-Type');
+    res.set('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
+  }
+}));
+
+// Backward compatibility - serve uploads on root path as well
+app.use('/uploads', express.static('uploads', {
+  setHeaders: (res, path) => {
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Methods', 'GET');
+    res.set('Access-Control-Allow-Headers', 'Content-Type');
+    res.set('Cache-Control', 'public, max-age=31536000');
+  }
+}));
+
+// Test route to check uploads
+app.get('/api/v1/test-uploads', (req, res) => {
+  const fs = require('fs');
+  const path = require('path');
+  const uploadsDir = path.join(__dirname, 'uploads');
+  
+  try {
+    const files = fs.readdirSync(uploadsDir);
+    const baseUrl = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 4015}`;
     
     res.json({ 
-        message: 'CORS test successful!',
-        origin: req.headers.origin,
-        headers: req.headers,
-        timestamp: new Date().toISOString()
+      message: 'Uploads directory accessible',
+      files: files.slice(0, 10), // Show first 10 files
+      uploadsPath: uploadsDir,
+      apiUploadUrl: `${baseUrl}/api/v1/uploads/`,
+      legacyUploadUrl: `${baseUrl}/uploads/`,
+      sampleUrls: files.slice(0, 3).map(file => ({
+        filename: file,
+        apiUrl: `${baseUrl}/api/v1/uploads/${file}`,
+        legacyUrl: `${baseUrl}/uploads/${file}`
+      }))
     });
+  } catch (error) {
+    res.status(500).json({
+      message: 'Error accessing uploads directory',
+      error: error.message
+    });
+  }
 });
 
-// Routes
+// Simple test route
+app.get('/api/test', (req, res) => {
+  console.log('=== API TEST ROUTE HIT ===');
+  res.json({ message: 'API is working!' });
+});
+
+// CORS test route
+app.get('/api/cors-test', (req, res) => {
+  console.log('=== CORS TEST ROUTE HIT ===');
+  console.log('Origin:', req.headers.origin);
+  console.log('Referer:', req.headers.referer);
+  res.json({ 
+    message: 'CORS test successful!',
+    origin: req.headers.origin,
+    referer: req.headers.referer,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Health check route
+app.get('/api/health', async (req, res) => {
+  try {
+    console.log('=== HEALTH CHECK ROUTE HIT ===');
+    
+    // Test database connection
+    let dbStatus = 'unknown';
+    try {
+      const mongoose = await import('mongoose');
+      dbStatus = mongoose.default.connection.readyState === 1 ? 'connected' : 'disconnected';
+    } catch (e) {
+      dbStatus = 'error';
+    }
+    
+    res.json({
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      database: dbStatus,
+      environment: process.env.NODE_ENV || 'unknown',
+      cors: {
+        allowedOrigins: Array.from(allowedOrigins),
+        clientUrl: process.env.CLIENT_URL,
+        backendUrl: process.env.BACKEND_URL
+      }
+    });
+  } catch (error) {
+    console.error('Health check error:', error);
+    res.status(500).json({
+      status: 'unhealthy',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Test featured endpoints route
+app.get('/api/test-featured', async (req, res) => {
+  try {
+    console.log('=== TEST FEATURED ENDPOINTS ===');
+    
+    // Test if we can import the models
+    let modelsStatus = {};
+    
+    try {
+      const Subject = (await import('./models/subject.model.js')).default;
+      modelsStatus.subjects = 'available';
+    } catch (e) {
+      modelsStatus.subjects = 'error: ' + e.message;
+    }
+    
+    try {
+      const Course = (await import('./models/course.model.js')).default;
+      modelsStatus.courses = 'available';
+    } catch (e) {
+      modelsStatus.courses = 'error: ' + e.message;
+    }
+    
+    try {
+      const Instructor = (await import('./models/instructor.model.js')).default;
+      modelsStatus.instructors = 'available';
+    } catch (e) {
+      modelsStatus.instructors = 'error: ' + e.message;
+    }
+    
+    try {
+      const Blog = (await import('./models/blog.model.js')).default;
+      modelsStatus.blogs = 'available';
+    } catch (e) {
+      modelsStatus.blogs = 'error: ' + e.message;
+    }
+    
+    res.json({
+      message: 'Featured endpoints test',
+      timestamp: new Date().toISOString(),
+      models: modelsStatus,
+      environment: process.env.NODE_ENV || 'unknown'
+    });
+  } catch (error) {
+    console.error('Featured endpoints test error:', error);
+    res.status(500).json({
+      status: 'error',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 app.use('/api/v1/user', userRoutes); 
 app.use('/api/v1/courses', courseRoutes);
 app.use('/api/v1/payments', paymentRoutes);
@@ -143,26 +292,32 @@ app.use('/api/v1/video-progress', videoProgressRoutes);
 app.use('/api/v1/device-management', deviceManagementRoutes);
 app.use('/api/v1/live-meetings', liveMeetingRoutes);
 app.use('/api/v1/captcha', captchaRoutes);
+app.use('/api/v1/course-access', courseAccessRoutes);
+
+
+// Apply device authorization middleware to protected routes
+app.use('/api/v1/courses', checkDeviceAuthorization, logDeviceAccess);
+app.use('/api/v1/payments', checkDeviceAuthorization, logDeviceAccess);
+app.use('/api/v1/wallet', checkDeviceAuthorization, logDeviceAccess);
+app.use('/api/v1/exams', checkDeviceAuthorization, logDeviceAccess);
+app.use('/api/v1/video-progress', checkDeviceAuthorization, logDeviceAccess);
+app.use('/api/v1/live-meetings', checkDeviceAuthorization, logDeviceAccess);
+
+// Note: Public routes like subjects, blogs, instructors don't need device authorization
+// They are accessible without authentication
 
 app.use('/api/v1/grades', gradeRoutes);
 app.use('/api/v1/instructors', instructorRoutes);
 app.use('/api/v1/stages', stageRoutes);
+ 
 
-// Global 404 handler
 app.all('*', (req, res) => {
     res.status(404).send('OOPS!! 404 page not found');
-});
+})
 
 app.use(errorMiddleware);
 
-// db init - make it non-blocking
-setTimeout(() => {
-    try {
-        connectToDb();
-    } catch (error) {
-        console.log('⚠️ MongoDB connection failed, but server continues running');
-        console.log('💡 You can still test CORS and basic functionality');
-    }
-}, 1000);
+// db init
+connectToDb();
 
 export default app;

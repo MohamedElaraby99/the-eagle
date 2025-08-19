@@ -7,9 +7,8 @@ import { IoIosLock, IoIosRefresh } from "react-icons/io";
 import { FiMoreVertical } from "react-icons/fi";
 import Layout from "../../Layout/Layout";
 import { useNavigate } from "react-router-dom";
-import { axiosInstance } from "../../Helpers/axiosInstance";
+
 import { egyptianGovernorates, getArabicGovernorate } from "../../utils/governorateMapping";
-import { generateImageUrl } from "../../utils/fileUtils";
 
 
 export default function Profile() {
@@ -24,39 +23,14 @@ export default function Profile() {
     phoneNumber: userData?.phoneNumber || "",
     fatherPhoneNumber: userData?.fatherPhoneNumber || "",
     governorate: userData?.governorate || "",
-    stage: userData?.stage || "",
     age: userData?.age || "",
     avatar: null,
     previewImage: null,
     userId: null,
   });
-  const [stages, setStages] = useState([]);
   const avatarInputRef = useRef(null);
   const [isChanged, setIschanged] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-
-  // Fetch stages on component mount
-  useEffect(() => {
-    const fetchStages = async () => {
-      try {
-        console.log('Fetching stages...');
-        const response = await axiosInstance.get('/stages');
-        console.log('Stages API response:', response.data);
-        
-        if (response.data.success) {
-          const stagesData = response.data.data.stages;
-          console.log('Stages data:', stagesData);
-          setStages(stagesData);
-        } else {
-          console.error('Stages API returned success: false');
-        }
-      } catch (error) {
-        console.error('Error fetching stages:', error);
-      }
-    };
-
-    fetchStages();
-  }, []);
 
   function handleImageUpload(e) {
     e.preventDefault();
@@ -87,7 +61,6 @@ export default function Profile() {
     if (userData?.role !== 'ADMIN') {
       formData.append("fatherPhoneNumber", userInput.fatherPhoneNumber);
       formData.append("governorate", userInput.governorate);
-      formData.append("stage", userInput.stage);
       formData.append("age", userInput.age);
     }
     
@@ -120,7 +93,6 @@ export default function Profile() {
       phoneNumber: userData?.phoneNumber || "",
       fatherPhoneNumber: userData?.fatherPhoneNumber || "",
       governorate: userData?.governorate || "",
-      stage: userData?.stage?._id || userData?.stage || "",
       age: userData?.age || "",
       avatar: null,
       previewImage: null,
@@ -131,11 +103,8 @@ export default function Profile() {
       phoneNumber: userData?.phoneNumber || "",
       fatherPhoneNumber: userData?.fatherPhoneNumber || "",
       governorate: userData?.governorate || "",
-      stage: userData?.stage?._id || userData?.stage || "",
       age: userData?.age || "",
     });
-    console.log('UserData stage object:', userData?.stage);
-    console.log('Available stages:', stages);
   }
 
   function handleCancelEdit() {
@@ -148,7 +117,6 @@ export default function Profile() {
       phoneNumber: userData?.phoneNumber || "",
       fatherPhoneNumber: userData?.fatherPhoneNumber || "",
       governorate: userData?.governorate || "",
-      stage: userData?.stage?._id || userData?.stage || "",
       age: userData?.age || "",
       avatar: null,
       previewImage: null,
@@ -169,7 +137,6 @@ export default function Profile() {
         hasChanges = hasChanges ||
           userInput.fatherPhoneNumber !== userData?.fatherPhoneNumber ||
           userInput.governorate !== userData?.governorate ||
-          userInput.stage !== (userData?.stage?._id || userData?.stage) ||
           userInput.age !== userData?.age;
       }
       
@@ -179,7 +146,7 @@ export default function Profile() {
         phoneChanged: userInput.phoneNumber !== userData?.phoneNumber,
         fatherPhoneChanged: userData?.role !== 'ADMIN' ? userInput.fatherPhoneNumber !== userData?.fatherPhoneNumber : false,
         governorateChanged: userData?.role !== 'ADMIN' ? userInput.governorate !== userData?.governorate : false,
-        stageChanged: userData?.role !== 'ADMIN' ? userInput.stage !== (userData?.stage?._id || userData?.stage) : false,
+
         ageChanged: userData?.role !== 'ADMIN' ? userInput.age !== userData?.age : false,
         avatarChanged: !!userInput.avatar,
         userRole: userData?.role,
@@ -204,10 +171,7 @@ export default function Profile() {
   // Debug: Log user data to see what's being received
   useEffect(() => {
     console.log('Current userData:', userData);
-    console.log('Stage from userData:', userData?.stage);
-    console.log('Stage from userInput:', userInput.stage);
-    console.log('Stages array:', stages);
-  }, [userData, userInput.stage, stages]);
+  }, [userData]);
 
   useEffect(() => {
     if (userData && Object.keys(userData).length > 0) {
@@ -218,23 +182,13 @@ export default function Profile() {
         phoneNumber: userData?.phoneNumber || "",
         fatherPhoneNumber: userData?.fatherPhoneNumber || "",
         governorate: userData?.governorate || "",
-        stage: userData?.stage?._id || userData?.stage || "",
         age: userData?.age || "",
       userId: userData?._id,
     });
     }
-  }, [userData, stages]);
+  }, [userData]);
 
-  // Additional useEffect to handle stage selection when user doesn't have a stage assigned
-  useEffect(() => {
-    if (stages.length > 0 && userData && !userData.stage && isEditing) {
-      console.log('User has no stage assigned, but stages are available. Setting default to first stage.');
-      setUserInput(prev => ({
-        ...prev,
-        stage: stages[0]._id
-      }));
-    }
-  }, [stages, userData, isEditing]);
+
 
   return (
     <Layout hideFooter={true}>
@@ -259,7 +213,7 @@ export default function Profile() {
                   src={
                     userInput.previewImage
                       ? userInput.previewImage
-                      : generateImageUrl(userData?.avatar?.secure_url)
+                      : userData?.avatar?.secure_url
                   }
                   alt="avatar"
                   className="h-full w-full"
@@ -452,45 +406,11 @@ export default function Profile() {
                       المرحلة الدراسية
                     </label>
                     
-                    <select
-                      value={isEditing ? userInput.stage : (userData?.stage?._id || userData?.stage || "")}
-                      onChange={(e) => {
-                        console.log('Stage selected:', e.target.value);
-                        setUserInput({ ...userInput, stage: e.target.value });
-                      }}
-                      disabled={!isEditing}
-                      className={`w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                        !isEditing 
-                          ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 cursor-not-allowed' 
-                          : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white'
-                      }`}
-                      onFocus={() => {
-                        console.log('Stage select focused. Current value:', isEditing ? userInput.stage : (userData?.stage?._id || userData?.stage || ""));
-                        console.log('Available stages:', stages);
-                        console.log('UserData stage:', userData?.stage);
-                      }}
-                    >
-                      <option value="">اختر المرحلة الدراسية</option>
-                      {stages.length > 0 ? (
-                        stages.map((stage) => {
-                          console.log('Rendering stage:', stage);
-                          return (
-                            <option key={stage._id} value={stage._id}>
-                              {stage.name}
-                            </option>
-                          );
-                        })
-                      ) : (
-                        <option value="" disabled>جاري تحميل المراحل...</option>
-                      )}
-                    </select>
+                    <div className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+                      {userData?.stage?.name || userData?.stage || "غير محدد"}
+                    </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">
-                      {stages.length > 0 ? `${stages.length} مرحلة متاحة` : 'لا توجد مراحل متاحة'}
-                      {!userData?.stage && stages.length > 0 && (
-                        <div className="text-blue-600 dark:text-blue-400 mt-1">
-                          ⚠️ لم يتم تحديد مرحلة دراسية بعد. يرجى اختيار مرحلة.
-                        </div>
-                      )}
+                      المرحلة الدراسية لا يمكن تعديلها
                     </div>
                   </div>
 

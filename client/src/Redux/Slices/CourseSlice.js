@@ -3,9 +3,11 @@ import { axiosInstance } from '../../Helpers/axiosInstance';
 
 const initialState = {
   courses: [],
+  featuredCourses: [],
   currentCourse: null,
   courseStats: null,
   loading: false,
+  featuredLoading: false,
   error: null,
   createLoading: false,
   updateLoading: false,
@@ -32,9 +34,10 @@ export const getAllCourses = createAsyncThunk(
 // Get all courses for admin (with full content)
 export const getAdminCourses = createAsyncThunk(
   'course/getAdminCourses',
-  async (_, { rejectWithValue }) => {
+  async (queryParams = '', { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get('/courses/admin/all');
+      const url = queryParams ? `/courses/admin/all?${queryParams}` : '/courses/admin/all';
+      const response = await axiosInstance.get(url);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data);
@@ -48,6 +51,19 @@ export const getFeaturedCourses = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.get('/courses/featured');
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data);
+    }
+  }
+);
+
+// Toggle course featured status
+export const toggleFeatured = createAsyncThunk(
+  'course/toggleFeatured',
+  async (courseId, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.patch(`/courses/${courseId}/toggle-featured`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data);
@@ -79,6 +95,7 @@ export const createCourse = createAsyncThunk(
       formData.append('instructor', courseData.instructor);
       formData.append('stage', courseData.stage);
       formData.append('subject', courseData.subject);
+      formData.append('category', courseData.category);
       
       if (courseData.thumbnail) {
         formData.append('thumbnail', courseData.thumbnail);
@@ -108,6 +125,7 @@ export const updateCourse = createAsyncThunk(
       formData.append('instructor', courseData.instructor);
       formData.append('stage', courseData.stage);
       formData.append('subject', courseData.subject);
+      formData.append('category', courseData.category);
       
       if (courseData.thumbnail) {
         formData.append('thumbnail', courseData.thumbnail);
@@ -299,18 +317,20 @@ const courseSlice = createSlice({
     },
     clearCourseState: (state) => {
       state.courses = [];
+      state.featuredCourses = [];
       state.currentCourse = null;
       state.courseStats = null;
+      state.loading = false;
+      state.featuredLoading = false;
+      state.error = null;
+      state.createLoading = false;
+      state.updateLoading = false;
+      state.deleteLoading = false;
       state.pagination = {
         page: 1,
         limit: 10,
         total: 0
       };
-      state.loading = false;
-      state.createLoading = false;
-      state.updateLoading = false;
-      state.deleteLoading = false;
-      state.error = null;
     }
   },
   extraReducers: (builder) => {
@@ -354,11 +374,11 @@ const courseSlice = createSlice({
       })
       // Get featured courses
       .addCase(getFeaturedCourses.pending, (state) => {
-        state.loading = true;
+        state.featuredLoading = true;
         state.error = null;
       })
       .addCase(getFeaturedCourses.fulfilled, (state, action) => {
-        state.loading = false;
+        state.featuredLoading = false;
         console.log('🌟 Frontend received FEATURED courses data:', {
           totalCourses: action.payload.data.courses?.length,
           firstCourse: action.payload.data.courses?.[0],
@@ -370,9 +390,39 @@ const courseSlice = createSlice({
             hasStage: !!c.stage
           }))
         });
-        state.courses = action.payload.data.courses;
+        state.featuredCourses = action.payload.data.courses;
       })
       .addCase(getFeaturedCourses.rejected, (state, action) => {
+        state.featuredLoading = false;
+        state.error = action.payload;
+      })
+      // Toggle featured course
+      .addCase(toggleFeatured.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(toggleFeatured.fulfilled, (state, action) => {
+        state.loading = false;
+        const updatedCourse = action.payload.data.course;
+        
+        // Update in courses array
+        const index = state.courses.findIndex(course => course._id === updatedCourse._id);
+        if (index !== -1) {
+          state.courses[index] = updatedCourse;
+        }
+        
+        // Update in featuredCourses array
+        const featuredIndex = state.featuredCourses.findIndex(course => course._id === updatedCourse._id);
+        if (featuredIndex !== -1) {
+          state.featuredCourses[featuredIndex] = updatedCourse;
+        }
+        
+        // Update currentCourse if it matches
+        if (state.currentCourse && state.currentCourse._id === updatedCourse._id) {
+          state.currentCourse = updatedCourse;
+        }
+      })
+      .addCase(toggleFeatured.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })

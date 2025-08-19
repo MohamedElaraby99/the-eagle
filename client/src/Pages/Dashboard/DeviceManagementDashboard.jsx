@@ -8,6 +8,8 @@ import {
     resetUserDevices,
     removeDevice,
     getDeviceStats,
+    getDeviceLimit,
+    updateDeviceLimit,
     clearDeviceError
 } from "../../Redux/Slices/DeviceManagementSlice";
 import {
@@ -31,7 +33,10 @@ import {
     FaChrome,
     FaFirefoxBrowser,
     FaEdge,
-    FaSafari
+    FaSafari,
+    FaEdit,
+    FaSave,
+    FaTimes
 } from "react-icons/fa";
 
 export default function DeviceManagementDashboard() {
@@ -56,14 +61,24 @@ export default function DeviceManagementDashboard() {
     });
     const [selectedUser, setSelectedUser] = useState(null);
     const [showUserDevices, setShowUserDevices] = useState(false);
+    const [isEditingLimit, setIsEditingLimit] = useState(false);
+    const [newDeviceLimit, setNewDeviceLimit] = useState(2);
 
     // Fetch initial data
     useEffect(() => {
         if (role === "ADMIN") {
             dispatch(getDeviceStats());
+            dispatch(getDeviceLimit());
             dispatch(getAllUsersDevices(filters));
         }
     }, [dispatch, role]);
+
+    // Update newDeviceLimit when deviceStats changes
+    useEffect(() => {
+        if (deviceStats.maxDevicesPerUser) {
+            setNewDeviceLimit(deviceStats.maxDevicesPerUser);
+        }
+    }, [deviceStats.maxDevicesPerUser]);
 
     // Handle filter changes
     useEffect(() => {
@@ -224,6 +239,25 @@ export default function DeviceManagementDashboard() {
                     {/* Overview Tab */}
                     {activeTab === "overview" && (
                         <div className="space-y-6">
+                            {/* Debug Information */}
+                            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
+                                <h3 className="text-lg font-medium text-yellow-800 dark:text-yellow-200 mb-2">
+                                    معلومات التصحيح
+                                </h3>
+                                <div className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
+                                    <p>• إجمالي المستخدمين: {usersDevices.length}</p>
+                                    <p>• إجمالي الأجهزة: {deviceStats.totalDevices}</p>
+                                    <p>• الأجهزة النشطة: {deviceStats.activeDevices}</p>
+                                    <p>• الحد الحالي: {deviceStats.maxDevicesPerUser} أجهزة</p>
+                                    <p>• حالة التحميل: {loading ? 'جاري التحميل' : 'مكتمل'}</p>
+                                    {deviceStats.totalDevices === 0 && (
+                                        <p className="font-medium text-red-600 dark:text-red-400">
+                                            ملاحظة: لا توجد أجهزة مسجلة. الأجهزة تُسجل تلقائياً عند تسجيل دخول المستخدمين.
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+
                             {/* Statistics Cards */}
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
@@ -277,6 +311,9 @@ export default function DeviceManagementDashboard() {
                                             <p className="text-2xl font-bold text-red-600 dark:text-red-400">
                                                 {deviceStats.usersOverLimit}
                                             </p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                الحد الحالي: {deviceStats.maxDevicesPerUser} أجهزة
+                                            </p>
                                         </div>
                                         <FaExclamationTriangle className="h-8 w-8 text-red-500" />
                                     </div>
@@ -326,6 +363,126 @@ export default function DeviceManagementDashboard() {
                                                 </span>
                                             </div>
                                         ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Device Limit Editor */}
+                            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
+                                    <FaEdit className="mr-2 text-blue-500" />
+                                    حد الأجهزة لكل مستخدم
+                                </h3>
+                                
+                                {isEditingLimit ? (
+                                    <div className="space-y-4">
+                                        <div className="flex items-center space-x-4">
+                                            <input
+                                                type="number"
+                                                value={newDeviceLimit}
+                                                onChange={(e) => setNewDeviceLimit(parseInt(e.target.value) || 1)}
+                                                className="w-24 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                                min="1"
+                                                max="10"
+                                            />
+                                            <span className="text-gray-600 dark:text-gray-400">
+                                                جهاز لكل مستخدم
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center space-x-2 space-x-reverse">
+                                            <button
+                                                onClick={async () => {
+                                                    try {
+                                                        await dispatch(updateDeviceLimit(newDeviceLimit)).unwrap();
+                                                        setIsEditingLimit(false);
+                                                        // Refresh stats to get updated data
+                                                        dispatch(getDeviceStats());
+                                                        dispatch(getAllUsersDevices(filters));
+                                                    } catch (error) {
+                                                        // Error is handled in the slice
+                                                    }
+                                                }}
+                                                disabled={actionLoading}
+                                                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                                            >
+                                                <FaSave className="w-4 h-4" />
+                                                <span>حفظ</span>
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    setIsEditingLimit(false);
+                                                    setNewDeviceLimit(deviceStats.maxDevicesPerUser);
+                                                }}
+                                                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium flex items-center space-x-2"
+                                            >
+                                                <FaTimes className="w-4 h-4" />
+                                                <span>إلغاء</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        <div className="flex items-center space-x-4">
+                                            <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                                                {deviceStats.maxDevicesPerUser}
+                                            </span>
+                                            <span className="text-gray-600 dark:text-gray-400">
+                                                جهاز لكل مستخدم
+                                            </span>
+                                        </div>
+                                        <button
+                                            onClick={() => setIsEditingLimit(true)}
+                                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium flex items-center space-x-2"
+                                        >
+                                            <FaEdit className="w-4 h-4" />
+                                            <span>تعديل الحد</span>
+                                        </button>
+                                    </div>
+                                )}
+                                
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
+                                    يمكنك تغيير عدد الأجهزة المسموح بها لكل مستخدم. الحد الأقصى هو 10 أجهزة.
+                                </p>
+                            </div>
+
+                            {/* Test Section */}
+                            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
+                                    <FaServer className="mr-2 text-green-500" />
+                                    اختبار النظام
+                                </h3>
+                                <div className="space-y-4">
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                                        استخدم هذه الأزرار لاختبار نظام إدارة الأجهزة:
+                                    </p>
+                                    <div className="flex items-center space-x-4 space-x-reverse">
+                                        <button
+                                            onClick={() => {
+                                                dispatch(getDeviceStats());
+                                                dispatch(getAllUsersDevices(filters));
+                                            }}
+                                            disabled={loading}
+                                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                                        >
+                                            <FaRedo className="w-4 h-4" />
+                                            <span>تحديث البيانات</span>
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                console.log('Device Stats:', deviceStats);
+                                                console.log('Users Devices:', usersDevices);
+                                                toast.success('تم طباعة البيانات في وحدة التحكم');
+                                            }}
+                                            className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium flex items-center space-x-2"
+                                        >
+                                            <FaEye className="w-4 h-4" />
+                                            <span>عرض البيانات في وحدة التحكم</span>
+                                        </button>
+                                    </div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                        <p>• الأجهزة تُسجل تلقائياً عند تسجيل دخول المستخدمين</p>
+                                        <p>• تأكد من أن المستخدمين قد سجلوا دخولهم مرة واحدة على الأقل</p>
+                                        <p>• يمكنك تغيير حد الأجهزة من القسم أعلاه</p>
                                     </div>
                                 </div>
                             </div>

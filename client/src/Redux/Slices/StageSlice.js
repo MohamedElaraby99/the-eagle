@@ -93,6 +93,18 @@ export const getAllStagesWithStats = createAsyncThunk(
   }
 );
 
+export const getAllStagesAdmin = createAsyncThunk(
+  'stage/getAllStagesAdmin',
+  async (params = {}, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.get('/stages/admin', { params });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch all stages');
+    }
+  }
+);
+
 export const toggleStageStatus = createAsyncThunk(
   'stage/toggleStageStatus',
   async (id, { rejectWithValue }) => {
@@ -107,11 +119,15 @@ export const toggleStageStatus = createAsyncThunk(
   }
 );
 
+
+
 const initialState = {
   stages: [],
+  adminStages: [],
   currentStage: null,
   stagesWithStats: [],
   loading: false,
+  adminLoading: false,
   error: null,
   pagination: {
     page: 1,
@@ -148,6 +164,20 @@ const stageSlice = createSlice({
     });
     builder.addCase(getAllStages.rejected, (state, action) => {
       state.loading = false;
+      state.error = action.payload;
+    });
+
+    // Get all stages admin (including inactive)
+    builder.addCase(getAllStagesAdmin.pending, (state) => {
+      state.adminLoading = true;
+      state.error = null;
+    });
+    builder.addCase(getAllStagesAdmin.fulfilled, (state, action) => {
+      state.adminLoading = false;
+      state.adminStages = action.payload.data.stages;
+    });
+    builder.addCase(getAllStagesAdmin.rejected, (state, action) => {
+      state.adminLoading = false;
       state.error = action.payload;
     });
 
@@ -219,6 +249,8 @@ const stageSlice = createSlice({
         state.currentStage = updatedStage;
       }
     });
+
+
   }
 });
 

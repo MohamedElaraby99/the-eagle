@@ -34,6 +34,7 @@ import {
 } from 'react-icons/fa';
 import { generateImageUrl } from '../../utils/fileUtils';
 import { placeholderImages } from '../../utils/placeholderImages';
+import { checkCourseAccess, redeemCourseAccessCode } from '../../Redux/Slices/CourseAccessSlice';
 
 export default function CourseDetail() {
   const { id } = useParams();
@@ -42,6 +43,7 @@ export default function CourseDetail() {
   const { currentCourse, loading } = useSelector((state) => state.course);
   const { walletBalance, purchaseStatus, loading: paymentLoading } = useSelector((state) => state.payment);
   const { data: user, isLoggedIn } = useSelector((state) => state.auth);
+  const courseAccessState = useSelector((state) => state.courseAccess.byCourseId[id]);
 
   const [expandedUnits, setExpandedUnits] = useState(new Set());
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
@@ -53,6 +55,7 @@ export default function CourseDetail() {
   const [previewItem, setPreviewItem] = useState(null);
   const [showLessonModal, setShowLessonModal] = useState(false);
   const [selectedLesson, setSelectedLesson] = useState(null);
+  const [redeemCode, setRedeemCode] = useState('');
 
   useEffect(() => {
     if (id) {
@@ -60,16 +63,23 @@ export default function CourseDetail() {
     }
   }, [dispatch, id]);
 
-  // Fetch wallet balance only when user is logged in and not ADMIN or USER1
+  // Check timed-access via code
   useEffect(() => {
-    if (user && isLoggedIn && user.role !== 'ADMIN' && user.role !== 'USER1') {
+    if (id && user && isLoggedIn) {
+      dispatch(checkCourseAccess(id));
+    }
+  }, [dispatch, id, user, isLoggedIn]);
+
+  // Fetch wallet balance only when user is logged in
+  useEffect(() => {
+    if (user && isLoggedIn && user.role !== 'ADMIN') {
       dispatch(getWalletBalance());
     }
   }, [dispatch, user, isLoggedIn]);
 
-  // Check purchase status for all items when course loads (only for regular users)
+  // Check purchase status for all items when course loads
   useEffect(() => {
-    if (currentCourse && user && isLoggedIn && user.role !== 'ADMIN' && user.role !== 'USER1') {
+    if (currentCourse && user && isLoggedIn) {
       // Check درس
       currentCourse.directLessons?.forEach(lesson => {
         if (lesson.price > 0) {
@@ -159,8 +169,12 @@ export default function CourseDetail() {
 
 
   const isItemPurchased = (purchaseType, itemId) => {
-    // Admin users and USER1 users have access to all content
-    if (user?.role === 'ADMIN' || user?.role === 'USER1') {
+    // Admin users have access to all content
+    if (user?.role === 'ADMIN') {
+      return true;
+    }
+    // If user has active course access via code, allow viewing
+    if (courseAccessState?.hasAccess) {
       return true;
     }
     const key = `${currentCourse._id}-${purchaseType}-${itemId}`;
@@ -177,10 +191,9 @@ export default function CourseDetail() {
       return;
     }
     
-    // Admin users and USER1 users have access to all content, no need to purchase
-    if (user.role === 'ADMIN' || user.role === 'USER1') {
-      const roleMessage = user.role === 'ADMIN' ? 'أنت مدير النظام - لديك صلاحية الوصول لجميع المحتوى' : 'أنت مستخدم محتوى - لديك صلاحية الوصول لجميع المحتوى';
-      setAlertMessage(roleMessage);
+    // Admin users have access to all content, no need to purchase
+    if (user.role === 'ADMIN') {
+      setAlertMessage('أنت مدير النظام - لديك صلاحية الوصول لجميع المحتوى');
       setShowSuccessAlert(true);
       return;
     }
@@ -193,6 +206,25 @@ export default function CourseDetail() {
 
     setSelectedItem({ ...item, purchaseType });
     setShowPurchaseModal(true);
+  };
+
+  const handleRedeemCode = async (e) => {
+    e.preventDefault();
+    if (!redeemCode.trim()) return;
+    try {
+      await dispatch(redeemCourseAccessCode({ 
+        code: redeemCode.trim(),
+        courseId: currentCourse._id 
+      })).unwrap();
+      setRedeemCode('');
+      setAlertMessage('تم تفعيل الوصول للكورس بنجاح لوقت محدد');
+      setShowSuccessAlert(true);
+      // Refresh course access status
+      dispatch(checkCourseAccess(currentCourse._id));
+    } catch (err) {
+      setAlertMessage(err?.message || 'تعذر تفعيل الكود');
+      setShowErrorAlert(true);
+    }
   };
 
   const handlePreviewClick = (item, purchaseType) => {
@@ -235,8 +267,8 @@ export default function CourseDetail() {
 
   const renderPurchaseButton = (item, purchaseType, showButton = true, unitId = null) => {
     
-    // Admin users and USER1 users have access to all content
-    if (user?.role === 'ADMIN' || user?.role === 'USER1') {
+    // Admin users have access to all content
+    if (user?.role === 'ADMIN') {
       return (
         <WatchButton
           item={item}
@@ -328,7 +360,7 @@ export default function CourseDetail() {
               className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
             >
               <FaArrowLeft />
-              <span>العودة للدورات</span>
+              <span>العودة للكورسات </span>
             </Link>
           </div>
         </div>
@@ -346,7 +378,7 @@ export default function CourseDetail() {
             className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors"
           >
             <FaArrowLeft />
-            <span>العودة للدورات</span>
+            <span>العودة للكورسات </span>
           </Link>
         </div>
 
@@ -445,7 +477,7 @@ export default function CourseDetail() {
                 <div className="lg:col-span-1">
                   <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6 sticky top-6">
                                          {/* Wallet Balance */}
-                     {user && isLoggedIn && user.role !== 'ADMIN' && user.role !== 'USER1' && (
+                     {user && isLoggedIn && user.role !== 'ADMIN' && (
                        <div className="text-center mb-6 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
                          <div className="flex items-center justify-center gap-2 mb-2">
                            <FaWallet className="text-green-600" />
@@ -453,19 +485,6 @@ export default function CourseDetail() {
                          </div>
                          <div className="text-2xl font-bold text-green-600">
                            {walletBalance} جنيه
-                         </div>
-                       </div>
-                     )}
-
-                     {/* Content Access Indicator for USER1 */}
-                     {user && isLoggedIn && user.role === 'USER1' && (
-                       <div className="text-center mb-6 p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-                         <div className="flex items-center justify-center gap-2 mb-2">
-                           <FaUnlock className="text-orange-600" />
-                           <span className="text-sm text-gray-600 dark:text-gray-400">صلاحية الوصول للمحتوى</span>
-                         </div>
-                         <div className="text-sm font-medium text-orange-600">
-                           يمكنك مشاهدة جميع المحتويات
                          </div>
                        </div>
                      )}
@@ -480,6 +499,34 @@ export default function CourseDetail() {
                         <span>المرحلة: {currentCourse.stage?.name || 'غير محدد'}</span>
                       </div>
                     </div>
+
+                    {/* Redeem Access Code */}
+                    {user && isLoggedIn && user.role !== 'ADMIN' && (
+                      <form onSubmit={handleRedeemCode} className="space-y-3">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                          لديك كود لفتح الكورس؟
+                        </label>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={redeemCode}
+                            onChange={(e) => setRedeemCode(e.target.value)}
+                            placeholder="أدخل الكود هنا"
+                            className="flex-1 px-3 py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                            required
+                          />
+                          <button
+                            type="submit"
+                            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg"
+                          >
+                            تفعيل
+                          </button>
+                        </div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          يمنحك الكود وصولاً كاملاً للكورس لمدة محددة.
+                        </p>
+                      </form>
+                    )}
                   </div>
                 </div>
               </div>
@@ -493,7 +540,7 @@ export default function CourseDetail() {
             <div className="p-6 border-b border-gray-200 dark:border-gray-700">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                 <FaList />
-                <span>هيكل المادة</span>
+                <span>هيكل الدرس</span>
               </h2>
             </div>
 
@@ -524,7 +571,7 @@ export default function CourseDetail() {
                           </div>
                         </div>
                         <div className="flex items-center gap-4">
-                          {lesson.price > 0 && user?.role !== 'USER1' && (
+                          {lesson.price > 0 && (
                             <span className="text-sm font-medium text-green-600">
                               {lesson.price} جنيه
                             </span>
@@ -568,11 +615,11 @@ export default function CourseDetail() {
                             </div>
                           </div>
                           <div className="flex items-center gap-4">
-                            {unit.price > 0 && user?.role !== 'USER1' && (
+                            {unit.price > 0 && (
                               <span className="text-sm font-medium text-green-600">
                                 {unit.price} جنيه
                               </span>
-                            )}
+                                                        )}
                             {expandedUnits.has(unit._id || unitIndex) ? (
                               <FaChevronUp className="text-gray-400" />
                             ) : (
@@ -604,7 +651,7 @@ export default function CourseDetail() {
                                     </div>
                                   </div>
                                   <div className="flex items-center gap-4">
-                                    {lesson.price > 0 && user?.role !== 'USER1' && (
+                                    {lesson.price > 0 && (
                                       <span className="text-sm font-medium text-green-600">
                                         {lesson.price} جنيه
                                       </span>

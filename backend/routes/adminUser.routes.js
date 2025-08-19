@@ -1,16 +1,19 @@
 import express from "express";
 import { isLoggedIn, authorisedRoles } from "../middleware/auth.middleware.js";
 import { 
-    getAllUsers,
-    createUser,
-    getUserDetails,
-    toggleUserStatus,
-    deleteUser,
-    updateUserRole,
+    getAllUsers, 
+    createUser, 
+    getUserDetails, 
+    toggleUserStatus, 
+    deleteUser, 
+    updateUserRole, 
+    updateUser, 
+    updateUserPassword,
+    resetAllUserWallets,
+    resetUserWallet,
+    resetAllRechargeCodes,
     getUserActivities,
-    getUserStats,
-    resetUserPassword,
-    createBulkUser1Accounts
+    getUserStats
 } from "../controllers/adminUser.controller.js";
 
 const router = express.Router();
@@ -20,7 +23,7 @@ router.use(isLoggedIn);
 router.use(authorisedRoles("ADMIN"));
 
 // Get all users with filters and pagination
-router.get("/", (req, res, next) => {
+router.get("/users", (req, res, next) => {
     console.log('=== ADMIN USERS ROUTE HIT ===');
     console.log('User making request:', req.user);
     next();
@@ -30,27 +33,36 @@ router.get("/", (req, res, next) => {
 router.post("/create", createUser);
 
 // Get user details
-router.get("/:userId", getUserDetails);
+router.get("/users/:userId", getUserDetails);
 
 // Toggle user active status
-router.patch("/:userId/status", toggleUserStatus);
+router.patch("/users/:userId/status", toggleUserStatus);
 
 // Update user role
-router.patch("/:userId/role", updateUserRole);
+router.patch("/users/:userId/role", updateUserRole);
+
+// Update user information
+router.patch("/users/:userId", updateUser);
+
+// Update user password
+router.patch("/users/:userId/password", updateUserPassword);
+
+// Reset all user wallets
+router.post("/reset-all-wallets", resetAllUserWallets);
+
+// Reset specific user wallet
+router.post("/users/:userId/reset-wallet", resetUserWallet);
+
+// Reset all recharge codes
+router.post("/reset-all-codes", resetAllRechargeCodes);
 
 // Delete user
-router.delete("/:userId", deleteUser);
+router.delete("/users/:userId", deleteUser);
 
 // Get user activities
-router.get("/:userId/activities", getUserActivities);
+router.get("/users/:userId/activities", getUserActivities);
 
 // Get user statistics
-router.get("/:userId/stats", getUserStats);
-
-// Reset user password
-router.patch("/:userId/password", resetUserPassword);
-
-// Create bulk USER1 accounts
-router.post("/bulk-user1", createBulkUser1Accounts);
+router.get("/users/:userId/stats", getUserStats);
 
 export default router; 

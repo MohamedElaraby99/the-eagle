@@ -34,6 +34,7 @@ import WhatsAppServiceDashboard from "./Pages/Dashboard/WhatsAppServiceDashboard
 import WhatsAppServices from "./Pages/WhatsAppServices/WhatsAppServices";
 import InstructorDashboard from "./Pages/Dashboard/InstructorDashboard";
 import StageDashboard from "./Pages/Dashboard/StageDashboard";
+
 import Instructors from "./Pages/Instructors";
 import InstructorDetail from "./Pages/InstructorDetail";
 import CourseContentManager from './Pages/Dashboard/CourseContentManager';
@@ -53,6 +54,7 @@ import LiveMeetingDashboard from "./Pages/Dashboard/LiveMeetingDashboard";
 import ExamResultsDashboard from "./Pages/Dashboard/ExamResultsDashboard";
 import LiveMeetings from "./Pages/User/LiveMeetings";
 import ExamHistory from "./Pages/User/ExamHistory";
+import AdminCourseAccessCodes from "./Pages/Dashboard/AdminCourseAccessCodes";
 
 function App() {
   // Auto scroll to top on route change
@@ -72,6 +74,7 @@ function App() {
         <Route path="/admin/users" element={<AdminUserDashboard />} />
         <Route path="/admin/instructors" element={<InstructorDashboard />} />
         <Route path="/admin/stages" element={<StageDashboard />} />
+
         <Route path="/admin/whatsapp-services" element={<WhatsAppServiceDashboard />} />
         <Route path="/whatsapp-services" element={<WhatsAppServices />} />
         <Route path="/instructors" element={<Instructors />} />
@@ -112,6 +115,7 @@ function App() {
                     <Route path="/admin/device-management" element={<DeviceManagementDashboard />} />
                     <Route path="/admin/live-meetings" element={<LiveMeetingDashboard />} />
                     <Route path="/admin/exam-results" element={<ExamResultsDashboard />} />
+                    <Route path="/admin/course-access-codes" element={<AdminCourseAccessCodes />} />
                   </Route>
 
         <Route element={<RequireAuth allowedRoles={["USER", "ADMIN"]} />}>

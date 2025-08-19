@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getFeaturedInstructors } from '../Redux/Slices/InstructorSlice';
-import { FaGraduationCap, FaStar, FaUsers, FaBook, FaClock, FaLinkedin, FaTwitter, FaGlobe, FaTimes, FaAward, FaArrowRight } from 'react-icons/fa';
+import { FaGraduationCap, FaStar, FaUsers, FaBook, FaClock, FaLinkedin, FaTwitter, FaFacebook, FaWhatsapp, FaTimes, FaAward, FaArrowRight } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
-import { generateImageUrl } from '../utils/fileUtils';
+import { generateImageUrl } from "../utils/fileUtils";
+import { placeholderImages } from "../utils/placeholderImages";
 
 const InstructorSection = () => {
   const dispatch = useDispatch();
@@ -23,6 +24,11 @@ const InstructorSection = () => {
   const closeModal = () => {
     setShowModal(false);
     setSelectedInstructor(null);
+  };
+
+  const handleImgError = (e) => {
+    e.currentTarget.onerror = null;
+    e.currentTarget.src = placeholderImages.avatar;
   };
 
   const renderStars = (rating) => {
@@ -89,24 +95,17 @@ const InstructorSection = () => {
                 className="group bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden border border-gray-100 dark:border-gray-700 cursor-pointer"
                 onClick={() => handleInstructorClick(instructor)}
               >
-                {/* Large Instructor Photo */}
-                <div className="relative w-full h-48 overflow-hidden">
-                                     {instructor.profileImage?.secure_url ? (
-                     <img
-                       src={generateImageUrl(instructor.profileImage.secure_url)}
-                       alt={instructor.name}
-                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                       onError={(e) => {
-                         if (e.target && e.target.style) {
-                           e.target.style.display = 'none';
-                         }
-                         if (e.target && e.target.nextSibling && e.target.nextSibling.style) {
-                           e.target.nextSibling.style.display = 'flex';
-                         }
-                       }}
-                     />
-                   ) : (
-                    <div className="w-full h-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
+                {/* Large Instructor Photo - modern and fully visible */}
+                <div className="relative w-full aspect-[4/3] bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-700 rounded-lg overflow-hidden flex items-center justify-center">
+                  {instructor.profileImage?.secure_url ? (
+                    <img
+                      src={generateImageUrl(instructor.profileImage.secure_url)}
+                      alt={instructor.name}
+                      className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-105"
+                      onError={handleImgError}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
                       <FaGraduationCap className="text-gray-400 dark:text-gray-500 text-6xl" />
                     </div>
                   )}
@@ -172,22 +171,17 @@ const InstructorSection = () => {
             <div className="p-6">
               {/* Instructor Header */}
               <div className="text-center mb-8">
-                                 {selectedInstructor.profileImage?.secure_url ? (
-                   <img
-                     src={generateImageUrl(selectedInstructor.profileImage.secure_url)}
-                     alt={selectedInstructor.name}
-                     className="w-32 h-32 rounded-full object-cover mx-auto mb-4 border-4 border-gray-200 dark:border-gray-600 shadow-lg"
-                     onError={(e) => {
-                       if (e.target && e.target.style) {
-                         e.target.style.display = 'none';
-                       }
-                       if (e.target && e.target.nextSibling && e.target.nextSibling.style) {
-                         e.target.nextSibling.style.display = 'flex';
-                       }
-                     }}
-                   />
-                 ) : (
-                  <div className="w-32 h-32 bg-gray-200 dark:bg-gray-600 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-gray-200 dark:border-gray-600 shadow-lg">
+                {selectedInstructor.profileImage?.secure_url ? (
+                  <div className="w-28 h-28 rounded-xl bg-gray-100 dark:bg-gray-700 mx-auto mb-4 overflow-hidden flex items-center justify-center ring-1 ring-gray-200 dark:ring-gray-600">
+                    <img
+                      src={generateImageUrl(selectedInstructor.profileImage.secure_url)}
+                      alt={selectedInstructor.name}
+                      className="max-w-full max-h-full object-contain"
+                      onError={handleImgError}
+                    />
+                  </div>
+                ) : (
+                  <div className="w-32 h-32 bg-gray-200 dark:bg-gray-600 rounded-xl flex items-center justify-center mx-auto mb-4 border-4 border-gray-200 dark:border-gray-600 shadow-lg">
                     <FaGraduationCap className="text-gray-400 dark:text-gray-500 text-4xl" />
                   </div>
                 )}
@@ -231,43 +225,64 @@ const InstructorSection = () => {
               )}
 
               {/* Social Links */}
-              {(selectedInstructor.socialLinks?.linkedin || selectedInstructor.socialLinks?.twitter || selectedInstructor.socialLinks?.website) && (
-                <div className="mb-8">
-                  <h4 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">روابط التواصل</h4>
-                  <div className="flex items-center justify-center gap-4">
-                    {selectedInstructor.socialLinks?.linkedin && (
-                      <a
-                        href={selectedInstructor.socialLinks.linkedin}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-12 h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center transition-colors"
-                      >
-                        <FaLinkedin className="text-sm" />
-                      </a>
-                    )}
-                    {selectedInstructor.socialLinks?.twitter && (
-                      <a
-                        href={selectedInstructor.socialLinks.twitter}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-12 h-12 bg-blue-400 hover:bg-blue-500 text-white rounded-full flex items-center justify-center transition-colors"
-                      >
-                        <FaTwitter className="text-sm" />
-                      </a>
-                    )}
-                    {selectedInstructor.socialLinks?.website && (
-                      <a
-                        href={selectedInstructor.socialLinks.website}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-12 h-12 bg-gray-600 hover:bg-gray-700 text-white rounded-full flex items-center justify-center transition-colors"
-                      >
-                        <FaGlobe className="text-sm" />
-                      </a>
-                    )}
+              {(() => {
+                                 const hasSocialLinks = (
+                   (selectedInstructor.socialLinks?.linkedin && selectedInstructor.socialLinks.linkedin.trim() !== '') ||
+                   (selectedInstructor.socialLinks?.twitter && selectedInstructor.socialLinks.twitter.trim() !== '') ||
+                   (selectedInstructor.socialLinks?.facebook && selectedInstructor.socialLinks.facebook.trim() !== '') ||
+                   (selectedInstructor.socialLinks?.whatsapp && selectedInstructor.socialLinks.whatsapp.trim() !== '')
+                 );
+                
+                if (!hasSocialLinks) return null;
+                
+                return (
+                  <div className="mb-8">
+                    <h4 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">روابط التواصل</h4>
+                    <div className="flex items-center justify-center gap-4">
+                      {selectedInstructor.socialLinks?.linkedin && selectedInstructor.socialLinks.linkedin.trim() !== '' && (
+                        <a
+                          href={selectedInstructor.socialLinks.linkedin}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-12 h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center transition-colors"
+                        >
+                          <FaLinkedin className="text-sm" />
+                        </a>
+                      )}
+                      {selectedInstructor.socialLinks?.twitter && selectedInstructor.socialLinks.twitter.trim() !== '' && (
+                        <a
+                          href={selectedInstructor.socialLinks.twitter}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-12 h-12 bg-blue-400 hover:bg-blue-500 text-white rounded-full flex items-center justify-center transition-colors"
+                        >
+                          <FaTwitter className="text-sm" />
+                        </a>
+                      )}
+                                             {selectedInstructor.socialLinks?.facebook && selectedInstructor.socialLinks.facebook.trim() !== '' && (
+                         <a
+                           href={selectedInstructor.socialLinks.facebook}
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           className="w-12 h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center transition-colors"
+                         >
+                           <FaFacebook className="text-sm" />
+                         </a>
+                       )}
+                      {selectedInstructor.socialLinks?.whatsapp && selectedInstructor.socialLinks.whatsapp.trim() !== '' && (
+                        <a
+                          href={`https://wa.me/${selectedInstructor.socialLinks.whatsapp.replace(/[^0-9]/g, '')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-12 h-12 bg-green-600 hover:bg-green-700 text-white rounded-full flex items-center justify-center transition-colors"
+                        >
+                          <FaWhatsapp className="text-sm" />
+                        </a>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* Featured Badge */}
               {selectedInstructor.featured && (

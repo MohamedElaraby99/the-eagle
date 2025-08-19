@@ -4,9 +4,53 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { generateDeviceFingerprint, parseDeviceInfo, generateDeviceName } from "../utils/deviceUtils.js";
+import { getDeviceLimit, updateDeviceLimit as updateConfigLimit } from "../config/device.config.js";
 
-// Constants
-const MAX_DEVICES_PER_USER = 2;
+/**
+ * Update device limit (Admin only)
+ */
+export const updateDeviceLimit = asyncHandler(async (req, res, next) => {
+    const { newLimit } = req.body;
+    
+    if (!newLimit || typeof newLimit !== 'number' || newLimit < 1 || newLimit > 10) {
+        return next(new ApiError(400, "Device limit must be a number between 1 and 10"));
+    }
+
+    try {
+        // Update the device limit in config
+        const success = updateConfigLimit(newLimit);
+        
+        if (!success) {
+            return next(new ApiError(500, "Failed to update device limit"));
+        }
+        
+        res.status(200).json(
+            new ApiResponse(200, {
+                maxDevicesPerUser: getDeviceLimit(),
+                message: `تم تحديث الحد الأقصى للأجهزة إلى ${newLimit} أجهزة`
+            }, "Device limit updated successfully")
+        );
+    } catch (error) {
+        console.error("Error in updateDeviceLimit:", error);
+        return next(new ApiError(500, "Failed to update device limit"));
+    }
+});
+
+/**
+ * Get current device limit
+ */
+export const getDeviceLimitController = asyncHandler(async (req, res, next) => {
+    try {
+        res.status(200).json(
+            new ApiResponse(200, {
+                maxDevicesPerUser: getDeviceLimit()
+            }, "Device limit retrieved successfully")
+        );
+    } catch (error) {
+        console.error("Error in getDeviceLimitController:", error);
+        return next(new ApiError(500, "Failed to retrieve device limit"));
+    }
+});
 
 /**
  * Register or update device for user
@@ -79,10 +123,10 @@ export const registerDevice = asyncHandler(async (req, res, next) => {
             isActive: true
         });
 
-        if (deviceCount >= MAX_DEVICES_PER_USER) {
+        if (deviceCount >= getDeviceLimit()) {
             return next(new ApiError(
                 403, 
-                `تم الوصول للحد الأقصى من الأجهزة المسموحة (${MAX_DEVICES_PER_USER} أجهزة). يرجى التواصل مع الإدارة لإعادة تعيين الأجهزة.`,
+                `تم الوصول للحد الأقصى من الأجهزة المسموحة (${getDeviceLimit()} أجهزة). يرجى التواصل مع الإدارة لإعادة تعيين الأجهزة.`,
                 "DEVICE_LIMIT_EXCEEDED"
             ));
         }
@@ -100,7 +144,7 @@ export const registerDevice = asyncHandler(async (req, res, next) => {
             new ApiResponse(201, {
                 device: newDevice,
                 isNewDevice: true,
-                remainingSlots: MAX_DEVICES_PER_USER - deviceCount - 1
+                remainingSlots: getDeviceLimit() - deviceCount - 1
             }, "Device registered successfully")
         );
 
@@ -274,11 +318,11 @@ export const getAllUsersDevices = asyncHandler(async (req, res, next) => {
         // Filter by device status
         if (deviceStatus === 'overLimit') {
             pipeline.push({
-                $match: { activeDevices: { $gt: MAX_DEVICES_PER_USER } }
+                $match: { activeDevices: { $gt: getDeviceLimit() } }
             });
         } else if (deviceStatus === 'underLimit') {
             pipeline.push({
-                $match: { activeDevices: { $lt: MAX_DEVICES_PER_USER } }
+                $match: { activeDevices: { $lt: getDeviceLimit() } }
             });
         }
 
@@ -345,11 +389,11 @@ export const getAllUsersDevices = asyncHandler(async (req, res, next) => {
 
         if (deviceStatus === 'overLimit') {
             countPipeline.push({
-                $match: { activeDevices: { $gt: MAX_DEVICES_PER_USER } }
+                $match: { activeDevices: { $gt: getDeviceLimit() } }
             });
         } else if (deviceStatus === 'underLimit') {
             countPipeline.push({
-                $match: { activeDevices: { $lt: MAX_DEVICES_PER_USER } }
+                $match: { activeDevices: { $lt: getDeviceLimit() } }
             });
         }
 
@@ -367,7 +411,7 @@ export const getAllUsersDevices = asyncHandler(async (req, res, next) => {
                     totalUsers,
                     limit: parseInt(limit)
                 },
-                maxDevicesPerUser: MAX_DEVICES_PER_USER
+                maxDevicesPerUser: getDeviceLimit()
             }, "Users with device information retrieved successfully")
         );
 
@@ -497,7 +541,7 @@ export const getDeviceStats = asyncHandler(async (req, res, next) => {
                     deviceCount: { $sum: 1 }
                 }
             },
-            { $match: { deviceCount: { $gt: MAX_DEVICES_PER_USER } } },
+            { $match: { deviceCount: { $gt: getDeviceLimit() } } },
             { $count: "usersOverLimit" }
         ]);
 
@@ -508,7 +552,7 @@ export const getDeviceStats = asyncHandler(async (req, res, next) => {
             platformStats,
             browserStats,
             usersOverLimit: overLimitCount,
-            maxDevicesPerUser: MAX_DEVICES_PER_USER
+            maxDevicesPerUser: getDeviceLimit()
         };
 
         res.status(200).json(

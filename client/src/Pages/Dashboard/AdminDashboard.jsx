@@ -43,7 +43,11 @@ import {
   FaClock,
   FaStar,
   FaFilePdf,
-  FaClipboardCheck
+  FaClipboardCheck,
+  FaChalkboardTeacher,
+  FaServer,
+  FaList,
+  FaVideo
 } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -192,7 +196,7 @@ export default function AdminDashboard() {
         labels: ["لا توجد مراحل"],
         datasets: [
           {
-            label: "الطلاب حسب المرحلة",
+            label: "عدد المراحل الدراسية",
             data: [0],
             backgroundColor: ["rgba(156, 163, 175, 0.5)"],
             borderColor: ["rgba(156, 163, 175, 1)"],
@@ -206,8 +210,8 @@ export default function AdminDashboard() {
       labels: stages.map(stage => stage.name),
       datasets: [
         {
-          label: "الطلاب حسب المرحلة",
-          data: stages.map(stage => stage.studentsCount || 0),
+          label: "عدد المراحل الدراسية",
+          data: stages.map(() => 1), // Each stage counts as 1 to show total count
           backgroundColor: [
             "rgba(59, 130, 246, 0.8)",
             "rgba(16, 185, 129, 0.8)",
@@ -633,6 +637,128 @@ export default function AdminDashboard() {
                   <FaChartLine className="text-lg lg:text-2xl mx-auto mb-1 lg:mb-2 group-hover:scale-110 transition-transform duration-200" />
                   <span className="text-xs lg:text-sm font-medium">تقدم الطلاب</span>
                 </button>
+
+              </div>
+            </div>
+
+            {/* Admin Management Sections */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl lg:rounded-2xl shadow-lg lg:shadow-xl p-4 lg:p-6 mb-8 lg:mb-12">
+              <h3 className="text-lg lg:text-xl font-bold text-gray-900 dark:text-white mb-4 lg:mb-6 flex items-center gap-3 text-right">
+                <FaShieldAlt className="text-purple-500" />
+                إدارة النظام
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+
+                {/* إدارة المستخدمين */}
+                <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl p-4 lg:p-6 text-white hover:from-indigo-600 hover:to-indigo-700 transition-all duration-200 transform hover:scale-105 cursor-pointer shadow-lg hover:shadow-xl" onClick={() => navigate("/admin/users")}>
+                  <div className="flex items-center justify-between mb-3">
+                    <FaUsers className="text-2xl lg:text-3xl text-indigo-200" />
+                    <div className="w-3 h-3 bg-indigo-200 rounded-full animate-pulse"></div>
+                  </div>
+                  <h4 className="text-lg lg:text-xl font-bold mb-2">إدارة المستخدمين</h4>
+                  <p className="text-indigo-100 text-sm lg:text-base opacity-90">إدارة حسابات المستخدمين والصلاحيات</p>
+                  <div className="mt-4 flex items-center justify-between">
+                    <span className="text-xs text-indigo-200">إدارة كاملة</span>
+                    <FaArrowUp className="text-indigo-200 transform rotate-45" />
+                  </div>
+                </div>
+
+                {/* إدارة المدرسين */}
+                <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-4 lg:p-6 text-white hover:from-emerald-600 hover:to-emerald-700 transition-all duration-200 transform hover:scale-105 cursor-pointer shadow-lg hover:shadow-xl" onClick={() => navigate("/admin/instructors")}>
+                  <div className="flex items-center justify-between mb-3">
+                    <FaChalkboardTeacher className="text-2xl lg:text-3xl text-emerald-200" />
+                    <div className="w-3 h-3 bg-emerald-200 rounded-full animate-pulse"></div>
+                  </div>
+                  <h4 className="text-lg lg:text-xl font-bold mb-2">إدارة المدرسين</h4>
+                  <p className="text-emerald-100 text-sm lg:text-base opacity-90">إدارة المدرسين والدورات التدريبية</p>
+                  <div className="mt-4 flex items-center justify-between">
+                    <span className="text-xs text-emerald-200">إدارة كاملة</span>
+                    <FaArrowUp className="text-emerald-200 transform rotate-45" />
+                  </div>
+                </div>
+
+                {/* إدارة الأجهزة */}
+                <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-4 lg:p-6 text-white hover:from-orange-600 hover:to-orange-700 transition-all duration-200 transform hover:scale-105 cursor-pointer shadow-lg hover:shadow-xl" onClick={() => navigate("/admin/device-management")}>
+                  <div className="flex items-center justify-between mb-3">
+                    <FaServer className="text-2xl lg:text-3xl text-orange-200" />
+                    <div className="w-3 h-3 bg-orange-200 rounded-full animate-pulse"></div>
+                  </div>
+                  <h4 className="text-lg lg:text-xl font-bold mb-2">إدارة الأجهزة</h4>
+                  <p className="text-orange-100 text-sm lg:text-base opacity-90">مراقبة وإدارة الأجهزة المتصلة</p>
+                  <div className="mt-4 flex items-center justify-between">
+                    <span className="text-xs text-orange-200">إدارة كاملة</span>
+                    <FaArrowUp className="text-orange-200 transform rotate-45" />
+                  </div>
+                </div>
+
+                {/* إدارة المراحل */}
+                <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-4 lg:p-6 text-white hover:from-purple-600 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 cursor-pointer shadow-lg hover:shadow-xl" onClick={() => navigate("/admin/stages")}>
+                  <div className="flex items-center justify-between mb-3">
+                    <FaGraduationCap className="text-2xl lg:text-3xl text-purple-200" />
+                    <div className="w-3 h-3 bg-purple-200 rounded-full animate-pulse"></div>
+                  </div>
+                  <h4 className="text-lg lg:text-xl font-bold mb-2">إدارة المراحل</h4>
+                  <p className="text-purple-100 text-sm lg:text-base opacity-90">إدارة المراحل الدراسية</p>
+                  <div className="mt-4 flex items-center justify-between">
+                    <span className="text-xs text-purple-200">إدارة كاملة</span>
+                    <FaArrowUp className="text-purple-200 transform rotate-45" />
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            {/* Additional Admin Services */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl lg:rounded-2xl shadow-lg lg:shadow-xl p-4 lg:p-6 mb-8 lg:mb-12">
+              <h3 className="text-lg lg:text-xl font-bold text-gray-900 dark:text-white mb-4 lg:mb-6 flex items-center gap-3 text-right">
+                <FaRocket className="text-green-500" />
+                خدمات إضافية
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+
+                {/* رموز الشحن */}
+                <div className="bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-xl p-4 lg:p-6 text-white hover:from-cyan-600 hover:to-cyan-700 transition-all duration-200 transform hover:scale-105 cursor-pointer shadow-lg hover:shadow-xl" onClick={() => navigate("/admin/recharge-codes")}>
+                  <div className="flex items-center justify-between mb-3">
+                    <FaQrcode className="text-2xl lg:text-3xl text-cyan-200" />
+                    <div className="w-3 h-3 bg-cyan-200 rounded-full animate-pulse"></div>
+                  </div>
+                  <h4 className="text-lg lg:text-xl font-bold mb-2">رموز الشحن</h4>
+                  <p className="text-cyan-100 text-sm lg:text-base opacity-90">إدارة رموز شحن المحافظ</p>
+                  <div className="mt-4 flex items-center justify-between">
+                    <span className="text-xs text-cyan-200">إدارة كاملة</span>
+                    <FaArrowUp className="text-cyan-200 transform rotate-45" />
+                  </div>
+                </div>
+
+                {/* أكواد فتح الكورس المؤقتة */}
+                <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 lg:p-6 text-white hover:from-blue-600 hover:to-blue-700 transition-all duration-200 transform hover:scale-105 cursor-pointer shadow-lg hover:shadow-xl" onClick={() => navigate("/admin/course-access-codes")}>
+                  <div className="flex items-center justify-between mb-3">
+                    <FaTicketAlt className="text-2xl lg:text-3xl text-blue-200" />
+                    <div className="w-3 h-3 bg-blue-200 rounded-full animate-pulse"></div>
+                  </div>
+                  <h4 className="text-lg lg:text-xl font-bold mb-2">أكواد فتح الكورس</h4>
+                  <p className="text-blue-100 text-sm lg:text-base opacity-90">توليد أكواد وصول مؤقتة لكورس محدد</p>
+                  <div className="mt-4 flex items-center justify-between">
+                    <span className="text-xs text-blue-200">توليد وإدارة</span>
+                    <FaArrowUp className="text-blue-200 transform rotate-45" />
+                  </div>
+                </div>
+
+
+
+                {/* الجلسات المباشرة */}
+                <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl p-4 lg:p-6 text-white hover:from-yellow-600 hover:to-yellow-700 transition-all duration-200 transform hover:scale-105 cursor-pointer shadow-lg hover:shadow-xl" onClick={() => navigate("/admin/live-meetings")}>
+                  <div className="flex items-center justify-between mb-3">
+                    <FaVideo className="text-2xl lg:text-3xl text-yellow-200" />
+                    <div className="w-3 h-3 bg-yellow-200 rounded-full animate-pulse"></div>
+                  </div>
+                  <h4 className="text-lg lg:text-xl font-bold mb-2">الجلسات المباشرة</h4>
+                  <p className="text-yellow-100 text-sm lg:text-base opacity-90">إدارة الجلسات المباشرة</p>
+                  <div className="mt-4 flex items-center justify-between">
+                    <span className="text-xs text-yellow-200">إدارة كاملة</span>
+                    <FaArrowUp className="text-yellow-200 transform rotate-45" />
+                  </div>
+                </div>
 
               </div>
             </div>

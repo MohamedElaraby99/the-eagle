@@ -6,7 +6,7 @@ dotenv.config();
 
 const connectToDb = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/theeagle', {
+    const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/the4g', {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
@@ -20,12 +20,20 @@ const connectToDb = async () => {
 const createAdminUser = async () => {
   try {
     await connectToDb();
-  
+    
+    // Check if admin already exists
+    // const existingAdmin = await User.findOne({ role: 'ADMIN' });
+    // if (existingAdmin) {
+    //   console.log('Admin user already exists:', existingAdmin.email);
+    //   process.exit(0);
+    // }
+    
+    // Create admin user - don't hash password manually, let the model handle it
     const adminUser1 = {
-      username: 'adminn34',
+      username: 'adminn',
       fullName: 'System Administrator',
-      email: 'admi74346@lms.com',
-      password: 'Admin123!', // Will be hashed by the pre-save middleware
+      email: 'adminn@api.com',
+      password: '1234567', // Will be hashed by the pre-save middleware
       role: 'ADMIN',
       isActive: true
     };
@@ -43,12 +51,12 @@ const createAdminUser = async () => {
 
     
     console.log('✅ Admin user created successfully!');
-    console.log('📧 Email: adminnn@lms.com');
-    console.log('👤 Username: admin');
-    console.log('🔐 Password: Admin123!');
+    console.log('📧 Email: adminn@api.com');
+    console.log('👤 Username: adminn');
+    console.log('🔐 Password: 123456');
     console.log('👑 Role: ADMIN');
     console.log('\n💡 You can now login with these credentials');
-    console.log('🌐 Go to: http://localhost:5180/login');
+    console.log('🌐 Go to: http://localhost:5173/login');
     
     process.exit(0);
   } catch (error) {

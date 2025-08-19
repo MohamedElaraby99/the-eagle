@@ -109,7 +109,7 @@ export default function CoursesPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
               <h1 className="text-4xl md:text-5xl font-bold mb-4">
-                الدورات المتاحة
+                الكورسات المتاحة
               </h1>
               <p className="text-xl text-blue-100 max-w-3xl mx-auto">
                 اكتشف مجموعة واسعة من الدورات التعليمية المميزة بقيادة خبراء الصناعة
@@ -223,10 +223,26 @@ export default function CoursesPage() {
                 >
                   {/* Course Image */}
                   <div className="h-48 bg-gradient-to-br from-blue-500 to-purple-600 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-black bg-opacity-20"></div>
-                    <div className="absolute inset-0 flex items-center justify-center">
+                    {course.image && course.image.secure_url ? (
+                      // Display actual course image
+                      <img
+                        src={`${import.meta.env.VITE_REACT_APP_API_URL?.replace('/api/v1', '') || 'http://localhost:4015'}/uploads/courses/${course.image.public_id}`}
+                        alt={course.title}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          // Fallback to placeholder if image fails to load
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    
+                    {/* Fallback placeholder icon */}
+                    <div className={`absolute inset-0 flex items-center justify-center ${course.image && course.image.secure_url ? 'hidden' : ''}`}>
                       <FaBookOpen className="text-6xl text-white opacity-80" />
                     </div>
+                    
+                    <div className="absolute inset-0 bg-black bg-opacity-20"></div>
                     <div className="absolute top-4 right-4">
                       <span className="px-2 py-1 bg-white bg-opacity-90 text-gray-800 text-xs font-medium rounded-full">
                         {course.stage?.name || 'غير محدد'}

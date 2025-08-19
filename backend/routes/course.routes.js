@@ -3,16 +3,17 @@ import jwt from 'jsonwebtoken';
 import User from '../models/user.model.js';
 import upload from '../middleware/multer.middleware.js';
 import { isLoggedIn, authorisedRoles } from '../middleware/auth.middleware.js';
-import {
-  createCourse,
-  getAllCourses,
-  getAdminCourses,
-  getFeaturedCourses,
-  getCourseById,
+import { 
+  getAllCourses, 
+  getAdminCourses, 
+  getCourseById, 
   getLessonById,
-  updateCourse,
-  deleteCourse,
+  createCourse, 
+  updateCourse, 
+  deleteCourse, 
   getCourseStats,
+  getFeaturedCourses,
+  toggleFeatured,
   addUnitToCourse,
   addLessonToUnit,
   addDirectLessonToCourse,
@@ -56,6 +57,7 @@ router.get('/', async (req, res, next) => {
   getAllCourses(req, res, next);
 });
 router.get('/featured', getFeaturedCourses);
+router.patch('/:id/toggle-featured', isLoggedIn, authorisedRoles('ADMIN'), toggleFeatured);
 
 // Admin routes
 router.get('/admin/all', isLoggedIn, authorisedRoles('ADMIN'), getAdminCourses);

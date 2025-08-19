@@ -43,8 +43,8 @@ export default function BlogDashboard() {
     "تكنولوجيا",
     "تعليم", 
     "برمجة",
-    "تصميم",
-    "أعمال",
+    "التصميم",
+    "الأعمال",
     "أخرى"
   ];
 
@@ -737,7 +737,7 @@ export default function BlogDashboard() {
                     <div className="mt-2">
                       <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">الصورة الحالية:</p>
                       <img 
-                        src={generateImageUrl(selectedBlog.image.secure_url)} 
+                        src={selectedBlog.image.secure_url} 
                         alt="Current" 
                         className="w-32 h-32 object-cover rounded-lg border"
                       />

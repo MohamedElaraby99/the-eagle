@@ -6,8 +6,7 @@ import {
     getExamResults,
     getUserExamHistory,
     getExamStatistics,
-    checkExamTaken,
-    getExamDetails
+    checkExamTaken
 } from "../controllers/exam.controller.js";
 
 const router = express.Router();
@@ -26,9 +25,6 @@ router.get("/history", isLoggedIn, getUserExamHistory);
 
 // Check if user has taken an exam
 router.get("/check/:courseId/:lessonId/:examType", isLoggedIn, checkExamTaken);
-
-// Get exam details with correct answers for review
-router.get("/:examId/details", isLoggedIn, getExamDetails);
 
 // Get exam statistics (admin only)
 router.get("/statistics/:courseId", isLoggedIn, authorisedRoles('ADMIN'), getExamStatistics);

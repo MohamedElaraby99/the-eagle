@@ -31,7 +31,7 @@ const CourseStats = ({ stats, loading }) => {
       textColor: "text-blue-600 dark:text-blue-400"
     },
     {
-      title: "الدورات المنشورة",
+      title: "الكورسات المنشورة",
       value: stats?.publishedCourses || 0,
       icon: FaPlay,
       color: "from-green-500 to-green-600",
@@ -68,8 +68,8 @@ const CourseStats = ({ stats, loading }) => {
               {stat.title}
             </h3>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              {index === 0 && "جميع الدورات في النظام"}
-              {index === 1 && "الدورات المتاحة للطلاب"}
+              {index === 0 && "جميع الكورسات في النظام"}
+              {index === 1 && "الكورسات المتاحة للطلاب"}
              
               {index === 3 && "إجمالي الطلاب المسجلين"}
             </p>

@@ -4,24 +4,7 @@ import { FaStar, FaUsers, FaClock, FaTag, FaPlay, FaGraduationCap } from "react-
 import { generateImageUrl } from "../utils/fileUtils";
 import { placeholderImages } from "../utils/placeholderImages";
 
-const SubjectCard = ({ subject, showActions = false, onEdit, onDelete, onToggleFeatured, onUpdateStatus }) => {
-  const getLevelColor = (level) => {
-    switch (level) {
-      case 'Beginner': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-      case 'Intermediate': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
-      case 'Advanced': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
-    }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'active': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-      case 'inactive': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
-      case 'featured': return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
-    }
-  };
+const SubjectCard = ({ subject, showActions = false, onEdit, onDelete, onToggleFeatured }) => {
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300" dir="rtl">
@@ -34,21 +17,10 @@ const SubjectCard = ({ subject, showActions = false, onEdit, onDelete, onToggleF
             e.target.src = placeholderImages.course;
           }}
         />
-        
         {/* Featured Badge */}
         {subject.featured && (
           <div className="absolute top-2 right-2">
-            <span className="bg-yellow-500 text-white px-2 py-1 rounded-full text-xs font-medium">
-              مميز
-            </span>
-          </div>
-        )}
-        {/* Status Badge */}
-        {showActions && (
-          <div className="absolute top-2 left-2">
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(subject.status)}`}>
-              {subject.status}
-            </span>
+            <span className="bg-yellow-500 text-white px-2 py-1 rounded-full text-xs font-medium">مميز</span>
           </div>
         )}
         {/* Play Button Overlay */}
@@ -60,11 +32,11 @@ const SubjectCard = ({ subject, showActions = false, onEdit, onDelete, onToggleF
       </div>
       {/* Content */}
       <div className="p-6">
-        {/* Stage Badge */}
+        {/* Instructor Badge */}
         <div className="flex items-center gap-2 mb-3">
           <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
             <FaGraduationCap className="inline ml-1" />
-            {subject.stage?.name || 'مرحلة غير محددة'}
+            {subject.instructor?.name || 'المدرس غير محدد'}
           </span>
         </div>
 
@@ -101,11 +73,9 @@ const SubjectCard = ({ subject, showActions = false, onEdit, onDelete, onToggleF
                 تعديل
               </button>
               <button
-                onClick={() => onToggleFeatured(subject._id)}
+                onClick={() => onToggleFeatured && onToggleFeatured(subject._id)}
                 className={`px-3 py-1 rounded text-sm transition-colors ${
-                  subject.featured 
-                    ? 'bg-yellow-600 hover:bg-yellow-700 text-white' 
-                    : 'bg-gray-600 hover:bg-gray-700 text-white'
+                  subject.featured ? 'bg-yellow-600 hover:bg-yellow-700 text-white' : 'bg-gray-600 hover:bg-gray-700 text-white'
                 }`}
               >
                 {subject.featured ? 'إلغاء التميز' : 'تمييز'}

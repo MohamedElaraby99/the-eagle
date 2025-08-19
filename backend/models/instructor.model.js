@@ -44,7 +44,12 @@ const instructorSchema = new mongoose.Schema({
       trim: true,
       default: ''
     },
-    website: {
+    facebook: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    whatsapp: {
       type: String,
       trim: true,
       default: ''

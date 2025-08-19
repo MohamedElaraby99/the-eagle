@@ -1,6 +1,4 @@
 import userModel from "../models/user.model.js";
-import stageModel from "../models/stage.model.js";
-import bcrypt from "bcryptjs";
 import AppError from "../utils/error.utils.js";
 
 // Get all users with pagination and filters
@@ -13,13 +11,7 @@ const getAllUsers = async (req, res, next) => {
 
         // Filter by role
         if (role && role !== 'all') {
-            if (role.includes(',')) {
-                // Handle multiple roles (e.g., "USER,USER1")
-                const roles = role.split(',');
-                query.role = { $in: roles };
-            } else {
-                query.role = role;
-            }
+            query.role = role;
         }
 
         // Filter by status (active/inactive)
@@ -45,7 +37,14 @@ const getAllUsers = async (req, res, next) => {
 
         const users = await userModel.find(query)
             .select('-password -forgotPasswordToken -forgotPasswordExpiry')
-            .populate('stage', 'name')
+            .populate({
+                path: 'stage',
+                select: 'name',
+                populate: {
+                    path: 'category',
+                    select: 'name'
+                }
+            })
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(parseInt(limit));
@@ -64,8 +63,7 @@ const getAllUsers = async (req, res, next) => {
                     activeUsers: { $sum: { $cond: ['$isActive', 1, 0] } },
                     inactiveUsers: { $sum: { $cond: ['$isActive', 0, 1] } },
                     adminUsers: { $sum: { $cond: [{ $eq: ['$role', 'ADMIN'] }, 1, 0] } },
-                    regularUsers: { $sum: { $cond: [{ $eq: ['$role', 'USER'] }, 1, 0] } },
-                    user1Users: { $sum: { $cond: [{ $eq: ['$role', 'USER1'] }, 1, 0] } }
+                    regularUsers: { $sum: { $cond: [{ $eq: ['$role', 'USER'] }, 1, 0] } }
                 }
             }
         ]);
@@ -84,6 +82,7 @@ const getAllUsers = async (req, res, next) => {
                     governorate: user.governorate,
                     grade: user.grade,
                     stage: user.stage,
+                    category: user.stage?.category,
                     age: user.age,
                     walletBalance: user.wallet?.balance || 0,
                     totalTransactions: user.wallet?.transactions?.length || 0,
@@ -102,8 +101,7 @@ const getAllUsers = async (req, res, next) => {
                     activeUsers: 0,
                     inactiveUsers: 0,
                     adminUsers: 0,
-                    regularUsers: 0,
-                    user1Users: 0
+                    regularUsers: 0
                 }
             }
         });
@@ -134,26 +132,29 @@ const createUser = async (req, res, next) => {
         }
 
         // Validate role
-        if (!['USER', 'USER1', 'ADMIN'].includes(role)) {
-            return next(new AppError("Role must be either USER, USER1, or ADMIN", 400));
+        if (!['USER', 'ADMIN'].includes(role)) {
+            return next(new AppError("Role must be either USER or ADMIN", 400));
         }
 
-        // For USER and USER1 roles, require additional fields
-        if (role === 'USER' || role === 'USER1') {
-            if (!phoneNumber || !fatherPhoneNumber || !governorate || !stage || !age) {
-                return next(new AppError("Phone number, father phone number, governorate, stage, and age are required for regular users", 400));
+        // For USER role, require additional fields (fatherPhoneNumber optional)
+        if (role === 'USER') {
+            if (!phoneNumber || !governorate || !stage || !age) {
+                return next(new AppError("Phone number, governorate, stage, and age are required for regular users", 400));
             }
         }
 
         // Check if user already exists
-        const existingUserByEmail = await userModel.findOne({ email: email.toLowerCase() });
-        const existingUserByUsername = await userModel.findOne({ username: username.toLowerCase() });
+        const existingUser = await userModel.findOne({ 
+            $or: [{ email }, { username }] 
+        });
 
-        if (existingUserByEmail) {
-            return next(new AppError("Email already exists", 400));
-        }
-        if (existingUserByUsername) {
-            return next(new AppError("Username already exists", 400));
+        if (existingUser) {
+            if (existingUser.email === email) {
+                return next(new AppError("Email already exists", 400));
+            }
+            if (existingUser.username === username) {
+                return next(new AppError("Username already exists", 400));
+            }
         }
 
         // Prepare user data
@@ -170,10 +171,10 @@ const createUser = async (req, res, next) => {
             }
         };
 
-        // Add optional fields for USER and USER1 roles
-        if (role === 'USER' || role === 'USER1') {
+        // Add optional fields for USER role
+        if (role === 'USER') {
             userData.phoneNumber = phoneNumber;
-            userData.fatherPhoneNumber = fatherPhoneNumber;
+            if (fatherPhoneNumber) userData.fatherPhoneNumber = fatherPhoneNumber;
             userData.governorate = governorate;
             userData.stage = stage;
             userData.age = parseInt(age);
@@ -312,10 +313,8 @@ const deleteUser = async (req, res, next) => {
             return next(new AppError("You cannot delete your own account", 400));
         }
 
-        // Prevent deleting other admins
-        if (user.role === 'ADMIN') {
-            return next(new AppError("Cannot delete admin accounts", 400));
-        }
+        // Allow deleting admin accounts (but not self)
+        // Note: Admin can delete other admins, but cannot delete themselves
 
         await userModel.findByIdAndDelete(userId);
 
@@ -334,7 +333,7 @@ const updateUserRole = async (req, res, next) => {
         const { userId } = req.params;
         const { role } = req.body;
 
-        if (!['USER', 'USER1', 'ADMIN'].includes(role)) {
+        if (!['USER', 'ADMIN'].includes(role)) {
             return next(new AppError("Invalid role", 400));
         }
 
@@ -443,8 +442,60 @@ const getUserStats = async (req, res, next) => {
     }
 };
 
-// Reset user password (admin only)
-const resetUserPassword = async (req, res, next) => {
+// Update user information
+const updateUser = async (req, res, next) => {
+    try {
+        const { userId } = req.params;
+        const updateData = req.body;
+
+        // Remove sensitive fields that shouldn't be updated
+        delete updateData.password;
+        delete updateData.email; // Email updates should be handled separately for security
+        delete updateData.forgotPasswordToken;
+        delete updateData.forgotPasswordExpiry;
+
+        const user = await userModel.findById(userId);
+        if (!user) {
+            return next(new AppError("User not found", 404));
+        }
+
+        // Update user fields
+        Object.keys(updateData).forEach(key => {
+            if (updateData[key] !== undefined) {
+                user[key] = updateData[key];
+            }
+        });
+
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            message: "User updated successfully",
+            data: {
+                userId: user._id,
+                user: {
+                    id: user._id,
+                    fullName: user.fullName,
+                    username: user.username,
+                    email: user.email,
+                    phoneNumber: user.phoneNumber,
+                    fatherPhoneNumber: user.fatherPhoneNumber,
+                    governorate: user.governorate,
+                    stage: user.stage,
+                    age: user.age,
+                    role: user.role,
+                    isActive: user.isActive !== false,
+                    createdAt: user.createdAt
+                }
+            }
+        });
+    } catch (error) {
+        return next(new AppError(error.message, 500));
+    }
+};
+
+// Update user password
+const updateUserPassword = async (req, res, next) => {
     try {
         const { userId } = req.params;
         const { newPassword } = req.body;
@@ -453,25 +504,20 @@ const resetUserPassword = async (req, res, next) => {
             return next(new AppError("Password must be at least 6 characters long", 400));
         }
 
-        // Find the user
         const user = await userModel.findById(userId);
         if (!user) {
             return next(new AppError("User not found", 404));
         }
 
         // Hash the new password
-        const hashedPassword = await bcrypt.hash(newPassword, 12);
-
-        // Update the user's password
-        user.password = hashedPassword;
+        user.password = newPassword;
         await user.save();
 
         res.status(200).json({
             success: true,
-            message: "User password reset successfully",
+            message: "User password updated successfully",
             data: {
-                userId: user._id,
-                email: user.email
+                userId: user._id
             }
         });
     } catch (error) {
@@ -479,97 +525,80 @@ const resetUserPassword = async (req, res, next) => {
     }
 };
 
-// Create bulk USER1 accounts randomly
-const createBulkUser1Accounts = async (req, res, next) => {
+// Reset all users wallet points
+const resetAllUserWallets = async (req, res, next) => {
     try {
-        const { count, stageId } = req.body;
-
-        if (!count || !stageId) {
-            return next(new AppError("Count and stage ID are required", 400));
-        }
-
-        if (count < 1 || count > 100) {
-            return next(new AppError("Count must be between 1 and 100", 400));
-        }
-
-        // Validate stage exists
-        const stage = await stageModel.findById(stageId);
-        if (!stage) {
-            return next(new AppError("Stage not found", 404));
-        }
-
-        const createdUsers = [];
-        const failedUsers = [];
-
-        for (let i = 0; i < count; i++) {
-            try {
-                // Generate random data
-                const randomNumber = Math.floor(Math.random() * 10000);
-                const email = `user1_${randomNumber}_${Date.now()}@eagle.edu`;
-                // Generate shorter username to fit within 20 character limit
-                const shortRandom = Math.floor(Math.random() * 999); // 0-998 (max 3 digits)
-                const username = `u1_${randomNumber}_${shortRandom}`;
-                const password = Math.random().toString(36).substring(2, 8) + Math.floor(Math.random() * 1000);
-                const fullName = `مستخدم محتوى ${randomNumber}`;
-                const phoneNumber = `01${Math.floor(Math.random() * 9000000000) + 1000000000}`;
-                const fatherPhoneNumber = `01${Math.floor(Math.random() * 9000000000) + 1000000000}`;
-                const governorates = ['Cairo', 'Alexandria', 'Giza', 'Qalyubia', 'Port Said', 'Suez', 'Luxor', 'Aswan', 'Sharkia', 'Dakahlia'];
-                const governorate = governorates[Math.floor(Math.random() * governorates.length)];
-                const age = Math.floor(Math.random() * 10) + 15; // 15-25 years
-
-                // Validate username length before proceeding
-                if (username.length > 20) {
-                    throw new Error(`Generated username '${username}' is ${username.length} characters long, exceeding the 20 character limit`);
-                }
-                
-                // Log username for debugging (optional)
-                console.log(`Generated username: ${username} (${username.length} characters)`);
-
-                // Hash password
-                const hashedPassword = await bcrypt.hash(password, 12);
-
-                // Create user
-                const user = new userModel({
-                    email,
-                    username,
-                    password: hashedPassword,
-                    fullName,
-                    phoneNumber,
-                    fatherPhoneNumber,
-                    governorate,
-                    stage: stageId,
-                    age,
-                    role: 'USER1',
-                    isActive: true
-                });
-
-                await user.save();
-
-                createdUsers.push({
-                    email,
-                    password,
-                    stage: stage.name,
-                    fullName,
-                    phoneNumber,
-                    username
-                });
-            } catch (error) {
-                failedUsers.push({
-                    attempt: i + 1,
-                    error: error.message
-                });
+        // Update all users to reset their wallet balance to 0
+        const result = await userModel.updateMany(
+            {},
+            { 
+                $set: { 
+                    "wallet.balance": 0,
+                    "wallet.transactions": []
+                } 
             }
-        }
+        );
 
         res.status(200).json({
             success: true,
-            message: `Successfully created ${createdUsers.length} USER1 accounts`,
+            message: `Successfully reset wallet points for ${result.modifiedCount} users`,
             data: {
-                createdUsers,
-                failedUsers,
-                totalRequested: count,
-                totalCreated: createdUsers.length,
-                totalFailed: failedUsers.length
+                modifiedCount: result.modifiedCount
+            }
+        });
+    } catch (error) {
+        return next(new AppError(error.message, 500));
+    }
+};
+
+// Reset wallet for specific user
+const resetUserWallet = async (req, res, next) => {
+    try {
+        const { userId } = req.params;
+
+        // Check if user exists
+        const user = await userModel.findById(userId);
+        if (!user) {
+            return next(new AppError('User not found', 404));
+        }
+
+        // Reset wallet
+        user.wallet = {
+            balance: 0,
+            transactions: []
+        };
+
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            message: `Successfully reset wallet for user: ${user.fullName}`,
+            data: {
+                userId: user._id,
+                fullName: user.fullName,
+                email: user.email,
+                wallet: user.wallet
+            }
+        });
+    } catch (error) {
+        return next(new AppError(error.message, 500));
+    }
+};
+
+// Reset all recharge codes
+const resetAllRechargeCodes = async (req, res, next) => {
+    try {
+        // Import recharge code model
+        const rechargeCodeModel = (await import("../models/rechargeCode.model.js")).default;
+        
+        // Delete all recharge codes
+        const result = await rechargeCodeModel.deleteMany({});
+
+        res.status(200).json({
+            success: true,
+            message: `Successfully reset all recharge codes. Deleted ${result.deletedCount} codes.`,
+            data: {
+                deletedCount: result.deletedCount
             }
         });
     } catch (error) {
@@ -584,8 +613,11 @@ export {
     toggleUserStatus,
     deleteUser,
     updateUserRole,
+    updateUser,
+    updateUserPassword,
+    resetAllUserWallets,
+    resetUserWallet,
+    resetAllRechargeCodes,
     getUserActivities,
-    getUserStats,
-    resetUserPassword,
-    createBulkUser1Accounts
+    getUserStats
 }; 

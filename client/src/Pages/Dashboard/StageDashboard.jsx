@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { 
-  getAllStages, 
+  getAllStagesAdmin, 
   createStage, 
   updateStage, 
   deleteStage,
@@ -27,7 +27,7 @@ import {
 
 export default function StageDashboard() {
   const dispatch = useDispatch();
-  const { stages, loading, stagesWithStats } = useSelector((state) => state.stage);
+  const { adminStages, adminLoading, stagesWithStats } = useSelector((state) => state.stage);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedStage, setSelectedStage] = useState(null);
@@ -43,7 +43,7 @@ export default function StageDashboard() {
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    dispatch(getAllStages({ page: 1, limit: 100 }));
+    dispatch(getAllStagesAdmin({ page: 1, limit: 100 }));
     dispatch(getAllStagesWithStats());
   }, [dispatch]);
 
@@ -141,7 +141,7 @@ export default function StageDashboard() {
     }
   };
 
-  const filteredStages = stages.filter(stage => {
+  const filteredStages = adminStages.filter(stage => {
     const matchesSearch = stage.name.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = !status || stage.status === status;
     
@@ -158,7 +158,7 @@ export default function StageDashboard() {
 
   return (
     <Layout>
-      <section className="min-h-screen py-8 px-4 lg:px-20">
+      <section className="min-h-screen py-8 px-4 lg:px-20" dir="rtl">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
@@ -185,7 +185,7 @@ export default function StageDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600 dark:text-gray-400">إجمالي المراحل</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stages.length}</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{adminStages.length}</p>
                 </div>
                 <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-full">
                   <FaChartBar className="text-blue-600 dark:text-blue-400" size={20} />
@@ -197,7 +197,7 @@ export default function StageDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600 dark:text-gray-400">المراحل النشطة</p>
-                  <p className="text-2xl font-bold text-green-600">{stages.filter(s => s.status === 'active').length}</p>
+                  <p className="text-2xl font-bold text-green-600">{adminStages.filter(s => s.status === 'active').length}</p>
                 </div>
                 <div className="p-3 bg-green-100 dark:bg-green-900 rounded-full">
                   <FaToggleOn className="text-green-600 dark:text-green-400" size={20} />
@@ -238,20 +238,20 @@ export default function StageDashboard() {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="relative">
-                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <input
                   type="text"
                   placeholder="البحث في المراحل..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                 />
               </div>
 
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
-                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
               >
                 <option value="">جميع الحالات</option>
                 <option value="active">نشط</option>
@@ -269,6 +269,7 @@ export default function StageDashboard() {
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                       اسم المرحلة
                     </th>
+
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                       الإحصائيات
                     </th>
@@ -281,57 +282,75 @@ export default function StageDashboard() {
                   </tr>
                 </thead>
                 <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                  {filteredStages.map((stage) => (
-                    <tr key={stage._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900 dark:text-white">
-                          {stage.name}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center space-x-4 space-x-reverse">
-                          <div className="flex items-center text-sm text-gray-900 dark:text-white">
-                            <FaBook className="mr-1 text-purple-500" />
-                            {stagesWithStats.find(s => s._id === stage._id)?.subjectsCount || 0}
-                          </div>
-                          <div className="flex items-center text-sm text-gray-900 dark:text-white">
-                            <FaUsers className="mr-1 text-orange-500" />
-                            {stagesWithStats.find(s => s._id === stage._id)?.studentsCount || 0}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBgColor(stage.status)} ${getStatusColor(stage.status)}`}>
-                          {stage.status === 'active' ? 'نشط' : 'غير نشط'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex items-center space-x-2 space-x-reverse">
-                          <button
-                            onClick={() => handleToggleStatus(stage._id)}
-                            className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                            title={stage.status === 'active' ? 'إلغاء التفعيل' : 'تفعيل'}
-                          >
-                            {stage.status === 'active' ? <FaToggleOn size={16} /> : <FaToggleOff size={16} />}
-                          </button>
-                          <button
-                            onClick={() => openEditModal(stage)}
-                            className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
-                            title="تعديل"
-                          >
-                            <FaEdit size={16} />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteStage(stage._id)}
-                            className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                            title="حذف"
-                          >
-                            <FaTrash size={16} />
-                          </button>
+                  {adminLoading ? (
+                    <tr>
+                      <td colSpan="3" className="px-6 py-8 text-center">
+                        <div className="flex items-center justify-center">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                          <span className="mr-3 text-gray-500 dark:text-gray-400">جاري التحميل...</span>
                         </div>
                       </td>
                     </tr>
-                  ))}
+                  ) : filteredStages.length === 0 ? (
+                    <tr>
+                      <td colSpan="3" className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                        لا توجد مراحل
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredStages.map((stage) => (
+                      <tr key={stage._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900 dark:text-white">
+                            {stage.name}
+                          </div>
+                        </td>
+
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center space-x-4 space-x-reverse">
+                            <div className="flex items-center text-sm text-gray-900 dark:text-white">
+                              <FaBook className="mr-1 text-purple-500" />
+                              {stagesWithStats.find(s => s._id === stage._id)?.subjectsCount || 0}
+                            </div>
+                            <div className="flex items-center text-sm text-gray-900 dark:text-white">
+                              <FaUsers className="mr-1 text-orange-500" />
+                              {stagesWithStats.find(s => s._id === stage._id)?.studentsCount || 0}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBgColor(stage.status)} ${getStatusColor(stage.status)}`}>
+                            {stage.status === 'active' ? 'نشط' : 'غير نشط'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex items-center space-x-2 space-x-reverse">
+                            <button
+                              onClick={() => handleToggleStatus(stage._id)}
+                              className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+                              title={stage.status === 'active' ? 'إلغاء التفعيل' : 'تفعيل'}
+                            >
+                              {stage.status === 'active' ? <FaToggleOn size={16} /> : <FaToggleOff size={16} />}
+                            </button>
+                            <button
+                              onClick={() => openEditModal(stage)}
+                              className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
+                              title="تعديل"
+                            >
+                              <FaEdit size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteStage(stage._id)}
+                              className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                              title="حذف"
+                            >
+                              <FaTrash size={16} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -366,7 +385,7 @@ export default function StageDashboard() {
                       name="name"
                       value={formData.name}
                       onChange={handleInputChange}
-                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white ${
+                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white ${
                         errors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                       }`}
                       placeholder="اسم المرحلة"
@@ -377,14 +396,14 @@ export default function StageDashboard() {
                   </div>
 
                   <div>
-                    <label className="block text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       الحالة
                     </label>
                     <select
                       name="status"
                       value={formData.status}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                     >
                       <option value="active">نشط</option>
                       <option value="inactive">غير نشط</option>
@@ -445,7 +464,7 @@ export default function StageDashboard() {
                       name="name"
                       value={formData.name}
                       onChange={handleInputChange}
-                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white ${
+                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white ${
                         errors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                       }`}
                       placeholder="اسم المرحلة"
@@ -463,7 +482,7 @@ export default function StageDashboard() {
                       name="status"
                       value={formData.status}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                     >
                       <option value="active">نشط</option>
                       <option value="inactive">غير نشط</option>

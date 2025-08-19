@@ -128,7 +128,7 @@ const createCustomAdmin = async () => {
         console.log(`🔑 Role: ${admin.role}`);
         console.log(`🔐 Password: ${password}`);
         console.log("\n💡 You can now login with these credentials");
-        console.log("🌐 Go to: http://localhost:5180/login");
+        console.log("🌐 Go to: http://localhost:5173/login");
         
     } catch (error) {
         console.error("❌ Error creating admin account:", error.message);

@@ -3,9 +3,9 @@ import { axiosInstance } from "../../Helpers/axiosInstance";
 
 // Get all subjects
 export const getAllSubjects = createAsyncThunk("/subjects/get", async (params = {}) => {
-  const { page = 1, limit = 12, category = '', search = '', status = '', featured = '' } = params;
+  const { page = 1, limit = 12, search = '' } = params;
   try {
-    const res = await axiosInstance.get(`/subjects?page=${page}&limit=${limit}&category=${category}&search=${search}&status=${status}&featured=${featured}`);
+    const res = await axiosInstance.get(`/subjects?page=${page}&limit=${limit}&search=${search}`);
     return res?.data;
   } catch (error) {
     throw error;
@@ -25,7 +25,9 @@ export const getSubjectById = createAsyncThunk("/subjects/getById", async (id) =
 // Create subject
 export const createSubject = createAsyncThunk("/subjects/create", async (subjectData) => {
   try {
-    const res = await axiosInstance.post("/subjects", subjectData);
+    const res = await axiosInstance.post("/subjects", subjectData, {
+      headers: { "Content-Type": "multipart/form-data" }
+    });
     return res?.data;
   } catch (error) {
     throw error;
@@ -35,7 +37,9 @@ export const createSubject = createAsyncThunk("/subjects/create", async (subject
 // Update subject
 export const updateSubject = createAsyncThunk("/subjects/update", async ({ id, subjectData }) => {
   try {
-    const res = await axiosInstance.put(`/subjects/${id}`, subjectData);
+    const res = await axiosInstance.put(`/subjects/${id}`, subjectData, {
+      headers: { "Content-Type": "multipart/form-data" }
+    });
     return res?.data;
   } catch (error) {
     throw error;
@@ -74,14 +78,7 @@ export const toggleFeatured = createAsyncThunk("/subjects/toggleFeatured", async
 });
 
 // Update subject status
-export const updateSubjectStatus = createAsyncThunk("/subjects/updateStatus", async ({ id, status }) => {
-  try {
-    const res = await axiosInstance.put(`/subjects/${id}/status`, { status });
-    return res?.data;
-  } catch (error) {
-    throw error;
-  }
-});
+// Removed status updates
 
 const initialState = {
   subjects: [],
@@ -91,16 +88,7 @@ const initialState = {
   totalPages: 1,
   currentPage: 1,
   total: 0,
-  categories: [
-    'Programming',
-    'Design',
-    'Business',
-    'Marketing',
-    'Technology',
-    'Science',
-    'Arts',
-    'Other'
-  ],
+  
 
 };
 
@@ -162,7 +150,7 @@ const subjectSlice = createSlice({
 
     // Delete subject
     builder.addCase(deleteSubject.fulfilled, (state, action) => {
-      const deletedId = action?.payload?.subject?._id;
+      const deletedId = action.meta.arg; // remove using the id we sent
       state.subjects = state.subjects.filter(subject => subject._id !== deletedId);
       if (state.currentSubject && state.currentSubject._id === deletedId) {
         state.currentSubject = null;
@@ -174,20 +162,8 @@ const subjectSlice = createSlice({
       state.featuredSubjects = action?.payload?.subjects;
     });
 
-    // Toggle featured
+    // Apply toggle featured result
     builder.addCase(toggleFeatured.fulfilled, (state, action) => {
-      const updatedSubject = action?.payload?.subject;
-      const index = state.subjects.findIndex(subject => subject._id === updatedSubject._id);
-      if (index !== -1) {
-        state.subjects[index] = updatedSubject;
-      }
-      if (state.currentSubject && state.currentSubject._id === updatedSubject._id) {
-        state.currentSubject = updatedSubject;
-      }
-    });
-
-    // Update status
-    builder.addCase(updateSubjectStatus.fulfilled, (state, action) => {
       const updatedSubject = action?.payload?.subject;
       const index = state.subjects.findIndex(subject => subject._id === updatedSubject._id);
       if (index !== -1) {

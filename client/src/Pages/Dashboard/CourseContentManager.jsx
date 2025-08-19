@@ -781,39 +781,17 @@ const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
                 {newExam.questions.length > 0 && (
                   <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                     <h3 className="font-medium text-gray-900 dark:text-white mb-3">الأسئلة المضافة ({newExam.questions.length})</h3>
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       {newExam.questions.map((question, idx) => (
-                        <div key={idx} className="bg-white dark:bg-gray-600 rounded-lg p-4 border border-gray-200 dark:border-gray-500">
-                          <div className="flex items-start justify-between mb-3">
+                        <div key={idx} className="bg-white dark:bg-gray-600 rounded p-3">
+                          <div className="flex items-start justify-between">
                             <div className="flex-1">
-                              {/* Question Image - Top */}
-                              {question.image && (
-                                <div className="mb-3 text-center">
-                                  <img 
-                                    src={generateImageUrl(question.image)} 
-                                    alt="صورة السؤال" 
-                                    className="max-w-[250px] h-auto mx-auto rounded-lg shadow-md"
-                                  />
-                                </div>
-                              )}
-                              
-                              {/* Question Text - Below Image */}
-                              <div className="mb-3">
-                                <p className="font-medium text-gray-900 dark:text-white text-right">{question.question}</p>
-                              </div>
-                              
-                              {/* Options */}
-                              <div className="space-y-2">
+                              <p className="font-medium text-gray-900 dark:text-white">{question.question}</p>
+                              {question.image && <img src={generateImageUrl(question.image)} alt="Question" className="w-20 h-20 object-cover rounded mt-2" />}
+                              <div className="mt-2 space-y-1">
                                 {question.options.map((option, optIdx) => (
-                                  <div key={optIdx} className={`p-2 rounded-lg border ${
-                                    optIdx === question.correctAnswer 
-                                      ? 'border-green-500 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300' 
-                                      : 'border-gray-200 dark:border-gray-500 bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                                  }`}>
-                                    <span className="font-medium">{optIdx + 1}.</span> {option}
-                                    {optIdx === question.correctAnswer && (
-                                      <span className="mr-2 text-green-600 dark:text-green-400">✓ (إجابة صحيحة)</span>
-                                    )}
+                                  <div key={optIdx} className={`text-sm ${optIdx === question.correctAnswer ? 'text-green-600 font-bold' : 'text-gray-600 dark:text-gray-300'}`}>
+                                    {optIdx + 1}. {option} {optIdx === question.correctAnswer && '(إجابة صحيحة)'}
                                   </div>
                                 ))}
                               </div>
@@ -849,10 +827,10 @@ const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
                   {exams.length === 0 ? (
                     <div className="text-gray-400 text-sm">لا توجد امتحانات مضافة</div>
                   ) : (
-                    <div className="space-y-6">
+                    <div className="space-y-3">
                       {exams.map((exam, idx) => (
                         <div key={idx} className="bg-gray-50 dark:bg-gray-700 rounded p-4">
-                          <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-start justify-between">
                             <div className="flex-1">
                               <h4 className="font-medium text-gray-900 dark:text-white">{exam.title}</h4>
                               {exam.description && <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{exam.description}</p>}
@@ -867,50 +845,6 @@ const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
                               <button type="button" className="text-red-500 hover:text-red-700 text-sm" onClick={() => handleRemoveExam(idx)}>حذف</button>
                             </div>
                           </div>
-                          
-                          {/* Exam Questions */}
-                          {exam.questions && exam.questions.length > 0 && (
-                            <div className="border-t pt-4">
-                              <h5 className="font-medium text-gray-900 dark:text-white mb-3 text-center text-lg">اسألة الامتحانات</h5>
-                              <div className="space-y-4">
-                                {exam.questions.map((question, qIdx) => (
-                                  <div key={qIdx} className="bg-white dark:bg-gray-600 rounded-lg p-4 border border-gray-200 dark:border-gray-500">
-                                    {/* Question Image - Top */}
-                                    {question.image && (
-                                      <div className="mb-3 text-center">
-                                        <img 
-                                          src={generateImageUrl(question.image)} 
-                                          alt="صورة السؤال" 
-                                          className="max-w-[300px] h-auto mx-auto rounded-lg shadow-md"
-                                        />
-                                      </div>
-                                    )}
-                                    
-                                    {/* Question Text - Below Image */}
-                                    <div className="mb-3">
-                                      <p className="font-medium text-gray-900 dark:text-white text-right">{question.question}</p>
-                                    </div>
-                                    
-                                    {/* Options */}
-                                    <div className="space-y-2">
-                                      {question.options.map((option, optIdx) => (
-                                        <div key={optIdx} className={`p-2 rounded-lg border ${
-                                          optIdx === question.correctAnswer 
-                                            ? 'border-green-500 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300' 
-                                            : 'border-gray-200 dark:border-gray-500 bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                                        }`}>
-                                          <span className="font-medium">{optIdx + 1}.</span> {option}
-                                          {optIdx === question.correctAnswer && (
-                                            <span className="mr-2 text-green-600 dark:text-green-400">✓ (إجابة صحيحة)</span>
-                                          )}
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
                         </div>
                       ))}
                     </div>
@@ -1191,9 +1125,9 @@ const CourseContentManager = () => {
               {selectedCourse.units?.length === 0 && selectedCourse.directLessons?.length === 0 && (
                 <div className="text-center text-gray-400 py-10 text-sm md:text-base">لا توجد وحدات أو مقدمة في هذه الدرس</div>
               )}
-              
-              {/* مقدمة - Introduction Section */}
-              {selectedCourse.directLessons?.length > 0 && (
+
+               {/* درس */}
+               {selectedCourse.directLessons?.length > 0 && (
                 <div className="bg-purple-50 dark:bg-purple-900/20 rounded-xl shadow p-3 md:p-4">
                   <div className="font-semibold text-purple-700 dark:text-purple-300 mb-2 flex items-center gap-2">
                     <FaBookOpen className="text-purple-500" />
@@ -1220,7 +1154,6 @@ const CourseContentManager = () => {
                   ))}
                 </div>
               )}
-
               {/* Units Accordion */}
               {selectedCourse.units?.map(unit => (
                 <div key={unit._id} className="bg-white dark:bg-gray-800 rounded-xl shadow p-3 md:p-4">
@@ -1264,6 +1197,7 @@ const CourseContentManager = () => {
                   )}
                 </div>
               ))}
+             
             </div>
           )}
           {/* Modern Modal for lesson content */}

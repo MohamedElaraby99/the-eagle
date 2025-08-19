@@ -322,7 +322,7 @@ const LiveMeetingDashboard = () => {
               className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors duration-200"
             >
               <FaPlus />
-              إنشاء جلسةمباشر جديد
+              إنشاء جلسة مباشر جديد
             </button>
           </div>
 

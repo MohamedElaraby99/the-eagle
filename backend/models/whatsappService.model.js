@@ -38,11 +38,6 @@ const whatsappServiceSchema = new Schema({
             default: '24/7'
         }
     }],
-    price: {
-        type: Number,
-        required: [true, 'Service price is required'],
-        min: [0, 'Price cannot be negative']
-    },
     currency: {
         type: String,
         default: 'EGP'

@@ -8,6 +8,7 @@ import { getFeaturedSubjects } from "../Redux/Slices/SubjectSlice";
 import { getFeaturedCourses } from "../Redux/Slices/CourseSlice";
 import { generateImageUrl } from "../utils/fileUtils";
 import AnimatedHero from "../Components/AnimatedHero";
+import fikraLogo from "../assets/Asset 2@3x.png";
 
 // Lazy load components
 const FAQAccordion = lazy(() => import("../Components/FAQAccordion"));
@@ -51,7 +52,7 @@ export default function HomePage() {
   const dispatch = useDispatch();
   const { blogs } = useSelector((state) => state.blog);
   const { featuredSubjects } = useSelector((state) => state.subject);
-  const { courses } = useSelector((state) => state.course);
+  const { courses, featuredCourses, featuredLoading } = useSelector((state) => state.course);
 
   const { role } = useSelector((state) => state.auth);
   const [isVisible, setIsVisible] = useState(false);
@@ -104,14 +105,14 @@ export default function HomePage() {
   const handleAPKDownload = () => {
     // Create a download link for the APK file
     const link = document.createElement('a');
-    link.href = '/downloads/the-eagle.apk'; // Update this path to your APK file location
-    link.download = 'the-eagle.apk';
+    link.href = '/downloads/4GPlatform.apk'; // Update this path to your APK file location
+    link.download = '4GPlatform.apk';
     link.target = '_blank';
     
     // Fallback for mobile browsers
     if (navigator.userAgent.toLowerCase().indexOf('android') > -1) {
       // For Android devices, open the download directly
-      window.open('/downloads/the-eagle.apk', '_blank');
+      window.open('/downloads/4GPlatform.apk', '_blank');
     } else {
       // For other devices, trigger download
       document.body.appendChild(link);
@@ -184,8 +185,8 @@ export default function HomePage() {
 
   const categories = [
     { icon: FaCode, name: "البرمجة", count: "150+ دورة", color: "bg-blue-500" },
-            { icon: FaPalette, name: "تصميم", count: "120+ دورة", color: "bg-purple-500" },
-        { icon: FaChartLine, name: "أعمال", count: "200+ دورة", color: "bg-green-500" },
+    { icon: FaPalette, name: "التصميم", count: "120+ دورة", color: "bg-purple-500" },
+    { icon: FaChartLine, name: "الأعمال", count: "200+ دورة", color: "bg-green-500" },
     { icon: FaBookOpen, name: "التسويق", count: "180+ دورة", color: "bg-orange-500" }
   ];
 
@@ -244,19 +245,24 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">
-              الدورات المتاحة
+              الكورسات المتاحة
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              اكتشف مجموعة واسعة من الدورات التعليمية المميزة بقيادة خبراء الصناعة
+              اكتشف مجموعة واسعة من الكورسات التعليمية المميزة بقيادة خبراء الصناعة
             </p>
           </div>
 
-          {courses && courses.length > 0 ? (
+          {featuredLoading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600 dark:text-gray-400">جاري تحميل الكورسات المميزة...</p>
+            </div>
+          ) : featuredCourses && featuredCourses.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {(() => {
-                console.log('🎯 HomePage rendering courses from Redux state:', {
-                  totalCourses: courses.length,
-                  allCourses: courses.map(c => ({
+                console.log('🎯 HomePage rendering featuredCourses from Redux state:', {
+                  totalCourses: featuredCourses.length,
+                  allCourses: featuredCourses.map(c => ({
                     id: c._id,
                     title: c.title,
                     stage: c.stage,
@@ -267,7 +273,7 @@ export default function HomePage() {
                 });
                 return null;
               })()}
-              {courses.slice(0, 6).map((course, index) => (
+              {featuredCourses.slice(0, 6).map((course, index) => (
                 <div
                   key={course._id}
                   className="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group border border-gray-200 dark:border-gray-700"
@@ -281,12 +287,8 @@ export default function HomePage() {
                           alt={course.title}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                           onError={(e) => {
-                            if (e.target && e.target.style) {
-                              e.target.style.display = 'none';
-                            }
-                            if (e.target && e.target.nextSibling && e.target.nextSibling.style) {
-                              e.target.nextSibling.style.display = 'block';
-                            }
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'block';
                           }}
                         />
                         <div className="absolute inset-0 bg-black bg-opacity-20"></div>
@@ -592,7 +594,7 @@ export default function HomePage() {
                   <div className="flex-shrink-0 w-8 h-8 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center">
                     <FaDownload className="w-4 h-4 text-green-600 dark:text-green-400" />
                   </div>
-                  <span className="text-gray-700 dark:text-gray-300 mr-3">تحميل دون اتصال</span>
+                  <span className="text-gray-700 dark:text-gray-300 mr-3">اتصال بالانترنت  </span>
                 </div>
                 
                 <div className="flex items-center space-x-3">

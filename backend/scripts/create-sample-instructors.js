@@ -14,7 +14,7 @@ const connectDB = async () => {
         uri = process.env.MONGO_URI_ATLAS;
         break;
       case 'compass':
-        uri = process.env.MONGO_URI_COMPASS || 'mongodb://localhost:27017/theeagle_database';
+        uri = process.env.MONGO_URI_COMPASS || 'mongodb://localhost:27017/the4gtabase';
         break;
       case 'community':
         uri = process.env.MONGO_URI_COMMUNITY;
@@ -159,7 +159,7 @@ const createSampleInstructors = async () => {
     }
     
     console.log(`\n🎉 Successfully created ${sampleInstructors.length} sample instructors!`);
-    console.log('\n💡 You can now view instructors at: http://localhost:5180/instructors');
+    console.log('\n💡 You can now view instructors at: http://localhost:5173/instructors');
     
     mongoose.connection.close();
   } catch (error) {

@@ -44,9 +44,7 @@ const userSchema = new Schema({
     },
     fatherPhoneNumber: {
         type: String,
-        required: function() {
-            return this.role !== 'ADMIN';
-        },
+        required: false,
         trim: true
     },
     governorate: {
@@ -83,7 +81,7 @@ const userSchema = new Schema({
     role: {
         type: String,
         default: 'USER',
-        enum: ['USER', 'USER1', 'ADMIN']
+        enum: ['USER', 'ADMIN']
     },
     isActive: {
         type: Boolean,

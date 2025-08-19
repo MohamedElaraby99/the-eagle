@@ -34,7 +34,7 @@ export default function PrivacyPolicy() {
                   مقدمة
                 </h2>
                 <p className="text-gray-700 dark:text-gray-300 mb-4">
-                  شركة the eagle ("نحن" أو "لنا" أو "لنا") ملتزمة بحماية خصوصيتك. 
+                  4G يهم ملتزمة بحماية خصوصيتك. 
                   تشرح سياسة الخصوصية هذه كيف نجمع ونستخدم ونكشف ونحمي معلوماتك 
                   عند استخدام منصة إدارة التعلم الخاصة بنا.
                 </p>
@@ -408,7 +408,7 @@ export default function PrivacyPolicy() {
                     <p><strong>البريد الإلكتروني:</strong> softwarefikra@gmail.com</p>
                     <p><strong>الهاتف:</strong> +201207039410</p>
                     <p><strong>العنوان:</strong> المنصورة، شارع 18 توريل، مصر</p>
-                    <p><strong>الموقع الإلكتروني:</strong> https://the-eagle.fikra.solutions/</p>
+                    <p><strong>الموقع الإلكتروني:</strong> https://fikra.solutions/</p>
                   </div>
                 </div>
               </section>

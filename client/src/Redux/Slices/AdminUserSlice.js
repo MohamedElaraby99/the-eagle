@@ -18,7 +18,7 @@ export const getAllUsers = createAsyncThunk(
             });
             
             console.log('API URL params:', params.toString());
-            const response = await axiosInstance.get(`/admin/users?${params}`);
+            const response = await axiosInstance.get(`/admin/users/users?${params}`);
             console.log('API response:', response.data);
             return response.data;
         } catch (error) {
@@ -32,7 +32,7 @@ export const getUserDetails = createAsyncThunk(
     "adminUser/getDetails",
     async (userId, { rejectWithValue }) => {
         try {
-            const response = await axiosInstance.get(`/admin/users/${userId}`);
+            const response = await axiosInstance.get(`/admin/users/users/${userId}`);
             return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || "Failed to get user details");
@@ -56,7 +56,7 @@ export const toggleUserStatus = createAsyncThunk(
     "adminUser/toggleStatus",
     async ({ userId, isActive }, { rejectWithValue }) => {
         try {
-            const response = await axiosInstance.patch(`/admin/users/${userId}/status`, { isActive });
+            const response = await axiosInstance.patch(`/admin/users/users/${userId}/status`, { isActive });
             return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || "Failed to toggle user status");
@@ -68,10 +68,71 @@ export const updateUserRole = createAsyncThunk(
     "adminUser/updateRole",
     async ({ userId, role }, { rejectWithValue }) => {
         try {
-            const response = await axiosInstance.patch(`/admin/users/${userId}/role`, { role });
+            const response = await axiosInstance.patch(`/admin/users/users/${userId}/role`, { role });
             return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || "Failed to update user role");
+        }
+    }
+);
+
+export const updateUser = createAsyncThunk(
+    "adminUser/updateUser",
+    async ({ userId, userData }, { rejectWithValue }) => {
+        try {
+            const response = await axiosInstance.patch(`/admin/users/users/${userId}`, userData);
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || "Failed to update user");
+        }
+    }
+);
+
+export const updateUserPassword = createAsyncThunk(
+    "adminUser/updatePassword",
+    async ({ userId, password }, { rejectWithValue }) => {
+        try {
+            const response = await axiosInstance.patch(`/admin/users/users/${userId}/password`, { password });
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || "Failed to update user password");
+        }
+    }
+);
+
+export const resetAllUserWallets = createAsyncThunk(
+    "adminUser/resetAllWallets",
+    async (_, { rejectWithValue }) => {
+        try {
+            const response = await axiosInstance.post(`/admin/users/users/reset-all-wallets`);
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || "Failed to reset user wallets");
+        }
+    }
+);
+
+export const resetUserWallet = createAsyncThunk(
+    "adminUser/resetUserWallet",
+    async (userId, { rejectWithValue }) => {
+        try {
+            const response = await axiosInstance.post(`/admin/users/users/${userId}/reset-wallet`);
+            return response.data;
+        }
+        catch (error) {
+            return rejectWithValue(error.response?.data?.message || "Failed to reset user wallet");
+        }
+    }
+);
+
+export const resetAllRechargeCodes = createAsyncThunk(
+    "adminUser/resetAllCodes",
+    async (_, { rejectWithValue }) => {
+        try {
+            const response = await axiosInstance.post(`/admin/users/users/reset-all-codes`);
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || "Failed to reset recharge codes");
         }
     }
 );
@@ -80,7 +141,7 @@ export const deleteUser = createAsyncThunk(
     "adminUser/delete",
     async (userId, { rejectWithValue }) => {
         try {
-            const response = await axiosInstance.delete(`/admin/users/${userId}`);
+            const response = await axiosInstance.delete(`/admin/users/users/${userId}`);
             return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || "Failed to delete user");
@@ -93,7 +154,7 @@ export const getUserActivities = createAsyncThunk(
     async ({ userId, page = 1, limit = 20 }, { rejectWithValue }) => {
         try {
             const params = new URLSearchParams({ page, limit });
-            const response = await axiosInstance.get(`/admin/users/${userId}/activities?${params}`);
+            const response = await axiosInstance.get(`/admin/users/users/${userId}/activities?${params}`);
             return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || "Failed to get user activities");
@@ -105,7 +166,7 @@ export const getUserStats = createAsyncThunk(
     "adminUser/getStats",
     async (userId, { rejectWithValue }) => {
         try {
-            const response = await axiosInstance.get(`/admin/users/${userId}/stats`);
+            const response = await axiosInstance.get(`/admin/users/users/${userId}/stats`);
             return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || "Failed to get user stats");
@@ -328,6 +389,107 @@ const adminUserSlice = createSlice({
                 state.userStats = action.payload.data.stats;
             })
             .addCase(getUserStats.rejected, (state, action) => {
+                state.actionLoading = false;
+                state.actionError = action.payload;
+            });
+
+        // Update user
+        builder
+            .addCase(updateUser.pending, (state) => {
+                state.actionLoading = true;
+                state.actionError = null;
+            })
+            .addCase(updateUser.fulfilled, (state, action) => {
+                state.actionLoading = false;
+                // Update user in the list
+                const userIndex = state.users.findIndex(user => user.id === action.payload.data.userId);
+                if (userIndex !== -1) {
+                    state.users[userIndex] = { ...state.users[userIndex], ...action.payload.data.user };
+                }
+                // Update selected user if it's the same user
+                if (state.selectedUser && state.selectedUser.id === action.payload.data.userId) {
+                    state.selectedUser = { ...state.selectedUser, ...action.payload.data.user };
+                }
+            })
+            .addCase(updateUser.rejected, (state, action) => {
+                state.actionLoading = false;
+                state.actionError = action.payload;
+            });
+
+        // Update user password
+        builder
+            .addCase(updateUserPassword.pending, (state) => {
+                state.actionLoading = true;
+                state.actionError = null;
+            })
+            .addCase(updateUserPassword.fulfilled, (state) => {
+                state.actionLoading = false;
+                // Password update doesn't change the user object, just show success
+            })
+            .addCase(updateUserPassword.rejected, (state, action) => {
+                state.actionLoading = false;
+                state.actionError = action.payload;
+            });
+
+        // Reset all user wallets
+        builder
+            .addCase(resetAllUserWallets.pending, (state) => {
+                state.actionLoading = true;
+                state.actionError = null;
+            })
+            .addCase(resetAllUserWallets.fulfilled, (state) => {
+                state.actionLoading = false;
+                // Reset wallet balance for all users in the list
+                state.users.forEach(user => {
+                    user.walletBalance = 0;
+                    user.totalTransactions = 0;
+                });
+                // Reset selected user wallet if exists
+                if (state.selectedUser) {
+                    state.selectedUser.walletBalance = 0;
+                    state.selectedUser.totalTransactions = 0;
+                }
+            })
+            .addCase(resetAllUserWallets.rejected, (state, action) => {
+                state.actionLoading = false;
+                state.actionError = action.payload;
+            });
+
+        // Reset specific user wallet
+        builder
+            .addCase(resetUserWallet.pending, (state) => {
+                state.actionLoading = true;
+                state.actionError = null;
+            })
+            .addCase(resetUserWallet.fulfilled, (state, action) => {
+                state.actionLoading = false;
+                // Reset wallet balance for the specific user in the list
+                const userIndex = state.users.findIndex(user => user.id === action.payload.data.userId);
+                if (userIndex !== -1) {
+                    state.users[userIndex].walletBalance = 0;
+                    state.users[userIndex].totalTransactions = 0;
+                }
+                // Reset selected user wallet if it's the same user
+                if (state.selectedUser && state.selectedUser.id === action.payload.data.userId) {
+                    state.selectedUser.walletBalance = 0;
+                    state.selectedUser.totalTransactions = 0;
+                }
+            })
+            .addCase(resetUserWallet.rejected, (state, action) => {
+                state.actionLoading = false;
+                state.actionError = action.payload;
+            });
+
+        // Reset all recharge codes
+        builder
+            .addCase(resetAllRechargeCodes.pending, (state) => {
+                state.actionLoading = true;
+                state.actionError = null;
+            })
+            .addCase(resetAllRechargeCodes.fulfilled, (state) => {
+                state.actionLoading = false;
+            })
+            .addCase(resetAllRechargeCodes.rejected, (state, action) => {
                 state.actionLoading = false;
                 state.actionError = action.payload;
             });
