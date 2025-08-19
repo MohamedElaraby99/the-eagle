@@ -47,16 +47,45 @@ export const adminGenerateCourseAccessCodes = createAsyncThunk(
 // ADMIN: list codes
 export const adminListCourseAccessCodes = createAsyncThunk(
   "courseAccess/adminList",
-  async ({ courseId, isUsed } = {}, { rejectWithValue }) => {
+  async ({ courseId, isUsed, q, page = 1, limit = 20 } = {}, { rejectWithValue }) => {
     try {
       const params = new URLSearchParams();
       if (courseId) params.append("courseId", courseId);
       if (typeof isUsed !== "undefined") params.append("isUsed", String(isUsed));
+      if (q) params.append("q", q);
+      if (page) params.append("page", String(page));
+      if (limit) params.append("limit", String(limit));
       const url = `/course-access/admin/codes${params.toString() ? `?${params.toString()}` : ""}`;
       const res = await axiosInstance.get(url);
       return res.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: "Failed to fetch codes" });
+    }
+  }
+);
+
+// ADMIN: delete single code
+export const adminDeleteCourseAccessCode = createAsyncThunk(
+  "courseAccess/adminDeleteOne",
+  async ({ id }, { rejectWithValue }) => {
+    try {
+      const res = await axiosInstance.delete(`/course-access/admin/codes/${id}`);
+      return { id, data: res.data.data };
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { message: "Failed to delete code" });
+    }
+  }
+);
+
+// ADMIN: bulk delete codes
+export const adminBulkDeleteCourseAccessCodes = createAsyncThunk(
+  "courseAccess/adminBulkDelete",
+  async ({ ids, courseId, onlyUnused = true }, { rejectWithValue }) => {
+    try {
+      const res = await axiosInstance.post(`/course-access/admin/codes/bulk-delete`, { ids, courseId, onlyUnused });
+      return { ids, data: res.data.data };
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { message: "Failed to bulk delete codes" });
     }
   }
 );
@@ -69,7 +98,8 @@ const initialState = {
   admin: {
     generating: false,
     listing: false,
-    codes: []
+    codes: [],
+    pagination: { page: 1, limit: 20, total: 0, totalPages: 1 }
   }
 };
 
@@ -92,7 +122,8 @@ const courseAccessSlice = createSlice({
         const { courseId, data } = action.payload;
         state.byCourseId[courseId] = {
           hasAccess: !!data.hasAccess,
-          accessEndAt: data.accessEndAt || null
+          accessEndAt: data.accessEndAt || null,
+          source: data.source || null
         };
       })
       .addCase(checkCourseAccess.rejected, (state, action) => {
@@ -138,10 +169,22 @@ const courseAccessSlice = createSlice({
       .addCase(adminListCourseAccessCodes.fulfilled, (state, action) => {
         state.admin.listing = false;
         state.admin.codes = action.payload.codes || [];
+        state.admin.pagination = action.payload.pagination || { page: 1, limit: 20, total: (action.payload.codes||[]).length, totalPages: 1 };
       })
       .addCase(adminListCourseAccessCodes.rejected, (state, action) => {
         state.admin.listing = false;
         state.error = action.payload?.message || "Failed to fetch codes";
+      })
+      // Admin delete one
+      .addCase(adminDeleteCourseAccessCode.fulfilled, (state, action) => {
+        const { id } = action.payload;
+        state.admin.codes = state.admin.codes.filter(c => (c._id || c.id) !== id);
+      })
+      // Admin bulk delete
+      .addCase(adminBulkDeleteCourseAccessCodes.fulfilled, (state, action) => {
+        const { ids } = action.payload;
+        const idSet = new Set(ids);
+        state.admin.codes = state.admin.codes.filter(c => !idSet.has(c._id || c.id));
       });
   }
 });

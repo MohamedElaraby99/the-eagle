@@ -120,27 +120,124 @@ export const checkCourseAccess = asyncHandler(async (req, res) => {
     if (!courseId) throw new ApiError(400, 'courseId is required');
 
     const now = new Date();
-    const access = await CourseAccess.findOne({ userId, courseId, accessEndAt: { $gt: now } }).sort({ accessEndAt: -1 });
+    // Find the most recent access window (even if expired)
+    const latestAccess = await CourseAccess.findOne({ userId, courseId }).sort({ accessEndAt: -1 });
+    const hasActiveAccess = !!(latestAccess && latestAccess.accessEndAt > now);
 
     return res.status(200).json(new ApiResponse(200, {
-        hasAccess: !!access,
-        accessEndAt: access?.accessEndAt || null
+        hasAccess: hasActiveAccess,
+        accessEndAt: latestAccess?.accessEndAt || null,
+        source: latestAccess?.source || null
     }, 'Access status'));
 });
 
 // Admin: list generated codes with filters
 export const listCourseAccessCodes = asyncHandler(async (req, res) => {
     const { courseId, isUsed } = req.query;
+    const q = (req.query.q || '').toString().trim();
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+    const limitRaw = parseInt(req.query.limit, 10) || 20;
+    const limit = Math.min(Math.max(limitRaw, 1), 200);
+    const skip = (page - 1) * limit;
     const query = {};
     if (courseId) query.courseId = courseId;
     if (typeof isUsed !== 'undefined') query.isUsed = isUsed === 'true';
 
-    const codes = await CourseAccessCode.find(query)
-        .populate('usedBy', 'name email') // Populate user name and email
-        .populate('courseId', 'title') // Also populate course title
-        .sort({ createdAt: -1 });
-    
-    return res.status(200).json(new ApiResponse(200, { codes }, 'Codes list'));
+    // If searching, build aggregation to filter by code, course title, or user email
+    if (q) {
+        const matchStage = { $match: query };
+        const lookupUser = { $lookup: { from: 'users', localField: 'usedBy', foreignField: '_id', as: 'usedBy' } };
+        const unwindUser = { $unwind: { path: '$usedBy', preserveNullAndEmptyArrays: true } };
+        const lookupCourse = { $lookup: { from: 'courses', localField: 'courseId', foreignField: '_id', as: 'courseId' } };
+        const unwindCourse = { $unwind: { path: '$courseId', preserveNullAndEmptyArrays: true } };
+        const searchRegex = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+        const searchStage = {
+            $match: {
+                $or: [
+                    { code: { $regex: searchRegex } },
+                    { 'courseId.title': { $regex: searchRegex } },
+                    { 'usedBy.email': { $regex: searchRegex } }
+                ]
+            }
+        };
+        const sortStage = { $sort: { createdAt: -1 } };
+        const facetStage = {
+            $facet: {
+                data: [ { $skip: skip }, { $limit: limit } ],
+                meta: [ { $count: 'total' } ]
+            }
+        };
+
+        const pipeline = [ matchStage, lookupUser, unwindUser, lookupCourse, unwindCourse, searchStage, sortStage, facetStage ];
+        const aggResult = await CourseAccessCode.aggregate(pipeline);
+        const data = aggResult[0]?.data || [];
+        const total = aggResult[0]?.meta?.[0]?.total || 0;
+
+        // Re-shape populated fields to match populate output
+        const codes = data.map(doc => ({
+            ...doc,
+            usedBy: doc.usedBy ? { _id: doc.usedBy._id, email: doc.usedBy.email, name: doc.usedBy.fullName } : null,
+            courseId: doc.courseId ? { _id: doc.courseId._id, title: doc.courseId.title } : null
+        }));
+
+        return res.status(200).json(new ApiResponse(200, { 
+            codes,
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages: Math.max(Math.ceil(total / limit), 1)
+            }
+        }, 'Codes list'));
+    }
+
+    const [total, codes] = await Promise.all([
+        CourseAccessCode.countDocuments(query),
+        CourseAccessCode.find(query)
+            .populate('usedBy', 'name email')
+            .populate('courseId', 'title')
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+    ]);
+
+    return res.status(200).json(new ApiResponse(200, { 
+        codes,
+        pagination: {
+            page,
+            limit,
+            total,
+            totalPages: Math.max(Math.ceil(total / limit), 1)
+        }
+    }, 'Codes list'));
+});
+
+// Admin: delete a single code (only if unused)
+export const deleteCourseAccessCode = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const code = await CourseAccessCode.findById(id);
+    if (!code) {
+        throw new ApiError(404, 'Code not found');
+    }
+    if (code.isUsed) {
+        throw new ApiError(400, 'Cannot delete a used code');
+    }
+    await CourseAccessCode.deleteOne({ _id: id });
+    return res.status(200).json(new ApiResponse(200, { id }, 'Code deleted'));
+});
+
+// Admin: bulk delete codes by ids (defaults to only unused)
+export const bulkDeleteCourseAccessCodes = asyncHandler(async (req, res) => {
+    const { ids, courseId, onlyUnused = true } = req.body || {};
+    if (!Array.isArray(ids) || ids.length === 0) {
+        throw new ApiError(400, 'ids array is required');
+    }
+    const query = { _id: { $in: ids } };
+    if (courseId) query.courseId = courseId;
+    if (onlyUnused) query.isUsed = false;
+
+    const result = await CourseAccessCode.deleteMany(query);
+    return res.status(200).json(new ApiResponse(200, { deletedCount: result.deletedCount || 0 }, 'Bulk delete completed'));
 });
 
 

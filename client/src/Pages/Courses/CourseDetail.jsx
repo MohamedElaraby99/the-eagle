@@ -44,6 +44,12 @@ export default function CourseDetail() {
   const { walletBalance, purchaseStatus, loading: paymentLoading } = useSelector((state) => state.payment);
   const { data: user, isLoggedIn } = useSelector((state) => state.auth);
   const courseAccessState = useSelector((state) => state.courseAccess.byCourseId[id]);
+  const [accessAlertShown, setAccessAlertShown] = useState(false);
+  const hasAnyPurchase = (() => {
+    if (!currentCourse || !purchaseStatus) return false;
+    const prefix = `${currentCourse._id}-`;
+    return Object.keys(purchaseStatus).some(k => k.startsWith(prefix) && purchaseStatus[k]);
+  })();
 
   const [expandedUnits, setExpandedUnits] = useState(new Set());
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
@@ -180,6 +186,20 @@ export default function CourseDetail() {
     const key = `${currentCourse._id}-${purchaseType}-${itemId}`;
     return purchaseStatus[key] || false;
   };
+
+  // Block access if code-based access expired (only for code access, not purchased)
+  useEffect(() => {
+    if (!user || user.role === 'ADMIN') return;
+    if (!currentCourse) return;
+    // Only alert students who used a code, whose access expired, and who haven't purchased
+    const hasCodeSource = courseAccessState?.source === 'code';
+    const hasActive = !!courseAccessState?.hasAccess;
+    if (hasCodeSource && !hasActive && !hasAnyPurchase && !accessAlertShown) {
+      setAlertMessage('انتهت صلاحية الوصول عبر الكود. يرجى إعادة تفعيل كود جديد أو شراء المحتوى.');
+      setShowErrorAlert(true);
+      setAccessAlertShown(true);
+    }
+  }, [user, currentCourse, courseAccessState, hasAnyPurchase, accessAlertShown]);
 
   const handlePurchaseClick = (item, purchaseType) => {
     if (!user || !isLoggedIn) {

@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Layout from "../../Layout/Layout";
+import { axiosInstance } from "../../Helpers/axiosInstance";
 import { getAllCourses } from "../../Redux/Slices/CourseSlice";
 import { getAllStages } from "../../Redux/Slices/StageSlice";
-import { adminGenerateCourseAccessCodes, adminListCourseAccessCodes } from "../../Redux/Slices/CourseAccessSlice";
+import { adminGenerateCourseAccessCodes, adminListCourseAccessCodes, adminDeleteCourseAccessCode, adminBulkDeleteCourseAccessCodes } from "../../Redux/Slices/CourseAccessSlice";
 
 export default function AdminCourseAccessCodes() {
   const dispatch = useDispatch();
@@ -14,15 +15,24 @@ export default function AdminCourseAccessCodes() {
   const [form, setForm] = useState({ stageId: "", courseId: "", quantity: 1, accessStartAt: "", accessEndAt: "" });
   const [searchTerm, setSearchTerm] = useState("");
   const [showOnlyUsed, setShowOnlyUsed] = useState(false);
+  const [courseFilter, setCourseFilter] = useState("");
+  const [selected, setSelected] = useState(new Set());
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportMode, setExportMode] = useState('selected'); // 'selected' | 'byCourses'
+  const [exportCourseIds, setExportCourseIds] = useState([]);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     dispatch(getAllCourses());
     dispatch(getAllStages({ page: 1, limit: 100 }));
   }, [dispatch]);
 
+  const [page, setPage] = useState(1);
+  const [limit] = useState(20);
   useEffect(() => {
-    dispatch(adminListCourseAccessCodes({ courseId: form.courseId || undefined }));
-  }, [dispatch, form.courseId]);
+    dispatch(adminListCourseAccessCodes({ courseId: form.courseId || undefined, q: searchTerm || undefined, page, limit }));
+    setSelected(new Set());
+  }, [dispatch, form.courseId, searchTerm, page, limit]);
 
   // Initialize default date range (now -> now + 7 days) if empty
   useEffect(() => {
@@ -79,21 +89,59 @@ export default function AdminCourseAccessCodes() {
     }
     console.log('📤 Generating course access codes with payload:', payload);
     await dispatch(adminGenerateCourseAccessCodes(payload));
-    dispatch(adminListCourseAccessCodes({ courseId: form.courseId }));
+    dispatch(adminListCourseAccessCodes({ courseId: form.courseId, page, limit }));
   };
 
   // Filter codes based on search term and used filter
   const filteredCodes = admin.codes.filter(code => {
     const courseName = code.courseId?.title || courses.find(c => c._id === code.courseId)?.title || '';
     const userEmail = code.usedBy?.email || '';
-    const matchesSearch = code.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         courseName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         userEmail.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = true; // handled server-side now
     const matchesUsedFilter = !showOnlyUsed || code.isUsed;
-    return matchesSearch && matchesUsedFilter;
+    const codeCourseId = typeof code.courseId === 'object' ? code.courseId?._id : code.courseId;
+    const matchesCourseFilter = !courseFilter || codeCourseId === courseFilter;
+    return matchesSearch && matchesUsedFilter && matchesCourseFilter;
   });
 
-  const exportCodesToCSV = () => {
+  const isAllSelected = filteredCodes.length > 0 && filteredCodes.every(c => selected.has(c._id || c.id));
+  const toggleSelectAll = () => {
+    if (isAllSelected) {
+      setSelected(new Set());
+    } else {
+      const next = new Set(selected);
+      filteredCodes.forEach(c => next.add(c._id || c.id));
+      setSelected(next);
+    }
+  };
+  const toggleSelectOne = (id) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const handleDeleteOne = async (id, isUsed) => {
+    if (isUsed) {
+      alert('لا يمكن حذف كود مُستخدم');
+      return;
+    }
+    if (!confirm('تأكيد حذف هذا الكود؟')) return;
+    await dispatch(adminDeleteCourseAccessCode({ id }));
+    setSelected(prev => { const n = new Set(prev); n.delete(id); return n; });
+    dispatch(adminListCourseAccessCodes({ courseId: form.courseId || undefined, page, limit }));
+  };
+
+  const handleBulkDelete = async () => {
+    const ids = Array.from(selected);
+    if (ids.length === 0) return;
+    if (!confirm(`تأكيد حذف ${ids.length} كود (غير مُستخدم فقط)؟`)) return;
+    await dispatch(adminBulkDeleteCourseAccessCodes({ ids, courseId: form.courseId || undefined, onlyUnused: true }));
+    setSelected(new Set());
+    dispatch(adminListCourseAccessCodes({ courseId: form.courseId || undefined, page, limit }));
+  };
+
+  const buildCsvAndDownload = (codes) => {
     const headers = [
       'code',
       'course',
@@ -116,7 +164,7 @@ export default function AdminCourseAccessCodes() {
       }
       return code.usedBy || '';
     };
-    const rows = filteredCodes.map(c => ([
+    const rows = codes.map(c => ([
       c.code,
       getCourseName(c),
       c.accessStartAt ? new Date(c.accessStartAt).toISOString() : '',
@@ -145,6 +193,66 @@ export default function AdminCourseAccessCodes() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  const openExportModal = () => {
+    setShowExportModal(true);
+  };
+
+  const closeExportModal = () => {
+    setShowExportModal(false);
+    setExportMode('selected');
+    setExportCourseIds([]);
+  };
+
+  const handleExport = async () => {
+    try {
+      setExporting(true);
+      if (exportMode === 'selected') {
+        const toExport = admin.codes.filter(c => selected.has(c._id || c.id));
+        const toExportAvailable = toExport.filter(c => !c.isUsed);
+        if (toExportAvailable.length === 0) {
+          alert('لا توجد أكواد متاحة (غير مُستخدمة) ضمن المحدد للتصدير');
+          return;
+        }
+        buildCsvAndDownload(toExportAvailable);
+      } else {
+        // byCourses mode: fetch all codes for selected courses (all pages)
+        if (!exportCourseIds.length) {
+          alert('اختر كورس واحد على الأقل');
+          return;
+        }
+        const allCodes = [];
+        for (const cid of exportCourseIds) {
+          let p = 1;
+          const l = 200;
+          // loop pages until done
+          while (true) {
+            const params = new URLSearchParams();
+            params.append('courseId', cid);
+            params.append('page', String(p));
+            params.append('limit', String(l));
+            const res = await axiosInstance.get(`/course-access/admin/codes?${params.toString()}`);
+            const data = res.data?.data;
+            const pageCodes = data?.codes || [];
+            allCodes.push(...pageCodes);
+            const totalPages = data?.pagination?.totalPages || 1;
+            if (p >= totalPages) break;
+            p += 1;
+          }
+        }
+        // Export only available (unused) codes
+        const refined = allCodes.filter(c => !c.isUsed);
+        if (refined.length === 0) {
+          alert('لا توجد أكواد متاحة (غير مُستخدمة) للتصدير لهذه الكورسات');
+          return;
+        }
+        buildCsvAndDownload(refined);
+      }
+      closeExportModal();
+    } finally {
+      setExporting(false);
+    }
   };
 
   const getCourseName = (code) => {
@@ -224,16 +332,22 @@ export default function AdminCourseAccessCodes() {
         {error && <div className="text-red-600 mb-4">{String(error)}</div>}
 
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-2 md:gap-3 mb-3">
             <h2 className="text-xl font-semibold">الأكواد المُنشأة</h2>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full md:w-auto">
               <input
                 type="text"
                 placeholder="البحث في الأكواد..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="px-3 py-1 border border-gray-300 rounded text-sm"
+                className="px-3 py-2 border border-gray-300 rounded text-sm w-full sm:w-64"
               />
+              <select value={courseFilter} onChange={(e)=>setCourseFilter(e.target.value)} className="px-3 py-2 border border-gray-300 rounded text-sm w-full sm:w-64">
+                <option value="">كل الكورسات</option>
+                {courses.map(c => (
+                  <option key={c._id} value={c._id}>{c.title}</option>
+                ))}
+              </select>
               <label className="flex items-center gap-2 text-sm">
                 <input
                   type="checkbox"
@@ -244,50 +358,109 @@ export default function AdminCourseAccessCodes() {
                 الأكواد المُستخدمة فقط
               </label>
               {admin.listing && <span className="text-sm text-gray-500">جاري التحميل...</span>}
-              <button onClick={exportCodesToCSV} className="px-3 py-1 rounded bg-green-600 hover:bg-green-700 text-white text-sm">تصدير CSV</button>
+              <button onClick={openExportModal} className="px-3 py-2 rounded bg-green-600 hover:bg-green-700 text-white text-sm w-full sm:w-auto">تصدير</button>
+              <button onClick={handleBulkDelete} disabled={selected.size === 0} className={`px-3 py-2 rounded text-white text-sm w-full sm:w-auto ${selected.size === 0 ? 'bg-red-300 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'}`}>حذف المحدد</button>
             </div>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full text-right">
               <thead>
                 <tr className="text-sm text-gray-500">
+                  <th className="p-2"><input type="checkbox" checked={isAllSelected} onChange={toggleSelectAll} /></th>
                   <th className="p-2">الكود</th>
                   <th className="p-2">المادة</th>
-                  <th className="p-2">الفترة</th>
+                  <th className="p-2 hidden sm:table-cell">الفترة</th>
                   <th className="p-2">الحالة</th>
-                  <th className="p-2">المُستخدم</th>
-                  <th className="p-2">تاريخ الاستخدام</th>
-                  <th className="p-2">انتهاء صلاحية الكود</th>
+                  <th className="p-2 hidden md:table-cell">المُستخدم</th>
+                  <th className="p-2 hidden md:table-cell">تاريخ الاستخدام</th>
+                  <th className="p-2 hidden md:table-cell">انتهاء صلاحية الكود</th>
+                  <th className="p-2">إجراءات</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredCodes.map((c) => (
                   <tr key={c._id || c.id} className="border-t border-gray-200 dark:border-gray-700">
+                    <td className="p-2"><input type="checkbox" checked={selected.has(c._id || c.id)} onChange={()=>toggleSelectOne(c._id || c.id)} /></td>
                     <td className="p-2 font-mono">
                       <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded">{String(c.code || '')}</span>
                     </td>
                     <td className="p-2">{getCourseName(c)}</td>
-                    <td className="p-2">{c.accessStartAt && c.accessEndAt ? `${new Date(c.accessStartAt).toLocaleString('ar-EG')} ← ${new Date(c.accessEndAt).toLocaleString('ar-EG')}` : '-'}</td>
+                    <td className="p-2 hidden sm:table-cell">{c.accessStartAt && c.accessEndAt ? `${new Date(c.accessStartAt).toLocaleString('ar-EG')} ← ${new Date(c.accessEndAt).toLocaleString('ar-EG')}` : '-'}</td>
                     <td className="p-2">
                       <span className={`px-2 py-1 rounded text-xs ${c.isUsed ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
                         {c.isUsed ? "مُستخدم" : "متاح"}
                       </span>
                     </td>
-                    <td className="p-2">{getUserEmail(c)}</td>
-                    <td className="p-2">{c.usedAt ? new Date(c.usedAt).toLocaleString('ar-EG') : '-'}</td>
-                    <td className="p-2">{c.codeExpiresAt ? new Date(c.codeExpiresAt).toLocaleString('ar-EG') : '-'}</td>
+                    <td className="p-2 hidden md:table-cell">{getUserEmail(c)}</td>
+                    <td className="p-2 hidden md:table-cell">{c.usedAt ? new Date(c.usedAt).toLocaleString('ar-EG') : '-'}</td>
+                    <td className="p-2 hidden md:table-cell">{c.codeExpiresAt ? new Date(c.codeExpiresAt).toLocaleString('ar-EG') : '-'}</td>
+                    <td className="p-2">
+                      <button onClick={() => handleDeleteOne(c._id || c.id, c.isUsed)} className={`px-2 py-1 rounded text-white text-xs ${c.isUsed ? 'bg-red-300 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'}`}>حذف</button>
+                    </td>
                   </tr>
                 ))}
                 {filteredCodes.length === 0 && (
                   <tr>
-                    <td colSpan="7" className="p-4 text-center text-gray-500">
+                    <td colSpan="9" className="p-4 text-center text-gray-500">
                       {admin.listing ? 'جاري التحميل...' : 'لا توجد أكواد'}
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
+            {/* Pagination */}
+            {admin.pagination && admin.pagination.totalPages > 1 && (
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mt-4">
+                <button
+                  className="px-3 py-2 rounded border w-full sm:w-auto"
+                  disabled={page <= 1}
+                  onClick={() => setPage((p) => Math.max(p - 1, 1))}
+                >
+                  السابق
+                </button>
+                <span className="text-sm">
+                  صفحة {page} من {admin.pagination.totalPages}
+                </span>
+                <button
+                  className="px-3 py-2 rounded border w-full sm:w-auto"
+                  disabled={page >= admin.pagination.totalPages}
+                  onClick={() => setPage((p) => Math.min(p + 1, admin.pagination.totalPages))}
+                >
+                  التالي
+                </button>
+              </div>
+            )}
           </div>
+          {showExportModal && (
+            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" dir="rtl">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 w-full max-w-lg">
+                <h3 className="text-lg font-semibold mb-1">تصدير الأكواد</h3>
+                <p className="text-xs text-gray-500 mb-3">سيتم تصدير الأكواد المتاحة فقط (غير المُستخدمة)</p>
+                <div className="space-y-3">
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="exportMode" value="selected" checked={exportMode==='selected'} onChange={()=>setExportMode('selected')} />
+                    <span>تصدير الأكواد المحددة ({selected.size})</span>
+                  </label>
+                  <label className="flex items-start gap-2">
+                    <input type="radio" name="exportMode" value="byCourses" checked={exportMode==='byCourses'} onChange={()=>setExportMode('byCourses')} />
+                    <div className="flex-1">
+                      <div className="mb-2">تصدير حسب الكورس</div>
+                      <select multiple value={exportCourseIds} onChange={(e)=>setExportCourseIds(Array.from(e.target.selectedOptions).map(o=>o.value))} className="w-full h-40 border rounded p-2 dark:bg-gray-700">
+                        {courses.map(c => (
+                          <option key={c._id} value={c._id}>{c.title}</option>
+                        ))}
+                      </select>
+                      <p className="text-xs text-gray-500 mt-1">اضغط مع الاستمرار على Ctrl لاختيار أكثر من كورس</p>
+                    </div>
+                  </label>
+                </div>
+                <div className="flex items-center justify-end gap-2 mt-4">
+                  <button onClick={closeExportModal} className="px-3 py-1 rounded border">إلغاء</button>
+                  <button onClick={handleExport} disabled={exporting} className={`px-3 py-1 rounded text-white ${exporting ? 'bg-green-300' : 'bg-green-600 hover:bg-green-700'}`}>{exporting ? 'جاري التصدير...' : 'تصدير CSV'}</button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </Layout>
