@@ -39,11 +39,7 @@ const getAllUsers = async (req, res, next) => {
             .select('-password -forgotPasswordToken -forgotPasswordExpiry')
             .populate({
                 path: 'stage',
-                select: 'name',
-                populate: {
-                    path: 'category',
-                    select: 'name'
-                }
+                select: 'name'
             })
             .sort({ createdAt: -1 })
             .skip(skip)
@@ -82,7 +78,6 @@ const getAllUsers = async (req, res, next) => {
                     governorate: user.governorate,
                     grade: user.grade,
                     stage: user.stage,
-                    category: user.stage?.category,
                     age: user.age,
                     walletBalance: user.wallet?.balance || 0,
                     totalTransactions: user.wallet?.transactions?.length || 0,

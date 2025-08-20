@@ -128,13 +128,13 @@ export const updateStage = async (req, res, next) => {
         
         if (status) updateData.status = status;
         
-        if (category !== undefined) updateData.category = category;
+
         
         const updatedStage = await stageModel.findByIdAndUpdate(
             id,
             updateData,
             { new: true }
-        ).populate('category', 'name status');
+        );
         
         res.status(200).json({
             success: true,

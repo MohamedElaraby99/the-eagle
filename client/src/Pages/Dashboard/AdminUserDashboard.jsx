@@ -703,9 +703,6 @@ export default function AdminUserDashboard() {
                                                             {user.stage && user.stage.name && (
                                                                 <span className="ml-2">• المرحلة: {user.stage.name}</span>
                                                             )}
-                                                            {user.category && user.category.name && (
-                                                                <span className="ml-2">• الفئة: {user.category.name}</span>
-                                                            )}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -871,6 +868,9 @@ export default function AdminUserDashboard() {
                                                         </p>
                                                         <p className="text-xs text-gray-400 dark:text-gray-500">
                                                             المحفظة: {user.walletBalance} جنيه مصري • المعاملات: {user.totalTransactions}
+                                                            {user.stage && user.stage.name && (
+                                                                <span className="ml-2">• المرحلة: {user.stage.name}</span>
+                                                            )}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -1033,9 +1033,6 @@ export default function AdminUserDashboard() {
                                                             المحفظة: {user.walletBalance} جنيه مصري • المعاملات: {user.totalTransactions}
                                                             {user.stage && user.stage.name && (
                                                                 <span className="ml-2">• المرحلة: {user.stage.name}</span>
-                                                            )}
-                                                            {user.category && user.category.name && (
-                                                                <span className="ml-2">• الفئة: {user.category.name}</span>
                                                             )}
                                                         </p>
                                                     </div>
