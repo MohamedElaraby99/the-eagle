@@ -1,15 +1,20 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSelector } from 'react-redux';
-import { FaTimes, FaFilePdf, FaVideo, FaClipboardList, FaDumbbell, FaPlay, FaEye, FaSpinner, FaCheckCircle, FaTrophy } from 'react-icons/fa';
+import { FaTimes, FaFilePdf, FaVideo, FaClipboardList, FaDumbbell, FaPlay, FaEye, FaSpinner, FaCheckCircle, FaTrophy, FaClock } from 'react-icons/fa';
 import CustomVideoPlayer from './CustomVideoPlayer';
 import PDFViewer from './PDFViewer';
 import ExamModal from './Exam/ExamModal';
 import useLessonData from '../Helpers/useLessonData';
 import { generateFileUrl } from "../utils/fileUtils";
+import RemainingDaysLabel from './RemainingDaysLabel';
 
-const OptimizedLessonContentModal = ({ isOpen, onClose, courseId, lessonId, unitId = null, lessonTitle = "درس" }) => {
+const OptimizedLessonContentModal = ({ isOpen, onClose, courseId, lessonId, unitId = null, lessonTitle = "درس", courseAccessState = null }) => {
   const { data: userData } = useSelector((state) => state.auth);
   const { lesson, courseInfo, loading, error, refetch } = useLessonData(courseId, lessonId, unitId);
+  
+  // Check if access has expired
+  const isAccessExpired = courseAccessState?.source === 'code' && courseAccessState?.accessEndAt && 
+    new Date(courseAccessState.accessEndAt) <= new Date();
   
   const [selectedTab, setSelectedTab] = useState('video');
   const [examModalOpen, setExamModalOpen] = useState(false);
@@ -39,7 +44,7 @@ const OptimizedLessonContentModal = ({ isOpen, onClose, courseId, lessonId, unit
     switch (type) {
       case 'video': return <FaVideo className="text-blue-500" />;
       case 'pdf': return <FaFilePdf className="text-red-500" />;
-      case 'exam': return <FaClipboardList className="text-purple-500" />;
+      case 'exam': return <FaClipboardList className="text-orange-500" />;
       case 'training': return <FaDumbbell className="text-green-500" />;
       default: return null;
     }
@@ -66,6 +71,54 @@ const OptimizedLessonContentModal = ({ isOpen, onClose, courseId, lessonId, unit
     setSelectedExam(null);
     // Refetch lesson data to get updated exam results
     refetch();
+  };
+
+  const handleClearExamAttempt = async (examId) => {
+    try {
+      const response = await fetch(`/api/v1/exams/clear/${courseId}/${lessonId}/${examId}${unitId ? `?unitId=${unitId}` : ''}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        // Refetch lesson data to update the UI
+        refetch();
+        alert('تم مسح محاولة الامتحان بنجاح');
+      } else {
+        const errorData = await response.json();
+        alert(`فشل في مسح محاولة الامتحان: ${errorData.message || 'خطأ غير معروف'}`);
+      }
+    } catch (error) {
+      console.error('Error clearing exam attempt:', error);
+      alert('حدث خطأ أثناء مسح محاولة الامتحان');
+    }
+  };
+
+  const handleClearTrainingAttempt = async (trainingId) => {
+    try {
+      const response = await fetch(`/api/v1/exams/clear/${courseId}/${lessonId}/${trainingId}${unitId ? `?unitId=${unitId}` : ''}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        // Refetch lesson data to update the UI
+        refetch();
+        alert('تم مسح محاولة التدريب بنجاح');
+      } else {
+        const errorData = await response.json();
+        alert(`فشل في مسح محاولة التدريب: ${errorData.message || 'خطأ غير معروف'}`);
+      }
+    } catch (error) {
+      console.error('Error clearing training attempt:', error);
+      alert('حدث خطأ أثناء مسح محاولة التدريب');
+    }
   };
 
   // Extract YouTube video ID from URL
@@ -136,6 +189,12 @@ const OptimizedLessonContentModal = ({ isOpen, onClose, courseId, lessonId, unit
       {lesson.videos?.map((video, index) => (
         <div key={video._id} className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-800 dark:to-gray-900 p-4 sm:p-6 rounded-xl border border-blue-200 dark:border-gray-700">
           <div className="mb-4 text-gray-600 dark:text-gray-300 leading-relaxed text-sm sm:text-base">{video.description}</div>
+          {video.publishDate && (
+            <div className="mb-3 flex items-center gap-2 text-blue-600 dark:text-blue-400 text-sm">
+              <FaClock />
+              <span>تاريخ النشر: {new Date(video.publishDate).toLocaleDateString('ar')} {new Date(video.publishDate).toLocaleTimeString('ar', { hour: '2-digit', minute: '2-digit' })}</span>
+            </div>
+          )}
           {video.url ? (
             <div className="relative bg-black rounded-lg overflow-hidden shadow-lg aspect-video cursor-pointer group">
               {/* YouTube Thumbnail Background */}
@@ -161,10 +220,14 @@ const OptimizedLessonContentModal = ({ isOpen, onClose, courseId, lessonId, unit
               {/* Play Button Overlay */}
               <div 
                 className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 hover:bg-opacity-30 transition-all duration-200"
-                onClick={() => {
-                  setCurrentVideo(video);
-                  setVideoPlayerOpen(true);
-                }}
+                                 onClick={() => {
+                   // Check if access has expired before opening video
+                   if (isAccessExpired) {
+                     return;
+                   }
+                   setCurrentVideo(video);
+                   setVideoPlayerOpen(true);
+                 }}
               >
                 <div className="text-center">
                   <div className="bg-white/20 backdrop-blur-sm rounded-full p-6 mb-4 group-hover:bg-white/30 transition-all duration-200 transform group-hover:scale-110">
@@ -197,6 +260,12 @@ const OptimizedLessonContentModal = ({ isOpen, onClose, courseId, lessonId, unit
             <div className="flex-1 min-w-0">
               <div className="font-semibold text-lg sm:text-xl text-gray-800 dark:text-gray-200 break-words">{pdf.title || pdf.fileName}</div>
               <div className="text-sm text-red-600 dark:text-red-400 font-medium">ملف PDF</div>
+              {pdf.publishDate && (
+                <div className="mt-1 flex items-center gap-2 text-blue-600 dark:text-blue-400 text-xs">
+                  <FaClock />
+                  <span>تاريخ النشر: {new Date(pdf.publishDate).toLocaleDateString('ar')} {new Date(pdf.publishDate).toLocaleTimeString('ar', { hour: '2-digit', minute: '2-digit' })}</span>
+                </div>
+              )}
             </div>
           </div>
           
@@ -209,16 +278,21 @@ const OptimizedLessonContentModal = ({ isOpen, onClose, courseId, lessonId, unit
                   <div className="text-xs sm:text-sm text-gray-500">مستند PDF قابل للعرض</div>
                 </div>
               </div>
-              <button
-                onClick={() => {
-                  setCurrentPdf(pdf);
-                  setPdfViewerOpen(true);
-                }}
-                className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-3 sm:px-4 py-2 rounded-lg transition-all duration-200 hover:shadow-lg text-sm sm:text-base w-full sm:w-auto justify-center"
-              >
-                <FaEye />
-                عرض المستند
-              </button>
+                             <button
+                 onClick={() => {
+                   // Check if access has expired before opening PDF
+                   if (isAccessExpired) {
+                     return;
+                   }
+                   setCurrentPdf(pdf);
+                   setPdfViewerOpen(true);
+                 }}
+                 className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-3 sm:px-4 py-2 rounded-lg transition-all duration-200 hover:shadow-lg text-sm sm:text-base w-full sm:w-auto justify-center"
+                 disabled={isAccessExpired}
+               >
+                 <FaEye />
+                 عرض المستند
+               </button>
             </div>
           </div>
         </div>
@@ -229,14 +303,14 @@ const OptimizedLessonContentModal = ({ isOpen, onClose, courseId, lessonId, unit
   const renderExamContent = () => (
     <div className="space-y-4">
       {lesson.exams?.map((exam, index) => (
-        <div key={exam._id} className="bg-gradient-to-br from-purple-50 to-indigo-100 dark:from-gray-800 dark:to-gray-900 p-4 sm:p-6 rounded-xl border border-purple-200 dark:border-gray-700">
+        <div key={exam._id} className="bg-gradient-to-br from-orange-50 to-indigo-100 dark:from-gray-800 dark:to-gray-900 p-4 sm:p-6 rounded-xl border border-orange-200 dark:border-gray-700">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
-              <FaClipboardList className="text-purple-600 dark:text-purple-400 text-lg sm:text-xl" />
+            <div className="p-2 bg-orange-100 dark:bg-orange-900 rounded-lg">
+              <FaClipboardList className="text-orange-600 dark:text-orange-400 text-lg sm:text-xl" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="font-semibold text-lg sm:text-xl text-gray-800 dark:text-gray-200 break-words">{exam.title}</div>
-              <div className="text-sm text-purple-600 dark:text-purple-400 font-medium">امتحان </div>
+              <div className="text-sm text-orange-600 dark:text-orange-400 font-medium">امتحان </div>
             </div>
             {exam.userResult?.hasTaken && (
               <div className="text-right">
@@ -260,6 +334,21 @@ const OptimizedLessonContentModal = ({ isOpen, onClose, courseId, lessonId, unit
               </div>
             </div>
             
+            {/* Date Information */}
+            {(exam.openDate || exam.closeDate) && (
+              <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <div className="text-sm font-medium text-blue-800 dark:text-blue-300 mb-2">معلومات التواريخ:</div>
+                <div className="space-y-1 text-xs text-blue-700 dark:text-blue-400">
+                  {exam.openDate && (
+                    <div>يفتح في: {new Date(exam.openDate).toLocaleDateString('ar')} {new Date(exam.openDate).toLocaleTimeString('ar', { hour: '2-digit', minute: '2-digit' })}</div>
+                  )}
+                  {exam.closeDate && (
+                    <div>يغلق في: {new Date(exam.closeDate).toLocaleDateString('ar')} {new Date(exam.closeDate).toLocaleTimeString('ar', { hour: '2-digit', minute: '2-digit' })}</div>
+                  )}
+                </div>
+              </div>
+            )}
+            
             <div className="text-center">
               {exam.userResult?.hasTaken ? (
                 <div className="space-y-3">
@@ -274,13 +363,52 @@ const OptimizedLessonContentModal = ({ isOpen, onClose, courseId, lessonId, unit
                     تاريخ الامتحان: {new Date(exam.userResult.takenAt).toLocaleDateString('ar')}
                   </div>
                 </div>
+              ) : exam.examStatus === 'not_open' ? (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-center gap-2 text-orange-600">
+                    <FaClock />
+                    <span>الامتحان غير متاح بعد</span>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    {exam.statusMessage}
+                  </div>
+                  <button 
+                    disabled
+                    className="bg-gray-400 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium text-sm sm:text-base w-full sm:w-auto cursor-not-allowed"
+                  >
+                    الامتحان غير متاح
+                  </button>
+                </div>
+              ) : exam.examStatus === 'closed' ? (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-center gap-2 text-red-600">
+                    <FaTimes />
+                    <span>الامتحان مغلق</span>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    {exam.statusMessage}
+                  </div>
+                  <button 
+                    disabled
+                    className="bg-gray-400 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium text-sm sm:text-base w-full sm:w-auto cursor-not-allowed"
+                  >
+                    الامتحان مغلق
+                  </button>
+                </div>
               ) : (
-                <button 
-                  onClick={() => handleStartExam(exam, 'exam')}
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg transition-all duration-200 hover:shadow-lg font-medium text-sm sm:text-base w-full sm:w-auto"
-                >
-                  بدء الامتحان
-                </button>
+                                 <button 
+                   onClick={() => {
+                     // Check if access has expired before starting exam
+                     if (isAccessExpired) {
+                       return;
+                     }
+                     handleStartExam(exam, 'exam');
+                   }}
+                   className="bg-orange-600 hover:bg-orange-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg transition-all duration-200 hover:shadow-lg font-medium text-sm sm:text-base w-full sm:w-auto"
+                   disabled={isAccessExpired}
+                 >
+                   بدء الامتحان
+                 </button>
               )}
             </div>
           </div>
@@ -323,22 +451,73 @@ const OptimizedLessonContentModal = ({ isOpen, onClose, courseId, lessonId, unit
               </div>
             </div>
             
+            {/* Date Information */}
+            {(training.openDate || training.closeDate) && (
+              <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                <div className="text-sm font-medium text-green-800 dark:text-green-300 mb-2">معلومات التواريخ:</div>
+                <div className="space-y-1 text-xs text-green-700 dark:text-green-400">
+                  {training.openDate && (
+                    <div>يفتح في: {new Date(training.openDate).toLocaleDateString('ar')} {new Date(training.openDate).toLocaleTimeString('ar', { hour: '2-digit', minute: '2-digit' })}</div>
+                  )}
+                </div>
+              </div>
+            )}
+            
             {training.userResults.length > 0 && (
               <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
                 <div className="text-sm font-medium text-green-800 dark:text-green-300 mb-2">أفضل نتيجة:</div>
                 <div className="text-lg font-bold text-green-600">
                   {Math.max(...training.userResults.map(r => r.percentage))}%
                 </div>
+                <button 
+                  onClick={() => {
+                    // Check if access has expired before clearing training attempt
+                    if (isAccessExpired) {
+                      return;
+                    }
+                    handleClearTrainingAttempt(training._id);
+                  }}
+                  className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs transition-colors mt-2"
+                  title="مسح محاولات التدريب"
+                  disabled={isAccessExpired}
+                >
+                  مسح المحاولات
+                </button>
               </div>
             )}
             
             <div className="text-center">
-              <button 
-                onClick={() => handleStartExam(training, 'training')}
-                className="bg-green-600 hover:bg-green-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg transition-all duration-200 hover:shadow-lg font-medium text-sm sm:text-base w-full sm:w-auto"
-              >
-                {training.attemptCount > 0 ? 'إعادة التدريب' : 'بدء التدريب'}
-              </button>
+              {training.trainingStatus === 'not_open' ? (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-center gap-2 text-orange-600">
+                    <FaClock />
+                    <span>التدريب غير متاح بعد</span>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    {training.statusMessage}
+                  </div>
+                  <button 
+                    disabled
+                    className="bg-gray-400 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium text-sm sm:text-base w-full sm:w-auto cursor-not-allowed"
+                  >
+                    التدريب غير متاح
+                  </button>
+                </div>
+              ) : (
+                                 <button 
+                   onClick={() => {
+                     // Check if access has expired before starting training
+                     if (isAccessExpired) {
+                       return;
+                     }
+                     handleStartExam(training, 'training');
+                   }}
+                   className="bg-green-600 hover:bg-green-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg transition-all duration-200 hover:shadow-lg font-medium text-sm sm:text-base w-full sm:w-auto"
+                   disabled={isAccessExpired}
+                 >
+                   {training.attemptCount > 0 ? 'إعادة التدريب' : 'بدء التدريب'}
+                 </button>
+              )}
             </div>
           </div>
         </div>
@@ -347,6 +526,27 @@ const OptimizedLessonContentModal = ({ isOpen, onClose, courseId, lessonId, unit
   );
 
   if (!isOpen) return null;
+
+  // Block access if code-based access has expired
+  if (isAccessExpired) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8 text-center max-w-md">
+          <div className="text-red-500 text-4xl mb-4">⚠️</div>
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">انتهت صلاحية الوصول</h3>
+          <p className="text-gray-600 dark:text-gray-300 mb-4">
+            انتهت صلاحية الوصول عبر الكود. يرجى إعادة تفعيل كود جديد أو شراء المحتوى.
+          </p>
+          <button 
+            onClick={onClose}
+            className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg"
+          >
+            إغلاق
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -381,7 +581,7 @@ const OptimizedLessonContentModal = ({ isOpen, onClose, courseId, lessonId, unit
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-2 sm:p-4">
       <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-5xl max-h-[95vh] overflow-hidden relative">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 sm:p-6 rounded-t-2xl">
+        <div className="bg-gradient-to-r from-blue-600 to-orange-600 text-white p-4 sm:p-6 rounded-t-2xl">
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
               <h2 className="text-lg sm:text-xl md:text-2xl font-bold leading-tight break-words">{lesson.title}</h2>
@@ -389,6 +589,17 @@ const OptimizedLessonContentModal = ({ isOpen, onClose, courseId, lessonId, unit
               {courseInfo && (
                 <p className="text-blue-200 mt-1 text-xs sm:text-sm">{courseInfo.title}</p>
               )}
+              
+                             {/* Show remaining days if user has code-based access */}
+               {courseAccessState?.source === 'code' && courseAccessState?.accessEndAt && (
+                 <div className="mt-3">
+                   <RemainingDaysLabel 
+                     accessEndAt={courseAccessState.accessEndAt}
+                     className="bg-white/20 text-white border-white/30"
+                     showExpiredMessage={!courseAccessState?.hasAccess}
+                   />
+                 </div>
+               )}
             </div>
             <button
               className="text-white hover:text-red-200 text-xl sm:text-2xl transition-colors duration-200 flex-shrink-0 p-1"
@@ -405,7 +616,7 @@ const OptimizedLessonContentModal = ({ isOpen, onClose, courseId, lessonId, unit
             {[
               { key: 'video', label: 'الفيديوهات', icon: <FaVideo className="text-blue-500" />, count: lesson.videos?.length || 0 },
               { key: 'pdf', label: 'الملفات', icon: <FaFilePdf className="text-red-500" />, count: lesson.pdfs?.length || 0 },
-              { key: 'exam', label: 'الامتحانات', icon: <FaClipboardList className="text-purple-500" />, count: lesson.exams?.length || 0 },
+              { key: 'exam', label: 'الامتحانات', icon: <FaClipboardList className="text-orange-500" />, count: lesson.exams?.length || 0 },
               { key: 'training', label: 'التدريبات', icon: <FaDumbbell className="text-green-500" />, count: lesson.trainings?.length || 0 }
             ].filter(tab => tab.count > 0).map((tab) => (
               <button

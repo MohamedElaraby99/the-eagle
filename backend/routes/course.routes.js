@@ -57,10 +57,10 @@ router.get('/', async (req, res, next) => {
   getAllCourses(req, res, next);
 });
 router.get('/featured', getFeaturedCourses);
-router.patch('/:id/toggle-featured', isLoggedIn, authorisedRoles('ADMIN'), toggleFeatured);
+router.patch('/:id/toggle-featured', isLoggedIn, authorisedRoles('ADMIN', 'SUPER_ADMIN'), toggleFeatured);
 
 // Admin routes
-router.get('/admin/all', isLoggedIn, authorisedRoles('ADMIN'), getAdminCourses);
+router.get('/admin/all', isLoggedIn, authorisedRoles('ADMIN', 'SUPER_ADMIN'), getAdminCourses);
 router.get('/stats', getCourseStats);
 router.get('/:id', getCourseById);
 
@@ -68,14 +68,14 @@ router.get('/:id', getCourseById);
 router.get('/:courseId/lessons/:lessonId', isLoggedIn, getLessonById);
 
 // Protected routes
-router.post('/', upload.single('thumbnail'), isLoggedIn, authorisedRoles('ADMIN', 'INSTRUCTOR'), createCourse);
-router.put('/:id', upload.single('thumbnail'), isLoggedIn, authorisedRoles('ADMIN', 'INSTRUCTOR'), updateCourse);
-router.delete('/:id', isLoggedIn, authorisedRoles('ADMIN', 'INSTRUCTOR'), deleteCourse);
+router.post('/', upload.single('thumbnail'), isLoggedIn, authorisedRoles('ADMIN', 'SUPER_ADMIN', 'INSTRUCTOR'), createCourse);
+router.put('/:id', upload.single('thumbnail'), isLoggedIn, authorisedRoles('ADMIN', 'SUPER_ADMIN', 'INSTRUCTOR'), updateCourse);
+router.delete('/:id', isLoggedIn, authorisedRoles('ADMIN', 'SUPER_ADMIN', 'INSTRUCTOR'), deleteCourse);
 
 // Course structure management - Unit operations
-router.post('/:courseId/units', isLoggedIn, authorisedRoles('ADMIN', 'INSTRUCTOR'), addUnitToCourse);
-router.put('/:courseId/units/:unitId', isLoggedIn, authorisedRoles('ADMIN', 'INSTRUCTOR'), updateUnit);
-router.delete('/:courseId/units/:unitId', isLoggedIn, authorisedRoles('ADMIN', 'INSTRUCTOR'), deleteUnit);
+router.post('/:courseId/units', isLoggedIn, authorisedRoles('ADMIN', 'SUPER_ADMIN', 'INSTRUCTOR'), addUnitToCourse);
+router.put('/:courseId/units/:unitId', isLoggedIn, authorisedRoles('ADMIN', 'SUPER_ADMIN', 'INSTRUCTOR'), updateUnit);
+router.delete('/:courseId/units/:unitId', isLoggedIn, authorisedRoles('ADMIN', 'SUPER_ADMIN', 'INSTRUCTOR'), deleteUnit);
 
 // Course structure management - Lesson operations
 router.post('/:courseId/units/:unitId/lessons', 
@@ -85,7 +85,7 @@ router.post('/:courseId/units/:unitId/lessons',
     { name: 'thumbnail', maxCount: 1 }
   ]), 
   isLoggedIn, 
-  authorisedRoles('ADMIN', 'INSTRUCTOR'), 
+  authorisedRoles('ADMIN', 'SUPER_ADMIN', 'INSTRUCTOR'), 
   addLessonToUnit
 );
 
@@ -96,7 +96,7 @@ router.post('/:courseId/direct-lessons',
     { name: 'thumbnail', maxCount: 1 }
   ]), 
   isLoggedIn, 
-  authorisedRoles('ADMIN', 'INSTRUCTOR'), 
+  authorisedRoles('ADMIN', 'SUPER_ADMIN', 'INSTRUCTOR'), 
   addDirectLessonToCourse
 );
 
@@ -107,14 +107,14 @@ router.put('/:courseId/lessons/:lessonId',
     { name: 'thumbnail', maxCount: 1 }
   ]), 
   isLoggedIn, 
-  authorisedRoles('ADMIN', 'INSTRUCTOR'), 
+  authorisedRoles('ADMIN', 'SUPER_ADMIN', 'INSTRUCTOR'), 
   updateLesson
 );
 
-router.put('/:courseId/lessons/:lessonId/content', isLoggedIn, authorisedRoles('ADMIN', 'INSTRUCTOR'), updateLessonContent);
+router.put('/:courseId/lessons/:lessonId/content', isLoggedIn, authorisedRoles('ADMIN', 'SUPER_ADMIN', 'INSTRUCTOR'), updateLessonContent);
 
-router.delete('/:courseId/lessons/:lessonId', isLoggedIn, authorisedRoles('ADMIN', 'INSTRUCTOR'), deleteLesson);
-router.put('/:courseId/reorder-lessons', isLoggedIn, authorisedRoles('ADMIN', 'INSTRUCTOR'), reorderLessons);
+router.delete('/:courseId/lessons/:lessonId', isLoggedIn, authorisedRoles('ADMIN', 'SUPER_ADMIN', 'INSTRUCTOR'), deleteLesson);
+router.put('/:courseId/reorder-lessons', isLoggedIn, authorisedRoles('ADMIN', 'SUPER_ADMIN', 'INSTRUCTOR'), reorderLessons);
 
 // Training attempt submission
 router.post('/:courseId/lessons/:lessonId/trainings/:trainingIndex/submit', isLoggedIn, submitTrainingAttempt);

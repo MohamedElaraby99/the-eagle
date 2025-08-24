@@ -280,7 +280,7 @@ const ExamResultsDashboard = () => {
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
-                      <FaClock className="h-8 w-8 text-purple-600" />
+                      <FaClock className="h-8 w-8 text-orange-600" />
                     </div>
                     <div className="mr-5 w-0 flex-1">
                       <dl>
@@ -450,7 +450,7 @@ const ExamResultsDashboard = () => {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
                               <div className="flex-shrink-0 h-10 w-10">
-                                <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
+                                <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-orange-600 flex items-center justify-center text-white font-bold">
                                   {result.user?.fullName?.charAt(0) || 'U'}
                                 </div>
                               </div>
@@ -490,7 +490,7 @@ const ExamResultsDashboard = () => {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                               result.examType === 'final' 
-                                ? 'bg-purple-100 text-purple-800' 
+                                ? 'bg-orange-100 text-orange-800' 
                                 : 'bg-blue-100 text-blue-800'
                             }`}>
                               {result.examType === 'final' ? 'امتحان نهائي' : 'تدريب'}

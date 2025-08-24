@@ -374,9 +374,43 @@ export const getCourseById = async (req, res, next) => {
     
     // Clean up units and lessons
     if (courseObj.units) {
-      courseObj.units = courseObj.units.map(unit => ({
-        ...unit,
-        lessons: unit.lessons?.map(lesson => ({
+      console.log('🔍 Processing units:', courseObj.units.length);
+      courseObj.units = courseObj.units.map(unit => {
+        console.log(`📚 Unit "${unit.title}":`, {
+          lessonsCount: unit.lessons?.length || 0
+        });
+        return {
+          ...unit,
+          lessons: unit.lessons?.map(lesson => {
+            const lessonData = {
+              _id: lesson._id,
+              title: lesson.title,
+              description: lesson.description,
+              price: lesson.price,
+              content: lesson.content,
+              videosCount: lesson.videos?.length || 0,
+              pdfsCount: lesson.pdfs?.length || 0,
+              examsCount: lesson.exams?.length || 0,
+              trainingsCount: lesson.trainings?.length || 0
+              // Exclude actual videos, pdfs, exams, trainings for security
+            };
+            console.log(`  📚 Lesson "${lesson.title}":`, {
+              videos: lesson.videos?.length || 0,
+              pdfs: lesson.pdfs?.length || 0,
+              exams: lesson.exams?.length || 0,
+              trainings: lesson.trainings?.length || 0
+            });
+            return lessonData;
+          }) || []
+        };
+      });
+    }
+    
+    // Clean up direct lessons
+    if (courseObj.directLessons) {
+      console.log('🔍 Processing direct lessons:', courseObj.directLessons.length);
+      courseObj.directLessons = courseObj.directLessons.map(lesson => {
+        const lessonData = {
           _id: lesson._id,
           title: lesson.title,
           description: lesson.description,
@@ -387,24 +421,15 @@ export const getCourseById = async (req, res, next) => {
           examsCount: lesson.exams?.length || 0,
           trainingsCount: lesson.trainings?.length || 0
           // Exclude actual videos, pdfs, exams, trainings for security
-        })) || []
-      }));
-    }
-    
-    // Clean up direct lessons
-    if (courseObj.directLessons) {
-      courseObj.directLessons = courseObj.directLessons.map(lesson => ({
-        _id: lesson._id,
-        title: lesson.title,
-        description: lesson.description,
-        price: lesson.price,
-        content: lesson.content,
-        videosCount: lesson.videos?.length || 0,
-        pdfsCount: lesson.pdfs?.length || 0,
-        examsCount: lesson.exams?.length || 0,
-        trainingsCount: lesson.trainings?.length || 0
-        // Exclude actual videos, pdfs, exams, trainings for security
-      }));
+        };
+        console.log(`📚 Lesson "${lesson.title}":`, {
+          videos: lesson.videos?.length || 0,
+          pdfs: lesson.pdfs?.length || 0,
+          exams: lesson.exams?.length || 0,
+          trainings: lesson.trainings?.length || 0
+        });
+        return lessonData;
+      });
     }
 
     return res.status(200).json({ success: true, data: { course: courseObj } });
@@ -444,6 +469,19 @@ export const getLessonById = async (req, res, next) => {
         attempt.userId.toString() === userId.toString()
       ) : null;
 
+      // Check exam availability based on dates
+      const now = new Date();
+      let examStatus = 'available';
+      let statusMessage = '';
+      
+      if (exam.openDate && now < new Date(exam.openDate)) {
+        examStatus = 'not_open';
+        statusMessage = `الامتحان غير متاح بعد`;
+      } else if (exam.closeDate && now > new Date(exam.closeDate)) {
+        examStatus = 'closed';
+        statusMessage = `الامتحان مغلق`;
+      }
+
       return {
         _id: exam._id,
         title: exam.title,
@@ -451,6 +489,8 @@ export const getLessonById = async (req, res, next) => {
         timeLimit: exam.timeLimit,
         openDate: exam.openDate,
         closeDate: exam.closeDate,
+        examStatus,
+        statusMessage,
         questionsCount: exam.questions.length,
         questions: exam.questions.map(q => ({
           _id: q._id,
@@ -475,12 +515,24 @@ export const getLessonById = async (req, res, next) => {
         attempt.userId.toString() === userId.toString()
       ) : [];
 
+      // Check training availability based on dates
+      const now = new Date();
+      let trainingStatus = 'available';
+      let statusMessage = '';
+      
+      if (training.openDate && now < new Date(training.openDate)) {
+        trainingStatus = 'not_open';
+        statusMessage = `Training opens on ${new Date(training.openDate).toLocaleDateString()}`;
+      }
+
       return {
         _id: training._id,
         title: training.title,
         description: training.description,
         timeLimit: training.timeLimit,
         openDate: training.openDate,
+        trainingStatus,
+        statusMessage,
         questionsCount: training.questions.length,
         questions: training.questions.map(q => ({
           _id: q._id,
@@ -501,23 +553,66 @@ export const getLessonById = async (req, res, next) => {
     });
 
     // Optimized lesson response with only necessary data
+    const now = new Date();
+    console.log('🔍 Current time for filtering:', now.toISOString());
+    console.log('🔍 Current time local:', now.toString());
+    console.log('🔍 Current timezone offset:', now.getTimezoneOffset());
+    
+    const filteredVideos = lesson.videos.filter(video => {
+      if (!video.publishDate) {
+        console.log(`✅ Video ${video.title || video._id}: No publishDate - showing`);
+        return true;
+      }
+      const publishDate = new Date(video.publishDate);
+      // Normalize both dates to UTC for comparison
+      const nowUTC = new Date(now.getTime() - (now.getTimezoneOffset() * 60000));
+      const publishDateUTC = new Date(publishDate.getTime() - (publishDate.getTimezoneOffset() * 60000));
+      const shouldShow = nowUTC >= publishDateUTC;
+      console.log(`🔍 Video ${video.title || video._id}: publishDate=${publishDate.toISOString()}, publishDate local=${publishDate.toString()}, shouldShow=${shouldShow}`);
+      console.log(`🔍 Video timezone comparison: nowUTC=${nowUTC.toISOString()}, publishDateUTC=${publishDateUTC.toISOString()}`);
+      return shouldShow;
+    });
+    
+    const filteredPdfs = lesson.pdfs.filter(pdf => {
+      if (!pdf.publishDate) {
+        console.log(`✅ PDF ${pdf.title || pdf._id}: No publishDate - showing`);
+        return true;
+      }
+      const publishDate = new Date(pdf.publishDate);
+      // Normalize both dates to UTC for comparison
+      const nowUTC = new Date(now.getTime() - (now.getTimezoneOffset() * 60000));
+      const publishDateUTC = new Date(publishDate.getTime() - (publishDate.getTimezoneOffset() * 60000));
+      const shouldShow = nowUTC >= publishDateUTC;
+      console.log(`🔍 PDF ${pdf.title || pdf._id}: publishDate=${publishDate.toISOString()}, publishDate local=${publishDate.toString()}, shouldShow=${shouldShow}`);
+      console.log(`🔍 PDF timezone comparison: nowUTC=${nowUTC.toISOString()}, publishDateUTC=${publishDateUTC.toISOString()}`);
+      return shouldShow;
+    });
+    
+    console.log(`📊 Filtering results: ${lesson.videos.length} total videos -> ${filteredVideos.length} visible, ${lesson.pdfs.length} total PDFs -> ${filteredPdfs.length} visible`);
+    console.log(`📊 Raw lesson data:`, {
+      videos: lesson.videos.map(v => ({ id: v._id, title: v.title, publishDate: v.publishDate })),
+      pdfs: lesson.pdfs.map(p => ({ id: p._id, title: p.title, publishDate: p.publishDate }))
+    });
+    
     const optimizedLesson = {
       _id: lesson._id,
       title: lesson.title,
       description: lesson.description,
       price: lesson.price,
       content: lesson.content,
-      videos: lesson.videos.map(video => ({
+      videos: filteredVideos.map(video => ({
         _id: video._id,
         url: video.url,
         title: video.title,
-        description: video.description
+        description: video.description,
+        publishDate: video.publishDate
       })),
-      pdfs: lesson.pdfs.map(pdf => ({
+      pdfs: filteredPdfs.map(pdf => ({
         _id: pdf._id,
         url: pdf.url,
         title: pdf.title,
-        fileName: pdf.fileName
+        fileName: pdf.fileName,
+        publishDate: pdf.publishDate
       })),
       exams: processedExams,
       trainings: processedTrainings

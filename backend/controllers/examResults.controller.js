@@ -2,6 +2,7 @@ import ExamResult from '../models/examResult.model.js';
 import User from '../models/user.model.js';
 import Course from '../models/course.model.js';
 import AppError from '../utils/error.utils.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
 
 // Get all exam results for admin dashboard
 const getAllExamResults = async (req, res, next) => {
@@ -534,9 +535,312 @@ const exportExamResults = async (req, res, next) => {
     }
 };
 
+// Get exam results for a specific lesson
+const getExamResults = asyncHandler(async (req, res) => {
+    const { courseId, lessonId } = req.params;
+    const userId = req.user._id || req.user.id;
+
+    try {
+        const results = await ExamResult.find({
+            course: courseId,
+            lessonId: lessonId,
+            user: userId
+        }).sort({ completedAt: -1 });
+
+        res.status(200).json({
+            success: true,
+            data: results
+        });
+    } catch (error) {
+        console.error('Error getting exam results:', error);
+        throw new AppError('فشل في جلب نتائج الامتحانات', 500);
+    }
+});
+
+// Get user's exam history
+const getUserExamHistory = asyncHandler(async (req, res) => {
+    const userId = req.user._id || req.user.id;
+
+    try {
+        const results = await ExamResult.find({ user: userId })
+            .populate('course', 'title')
+            .sort({ completedAt: -1 });
+
+        res.status(200).json({
+            success: true,
+            data: results
+        });
+    } catch (error) {
+        console.error('Error getting user exam history:', error);
+        throw new AppError('فشل في جلب تاريخ الامتحانات', 500);
+    }
+});
+
+// Get exam statistics
+const getExamStatistics = asyncHandler(async (req, res) => {
+    try {
+        const totalResults = await ExamResult.countDocuments();
+        const passedResults = await ExamResult.countDocuments({ passed: true });
+        const failedResults = await ExamResult.countDocuments({ passed: false });
+        const trainingResults = await ExamResult.countDocuments({ examType: 'training' });
+        const finalResults = await ExamResult.countDocuments({ examType: 'final' });
+
+        const avgScore = await ExamResult.aggregate([
+            { $group: { _id: null, avgScore: { $avg: '$score' } } }
+        ]);
+
+        res.status(200).json({
+            success: true,
+            data: {
+                totalResults,
+                passedResults,
+                failedResults,
+                trainingResults,
+                finalResults,
+                averageScore: avgScore[0]?.avgScore || 0
+            }
+        });
+    } catch (error) {
+        console.error('Error getting exam statistics:', error);
+        throw new AppError('فشل في جلب إحصائيات الامتحانات', 500);
+    }
+});
+
+// Search exam results (admin only) - Enhanced to include both completed results and available exams
+const searchExamResults = asyncHandler(async (req, res) => {
+    const {
+        page = 1,
+        limit = 20,
+        search = '',
+        examType = '',
+        courseId = '',
+        userId = '',
+        dateFrom = '',
+        dateTo = '',
+        scoreFilter = '',
+        status = ''
+    } = req.query;
+
+    try {
+        // 1. Get completed exam results from ExamResult collection
+        const filter = {};
+        
+        if (examType) filter.examType = examType;
+        if (courseId) filter.course = courseId;
+        if (userId) filter.user = userId;
+        
+        if (dateFrom || dateTo) {
+            filter.completedAt = {};
+            if (dateFrom) filter.completedAt.$gte = new Date(dateFrom);
+            if (dateTo) filter.completedAt.$lte = new Date(dateTo + 'T23:59:59.999Z');
+        }
+        
+        if (scoreFilter) {
+            const [minScore, maxScore] = scoreFilter.split('-').map(Number);
+            filter.score = {};
+            if (minScore !== undefined) filter.score.$gte = minScore;
+            if (maxScore !== undefined) filter.score.$lte = maxScore;
+        }
+        
+        if (status) filter.passed = status === 'passed';
+
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        const pageLimit = parseInt(limit);
+
+        // Get completed exam results
+        const totalCompleted = await ExamResult.countDocuments(filter);
+        const completedResults = await ExamResult.find(filter)
+            .populate('user', 'fullName username email')
+            .populate('course', 'title')
+            .sort({ completedAt: -1 })
+            .skip(skip)
+            .limit(pageLimit)
+            .lean();
+
+        // 2. Get ALL exams with user progress from Course structure (including completed ones)
+        let allExamsFromLessons = [];
+        
+        // Always fetch all exams from lessons to show complete picture
+        const courses = await Course.find({
+            $or: [
+                { 'units.lessons.exams': { $exists: true, $ne: [] } },
+                { 'directLessons.exams': { $exists: true, $ne: [] } }
+            ]
+        }).select('title units directLessons').lean();
+
+        console.log(`🔍 Found ${courses.length} courses with exams`);
+
+        for (const course of courses) {
+            console.log(`📚 Processing course: ${course.title}`);
+            
+            // Process direct lessons
+            if (course.directLessons) {
+                for (const lesson of course.directLessons) {
+                    if (lesson.exams && lesson.exams.length > 0) {
+                        for (const exam of lesson.exams) {
+                            console.log(`  📖 Processing exam: ${exam.title}`);
+                            console.log(`    - userResult:`, exam.userResult);
+                            
+                            // Check if this exam has user results - be more flexible with the check
+                            const hasUserResult = exam.userResult && (
+                                exam.userResult.hasTaken === true || 
+                                exam.userResult.score !== undefined || 
+                                exam.userResult.percentage !== undefined
+                            );
+                            
+                            console.log(`    - hasUserResult: ${hasUserResult}`);
+                            
+                            allExamsFromLessons.push({
+                                _id: `lesson_${exam._id}`,
+                                type: hasUserResult ? 'completed' : 'available',
+                                course: { title: course.title },
+                                lesson: { title: lesson.title },
+                                exam: {
+                                    title: exam.title,
+                                    description: exam.description,
+                                    timeLimit: exam.timeLimit,
+                                    questionsCount: exam.questions?.length || 0
+                                },
+                                userResult: exam.userResult || { hasTaken: false },
+                                examType: 'final',
+                                isAvailable: !hasUserResult,
+                                isCompleted: hasUserResult,
+                                // If user has taken the exam, include the result data
+                                ...(hasUserResult && {
+                                    score: exam.userResult.score || 0,
+                                    percentage: exam.userResult.percentage || 0,
+                                    correctAnswers: exam.userResult.score || 0,
+                                    totalQuestions: exam.userResult.totalQuestions || 0,
+                                    completedAt: exam.userResult.takenAt || new Date(),
+                                    passed: (exam.userResult.percentage || 0) >= 50, // Assuming 50% is passing
+                                    user: {
+                                        fullName: 'طالب', // We don't have user details in lesson structure
+                                        username: 'طالب',
+                                        email: 'طالب'
+                                    }
+                                })
+                            });
+                        }
+                    }
+                }
+            }
+
+            // Process unit lessons
+            if (course.units) {
+                for (const unit of course.units) {
+                    if (unit.lessons) {
+                        for (const lesson of unit.lessons) {
+                            if (lesson.exams && lesson.exams.length > 0) {
+                                for (const exam of lesson.exams) {
+                                    console.log(`  📖 Processing exam: ${exam.title} (Unit: ${unit.title})`);
+                                    console.log(`    - userResult:`, exam.userResult);
+                                    
+                                    // Check if this exam has user results - be more flexible with the check
+                                    const hasUserResult = exam.userResult && (
+                                        exam.userResult.hasTaken === true || 
+                                        exam.userResult.score !== undefined || 
+                                        exam.userResult.percentage !== undefined
+                                    );
+                                    
+                                    console.log(`    - hasUserResult: ${hasUserResult}`);
+                                    
+                                    allExamsFromLessons.push({
+                                        _id: `lesson_${exam._id}`,
+                                        type: hasUserResult ? 'completed' : 'available',
+                                        course: { title: course.title },
+                                        lesson: { title: lesson.title },
+                                        unit: { title: unit.title },
+                                        exam: {
+                                            title: exam.title,
+                                            description: exam.description,
+                                            timeLimit: exam.timeLimit,
+                                            questionsCount: exam.questions?.length || 0
+                                        },
+                                        userResult: exam.userResult || { hasTaken: false },
+                                        examType: 'final',
+                                        isAvailable: !hasUserResult,
+                                        isCompleted: hasUserResult,
+                                        // If user has taken the exam, include the result data
+                                        ...(hasUserResult && {
+                                            score: exam.userResult.score || 0,
+                                            percentage: exam.userResult.percentage || 0,
+                                            correctAnswers: exam.userResult.score || 0,
+                                            totalQuestions: exam.userResult.totalQuestions || 0,
+                                            completedAt: exam.userResult.takenAt || new Date(),
+                                            passed: (exam.userResult.percentage || 0) >= 50, // Assuming 50% is passing
+                                            user: {
+                                                fullName: 'طالب', // We don't have user details in lesson structure
+                                                username: 'طالب',
+                                                email: 'طالب'
+                                            }
+                                        })
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 3. Combine and transform results
+        const transformedCompleted = completedResults.map(result => ({
+            _id: result._id,
+            type: 'completed',
+            user: {
+                fullName: result.user?.fullName,
+                username: result.user?.username,
+                email: result.user?.email
+            },
+            course: {
+                title: result.course?.title
+            },
+            lesson: {
+                title: result.lessonTitle
+            },
+            examType: result.examType,
+            score: result.score,
+            percentage: result.score,
+            correctAnswers: result.correctAnswers,
+            totalQuestions: result.totalQuestions,
+            timeTaken: result.timeTaken,
+            passed: result.passed,
+            completedAt: result.completedAt,
+            answers: result.answers,
+            isCompleted: true
+        }));
+
+        // Combine results (completed from ExamResult collection first, then all from lessons)
+        const allResults = [...transformedCompleted, ...allExamsFromLessons];
+        const total = totalCompleted + allExamsFromLessons.length;
+
+        res.status(200).json({
+            success: true,
+            data: {
+                results: allResults,
+                total,
+                page: parseInt(page),
+                limit: pageLimit,
+                totalPages: Math.ceil(total / pageLimit),
+                completedCount: totalCompleted,
+                availableCount: allExamsFromLessons.filter(exam => !exam.isCompleted).length,
+                lessonExamsCount: allExamsFromLessons.length
+            }
+        });
+
+    } catch (error) {
+        console.error('Error searching exam results:', error);
+        throw new AppError('فشل في البحث عن نتائج الامتحانات', 500);
+    }
+});
+
 export {
     getAllExamResults,
     getExamResultsStats,
     getExamResultById,
-    exportExamResults
+    exportExamResults,
+    getExamResults,
+    getUserExamHistory,
+    getExamStatistics,
+    searchExamResults
 };

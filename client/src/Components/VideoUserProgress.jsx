@@ -231,8 +231,8 @@ const VideoUserProgress = ({ videoId, courseId }) => {
             </div>
             <div className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">Avg Progress</div>
           </div>
-          <div className="text-center bg-purple-50 dark:bg-purple-900/20 rounded-lg p-3">
-            <div className="text-lg sm:text-2xl font-bold text-purple-500">
+          <div className="text-center bg-orange-50 dark:bg-orange-900/20 rounded-lg p-3">
+            <div className="text-lg sm:text-2xl font-bold text-orange-500">
               {formatTime(Math.round(sortedUsers.reduce((sum, u) => sum + (u.totalWatchTime || 0), 0) / sortedUsers.length))}
             </div>
             <div className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">Avg Watch Time</div>

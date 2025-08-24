@@ -30,7 +30,7 @@ const CourseDetailsModal = ({ course, onClose }) => {
   );
 };
 
-const CourseList = ({ courses, loading, pagination, onEditCourse, role }) => {
+const CourseList = ({ courses, loading, pagination, onEditCourse, role, onRefresh }) => {
   const dispatch = useDispatch();
   const [structureModalCourse, setStructureModalCourse] = useState(null);
   const [detailsModalCourse, setDetailsModalCourse] = useState(null);
@@ -39,6 +39,8 @@ const CourseList = ({ courses, loading, pagination, onEditCourse, role }) => {
     if (window.confirm('هل أنت متأكد من حذف هذه الدرس؟')) {
       try {
         await dispatch(deleteCourse(courseId)).unwrap();
+        // Refresh the courses list after deletion
+        if (onRefresh) onRefresh();
       } catch (error) {
         // console.error('Error deleting course:', error);
       }
@@ -48,6 +50,8 @@ const CourseList = ({ courses, loading, pagination, onEditCourse, role }) => {
   const handleToggleFeatured = async (courseId, currentFeatured) => {
     try {
       await dispatch(toggleFeatured(courseId)).unwrap();
+      // Refresh the courses list after toggling featured status
+      if (onRefresh) onRefresh();
     } catch (error) {
       // console.error('Error toggling featured status:', error);
     }
@@ -126,7 +130,7 @@ const CourseList = ({ courses, loading, pagination, onEditCourse, role }) => {
               ) : (
                 <>
                   {console.log('📚 No course image, using fallback for:', course.title)}
-                  <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600"></div>
+                  <div className="w-full h-full bg-gradient-to-br from-blue-500 to-orange-600"></div>
                   <div className="absolute inset-0 bg-black bg-opacity-20"></div>
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="text-white text-4xl">📚</div>
@@ -135,7 +139,7 @@ const CourseList = ({ courses, loading, pagination, onEditCourse, role }) => {
               )}
               
               {/* Fallback gradient for broken images */}
-              <div className="hidden w-full h-full bg-gradient-to-br from-blue-500 to-purple-600">
+              <div className="hidden w-full h-full bg-gradient-to-br from-blue-500 to-orange-600">
                 <div className="absolute inset-0 bg-black bg-opacity-20"></div>
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-white text-4xl">📚</div>
@@ -234,7 +238,7 @@ const CourseList = ({ courses, loading, pagination, onEditCourse, role }) => {
                 )}
                 <button
                   onClick={() => setStructureModalCourse(course._id)}
-                  className="text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300 p-2 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors"
+                  className="text-orange-600 dark:text-orange-400 hover:text-orange-800 dark:hover:text-orange-300 p-2 rounded-lg hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors"
                   title="إدارة الهيكل"
                 >
                   <FaList className="text-sm" />

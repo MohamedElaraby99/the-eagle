@@ -66,7 +66,7 @@ export default function DeviceManagementDashboard() {
 
     // Fetch initial data
     useEffect(() => {
-        if (role === "ADMIN") {
+        if (role === "ADMIN" || role === "SUPER_ADMIN") {
             dispatch(getDeviceStats());
             dispatch(getDeviceLimit());
             dispatch(getAllUsersDevices(filters));
@@ -82,7 +82,7 @@ export default function DeviceManagementDashboard() {
 
     // Handle filter changes
     useEffect(() => {
-        if (role === "ADMIN" && activeTab === "users") {
+        if ((role === "ADMIN" || role === "SUPER_ADMIN") && activeTab === "users") {
             dispatch(getAllUsersDevices(filters));
         }
     }, [dispatch, filters, activeTab, role]);
@@ -174,7 +174,7 @@ export default function DeviceManagementDashboard() {
         return `منذ ${Math.floor(diffInMinutes / 1440)} يوم`;
     };
 
-    if (role !== "ADMIN") {
+    if (role !== "ADMIN" && role !== "SUPER_ADMIN") {
         return (
             <Layout>
                 <div className="flex items-center justify-center min-h-screen">
@@ -239,24 +239,56 @@ export default function DeviceManagementDashboard() {
                     {/* Overview Tab */}
                     {activeTab === "overview" && (
                         <div className="space-y-6">
-                            {/* Debug Information */}
-                            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
-                                <h3 className="text-lg font-medium text-yellow-800 dark:text-yellow-200 mb-2">
-                                    معلومات التصحيح
-                                </h3>
-                                <div className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
-                                    <p>• إجمالي المستخدمين: {usersDevices.length}</p>
-                                    <p>• إجمالي الأجهزة: {deviceStats.totalDevices}</p>
-                                    <p>• الأجهزة النشطة: {deviceStats.activeDevices}</p>
-                                    <p>• الحد الحالي: {deviceStats.maxDevicesPerUser} أجهزة</p>
-                                    <p>• حالة التحميل: {loading ? 'جاري التحميل' : 'مكتمل'}</p>
-                                    {deviceStats.totalDevices === 0 && (
-                                        <p className="font-medium text-red-600 dark:text-red-400">
-                                            ملاحظة: لا توجد أجهزة مسجلة. الأجهزة تُسجل تلقائياً عند تسجيل دخول المستخدمين.
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
+                                                         {/* Debug Information */}
+                             <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
+                                 <h3 className="text-lg font-medium text-yellow-800 dark:text-yellow-200 mb-2">
+                                     معلومات التصحيح
+                                 </h3>
+                                 <div className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
+                                     <p>• إجمالي المستخدمين: {usersDevices.length}</p>
+                                     <p>• إجمالي الأجهزة: {deviceStats.totalDevices}</p>
+                                     <p>• الأجهزة النشطة: {deviceStats.activeDevices}</p>
+                                     <p>• الحد الحالي: {deviceStats.maxDevicesPerUser} أجهزة</p>
+                                     <p>• حالة التحميل: {loading ? 'جاري التحميل' : 'مكتمل'}</p>
+                                     {deviceStats.totalDevices === 0 && (
+                                         <p className="font-medium text-red-600 dark:text-red-400">
+                                             ملاحظة: لا توجد أجهزة مسجلة. الأجهزة تُسجل تلقائياً عند تسجيل دخول المستخدمين.
+                                         </p>
+                                     )}
+                                 </div>
+                             </div>
+
+                             {/* Device Limit Change History */}
+                             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
+                                 <h3 className="text-lg font-medium text-blue-800 dark:text-blue-200 mb-2">
+                                     معلومات تحديث الحد
+                                 </h3>
+                                 <div className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
+                                     <p>• الحد الحالي: {deviceStats.maxDevicesPerUser} أجهزة لكل مستخدم</p>
+                                     <p>• عند تقليل الحد: سيتم إعادة تعيين أجهزة المستخدمين الذين يتجاوزون الحد الجديد</p>
+                                     <p>• عند زيادة الحد: لن يتم إعادة تعيين أي أجهزة</p>
+                                     {deviceStats.lastLimitChange && (
+                                         <div className="mt-3 p-3 bg-blue-100 dark:bg-blue-800 rounded-lg">
+                                             <p className="font-medium text-blue-800 dark:text-blue-200 mb-2">
+                                                 آخر تحديث للحد:
+                                             </p>
+                                             <p>• من {deviceStats.lastLimitChange.previousLimit} إلى {deviceStats.lastLimitChange.newLimit} أجهزة</p>
+                                             <p>• التاريخ: {new Date(deviceStats.lastLimitChange.timestamp).toLocaleDateString('ar-EG')}</p>
+                                             {deviceStats.lastLimitChange.resetInfo && deviceStats.lastLimitChange.resetInfo.resetUsersCount > 0 && (
+                                                 <p>• تم إعادة تعيين أجهزة {deviceStats.lastLimitChange.resetInfo.resetUsersCount} مستخدم</p>
+                                             )}
+                                         </div>
+                                     )}
+                                     <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
+                                         💡 نصيحة: استخدم هذه الميزة بحذر عند تقليل الحد لتجنب إزعاج المستخدمين
+                                     </p>
+                                     <div className="mt-3 p-3 bg-purple-100 dark:bg-purple-800 rounded-lg">
+                                         <p className="text-xs text-purple-800 dark:text-purple-200">
+                                             🔒 ملاحظة: المستخدمون ذوو دور SUPER_ADMIN لديهم أجهزة غير محدودة ولا يخضعون لقيود الحد
+                                         </p>
+                                     </div>
+                                 </div>
+                             </div>
 
                             {/* Statistics Cards */}
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -390,24 +422,43 @@ export default function DeviceManagementDashboard() {
                                             </span>
                                         </div>
                                         <div className="flex items-center space-x-2 space-x-reverse">
-                                            <button
-                                                onClick={async () => {
-                                                    try {
-                                                        await dispatch(updateDeviceLimit(newDeviceLimit)).unwrap();
-                                                        setIsEditingLimit(false);
-                                                        // Refresh stats to get updated data
-                                                        dispatch(getDeviceStats());
-                                                        dispatch(getAllUsersDevices(filters));
-                                                    } catch (error) {
-                                                        // Error is handled in the slice
-                                                    }
-                                                }}
-                                                disabled={actionLoading}
-                                                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-                                            >
-                                                <FaSave className="w-4 h-4" />
-                                                <span>حفظ</span>
-                                            </button>
+                                                                                         <button
+                                                 onClick={async () => {
+                                                     // If reducing the limit, show confirmation dialog
+                                                     if (newDeviceLimit < deviceStats.maxDevicesPerUser) {
+                                                         const confirmed = window.confirm(
+                                                             `هل أنت متأكد من تقليل الحد من ${deviceStats.maxDevicesPerUser} إلى ${newDeviceLimit} أجهزة؟\n\nسيتم إعادة تعيين جميع أجهزة المستخدمين الذين لديهم أكثر من ${newDeviceLimit} أجهزة نشطة.`
+                                                         );
+                                                         
+                                                         if (!confirmed) {
+                                                             return;
+                                                         }
+                                                     }
+                                                     
+                                                     try {
+                                                         const result = await dispatch(updateDeviceLimit(newDeviceLimit)).unwrap();
+                                                         setIsEditingLimit(false);
+                                                         
+                                                         // Show success message with reset info
+                                                         if (result.data.resetUsersCount > 0) {
+                                                             toast.success(`تم تحديث الحد إلى ${newDeviceLimit} أجهزة وتم إعادة تعيين أجهزة ${result.data.resetUsersCount} مستخدم`);
+                                                         } else {
+                                                             toast.success(`تم تحديث الحد إلى ${newDeviceLimit} أجهزة`);
+                                                         }
+                                                         
+                                                         // Refresh stats to get updated data
+                                                         dispatch(getDeviceStats());
+                                                         dispatch(getAllUsersDevices(filters));
+                                                     } catch (error) {
+                                                         // Error is handled in the slice
+                                                     }
+                                                 }}
+                                                 disabled={actionLoading}
+                                                 className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                                             >
+                                                 <FaSave className="w-4 h-4" />
+                                                 <span>حفظ</span>
+                                             </button>
                                             <button
                                                 onClick={() => {
                                                     setIsEditingLimit(false);
@@ -440,9 +491,16 @@ export default function DeviceManagementDashboard() {
                                     </div>
                                 )}
                                 
-                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
-                                    يمكنك تغيير عدد الأجهزة المسموح بها لكل مستخدم. الحد الأقصى هو 10 أجهزة.
-                                </p>
+                                                                 <div className="text-sm text-gray-500 dark:text-gray-400 mt-4 space-y-2">
+                                     <p>يمكنك تغيير عدد الأجهزة المسموح بها لكل مستخدم. الحد الأقصى هو 10 أجهزة.</p>
+                                     {newDeviceLimit < deviceStats.maxDevicesPerUser && (
+                                         <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-3">
+                                             <p className="text-yellow-800 dark:text-yellow-200 font-medium">
+                                                 ⚠️ تحذير: عند تقليل الحد من {deviceStats.maxDevicesPerUser} إلى {newDeviceLimit}، سيتم إعادة تعيين جميع أجهزة المستخدمين الذين لديهم أكثر من {newDeviceLimit} أجهزة نشطة.
+                                             </p>
+                                         </div>
+                                     )}
+                                 </div>
                             </div>
 
                             {/* Test Section */}
@@ -601,32 +659,39 @@ export default function DeviceManagementDashboard() {
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                                                             {user.totalDevices}
                                                         </td>
-                                                        <td className="px-6 py-4 whitespace-nowrap">
-                                                            <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                                                                user.activeDevices > deviceStats.maxDevicesPerUser
-                                                                    ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                                                                    : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                                                            }`}>
-                                                                {user.activeDevices}
-                                                            </span>
-                                                        </td>
+                                                                                                                 <td className="px-6 py-4 whitespace-nowrap">
+                                                             <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                                                                 user.isUnlimited 
+                                                                     ? "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
+                                                                     : user.activeDevices > deviceStats.maxDevicesPerUser
+                                                                         ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                                                                         : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                                             }`}>
+                                                                 {user.activeDevices}
+                                                                 {user.isUnlimited && <span className="ml-1">∞</span>}
+                                                             </span>
+                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                                             <div className="flex items-center">
                                                                 <FaClock className="ml-1" />
                                                                 {formatLastActivity(user.lastDeviceActivity)}
                                                             </div>
                                                         </td>
-                                                        <td className="px-6 py-4 whitespace-nowrap">
-                                                            {user.activeDevices > deviceStats.maxDevicesPerUser ? (
-                                                                <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
-                                                                    تجاوز الحد
-                                                                </span>
-                                                            ) : (
-                                                                <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                                                    طبيعي
-                                                                </span>
-                                                            )}
-                                                        </td>
+                                                                                                                 <td className="px-6 py-4 whitespace-nowrap">
+                                                             {user.isUnlimited ? (
+                                                                 <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                                                                     غير محدود
+                                                                 </span>
+                                                             ) : user.activeDevices > deviceStats.maxDevicesPerUser ? (
+                                                                 <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                                                                     تجاوز الحد
+                                                                 </span>
+                                                             ) : (
+                                                                 <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                                                     طبيعي
+                                                                 </span>
+                                                             )}
+                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                             <div className="flex items-center space-x-2 space-x-reverse">
                                                                 <button
@@ -725,13 +790,18 @@ export default function DeviceManagementDashboard() {
                                                                 {device.deviceName}
                                                             </span>
                                                         </div>
-                                                        <span className={`px-2 py-1 text-xs rounded-full ${
-                                                            device.isActive
-                                                                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                                                                : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                                                        }`}>
-                                                            {device.isActive ? "نشط" : "غير نشط"}
-                                                        </span>
+                                                                                                                 <span className={`px-2 py-1 text-xs rounded-full ${
+                                                             device.isActive
+                                                                 ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                                                 : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                                                         }`}>
+                                                             {device.isActive ? "نشط" : "غير نشط"}
+                                                         </span>
+                                                         {!device.isActive && device.deactivationReason && (
+                                                             <span className="text-xs text-orange-600 dark:text-orange-400 mr-2">
+                                                                 ({device.deactivationReason})
+                                                             </span>
+                                                         )}
                                                     </div>
 
                                                     <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">

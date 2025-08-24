@@ -91,12 +91,16 @@ const LiveMeetings = () => {
 
   const handleJoinMeeting = async (meetingId) => {
     try {
-      const result = await dispatch(joinLiveMeeting(meetingId)).unwrap();
-      if (result.meetingLink) {
-        window.open(result.meetingLink, '_blank');
+      // Get the meeting details first to get the Google Meet link
+      const result = await dispatch(getLiveMeeting(meetingId)).unwrap();
+      if (result.liveMeeting?.googleMeetLink) {
+        window.open(result.liveMeeting.googleMeetLink, '_blank');
+      } else {
+        toast.error('رابط الاجتماع غير متوفر');
       }
     } catch (error) {
       console.error('Failed to join meeting:', error);
+      toast.error('فشل في الانضمام للاجتماع');
     }
   };
 
@@ -158,12 +162,25 @@ const LiveMeetings = () => {
           <span className="text-sm">{formatTime(meeting.scheduledDate)} ({getDuration(meeting.duration)})</span>
         </div>
         <div className="flex items-center text-gray-600 dark:text-gray-300">
-          <FaChalkboardTeacher className="ml-2 text-purple-500" />
+          <FaChalkboardTeacher className="ml-2 text-orange-500" />
           <span className="text-sm">{meeting.instructor?.name}</span>
         </div>
         <div className="flex items-center text-gray-600 dark:text-gray-300">
           <FaBookOpen className="ml-2 text-orange-500" />
           <span className="text-sm">{meeting.subject?.title}</span>
+        </div>
+        <div className="flex items-center text-gray-600 dark:text-gray-300 col-span-full">
+          <FaVideo className="ml-2 text-red-500" />
+          <span className="text-sm">
+            <a 
+              href={meeting.googleMeetLink} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-800 underline break-all"
+            >
+              {meeting.googleMeetLink}
+            </a>
+          </span>
         </div>
       </div>
 
@@ -174,6 +191,18 @@ const LiveMeetings = () => {
         </div>
         
         <div className="flex gap-2">
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(meeting.googleMeetLink);
+              toast.success('تم نسخ الرابط إلى الحافظة');
+            }}
+            className="flex items-center gap-1 px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors duration-200 text-sm"
+            title="نسخ الرابط"
+          >
+            <FaVideo />
+            نسخ الرابط
+          </button>
+          
           <button
             onClick={() => handleViewMeeting(meeting._id)}
             className="flex items-center gap-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors duration-200 text-sm"
@@ -352,7 +381,7 @@ const LiveMeetings = () => {
                       <span className="text-gray-600 dark:text-gray-300">{formatTime(selectedMeeting.scheduledDate)} ({getDuration(selectedMeeting.duration)})</span>
                     </div>
                     <div className="flex items-center">
-                      <FaChalkboardTeacher className="ml-3 text-purple-500" />
+                      <FaChalkboardTeacher className="ml-3 text-orange-500" />
                       <span className="text-gray-600 dark:text-gray-300">{selectedMeeting.instructor?.name}</span>
                     </div>
                     <div className="flex items-center">
@@ -362,6 +391,19 @@ const LiveMeetings = () => {
                     <div className="flex items-center">
                       <FaBookOpen className="ml-3 text-orange-500" />
                       <span className="text-gray-600 dark:text-gray-300">{selectedMeeting.subject?.title}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <FaVideo className="ml-3 text-red-500" />
+                      <span className="text-gray-600 dark:text-gray-300">
+                        <a 
+                          href={selectedMeeting.googleMeetLink} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 underline break-all"
+                        >
+                          {selectedMeeting.googleMeetLink}
+                        </a>
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -382,16 +424,40 @@ const LiveMeetings = () => {
                   إغلاق
                 </button>
                 
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(selectedMeeting.googleMeetLink);
+                    toast.success('تم نسخ الرابط إلى الحافظة');
+                  }}
+                  className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                >
+                  نسخ الرابط
+                </button>
+                
                 {isMeetingLive(selectedMeeting) && (
                   <button
                     onClick={() => {
-                      handleJoinMeeting(selectedMeeting._id);
+                      window.open(selectedMeeting.googleMeetLink, '_blank');
                       setShowMeetingModal(false);
                     }}
                     className="flex items-center gap-2 px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors animate-pulse"
                   >
                     <FaVideo />
                     انضم للجلسةالمباشر
+                    <FaExternalLinkAlt className="text-sm" />
+                  </button>
+                )}
+                
+                {!isMeetingLive(selectedMeeting) && selectedMeeting.status === 'scheduled' && (
+                  <button
+                    onClick={() => {
+                      window.open(selectedMeeting.googleMeetLink, '_blank');
+                      setShowMeetingModal(false);
+                    }}
+                    className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    <FaVideo />
+                    فتح الرابط
                     <FaExternalLinkAlt className="text-sm" />
                   </button>
                 )}

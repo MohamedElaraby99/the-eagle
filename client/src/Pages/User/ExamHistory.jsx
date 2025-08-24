@@ -53,7 +53,7 @@ const ExamHistory = () => {
 
   const getExamTypeIcon = (examType) => {
     return examType === 'training' ? (
-      <FaClipboardCheck className="text-purple-500" />
+      <FaClipboardCheck className="text-orange-500" />
     ) : (
       <FaGraduationCap className="text-red-500" />
     );
@@ -71,7 +71,7 @@ const ExamHistory = () => {
   if (!user) {
     return (
       <Layout>
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-orange-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
           <div className="text-center">
             <FaUser className="text-6xl text-gray-400 mx-auto mb-4" />
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Please Login</h1>
@@ -84,7 +84,7 @@ const ExamHistory = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-orange-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <div className="container mx-auto px-4 py-8">
           {/* Header */}
           <div className="mb-8">
@@ -101,7 +101,7 @@ const ExamHistory = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
             <div className="bg-white dark:bg-gray-800 rounded-lg p-4 sm:p-6 shadow-lg">
               <div className="flex items-center gap-2 sm:gap-3">
-                <FaClipboardCheck className="text-lg sm:text-2xl text-purple-500" />
+                <FaClipboardCheck className="text-lg sm:text-2xl text-orange-500" />
                 <div>
                   <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Training Exams</p>
                   <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
@@ -366,7 +366,7 @@ const ExamHistory = () => {
                               Question {index + 1}: {question.question}
                             </p>
                             <div className="space-y-1">
-                              {question.options.map((option, optionIndex) => (
+                              {question.options.slice(0, question.numberOfOptions || 4).map((option, optionIndex) => (
                                 <div
                                   key={optionIndex}
                                   className={`p-2 rounded ${

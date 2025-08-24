@@ -67,8 +67,11 @@ const CaptchaComponent = ({ onVerified, onError }) => {
       if (response.data.success) {
         setIsVerified(true);
         toast.success('تم التحقق بنجاح');
-        console.log('CAPTCHA verified successfully');
+        console.log('CAPTCHA verified successfully with session ID:', captchaData.sessionId);
+        
+        // Call the callback with the session ID immediately after verification
         if (onVerified) {
+          console.log('Calling onVerified with session ID:', captchaData.sessionId);
           onVerified(captchaData.sessionId);
         }
       }

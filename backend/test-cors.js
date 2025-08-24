@@ -13,8 +13,8 @@ const allowedOrigins = [
   process.env.FRONTEND_URL,
   'http://localhost:5173',
   'http://127.0.0.1:5173',
-  'http://localhost:5185',
-  'http://127.0.0.1:5185',
+  'http://localhost:5190',
+  'http://127.0.0.1:5190',
   'https://the-eagle.fikra.solutions',
   'https://www.the-eagle.fikra.solutions',
   'https://api.the-eagle.fikra.solutions'

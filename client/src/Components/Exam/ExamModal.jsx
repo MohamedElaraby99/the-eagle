@@ -83,14 +83,26 @@ const ExamModal = ({ isOpen, onClose, exam, courseId, lessonId, unitId, examType
     }
   }, [exam]);
 
-  // Handle exam result
+  // Reset stale results when opening a different exam
   useEffect(() => {
-    if (lastExamResult && !showResults) {
-      setShowResults(true);
-      setExamCompleted(true);
-      setIsTimerRunning(false);
+    // Clear previous results when exam changes
+    dispatch(clearLastExamResult());
+    setShowResults(false);
+    setExamCompleted(false);
+    setIsTimerRunning(false);
+  }, [dispatch, exam?._id]);
+
+  // Handle exam result only when it matches current exam context
+  useEffect(() => {
+    if (!lastExamResult) return;
+    // If backend includes examId, ensure it matches current exam
+    if (lastExamResult.examId && exam?._id && String(lastExamResult.examId) !== String(exam._id)) {
+      return;
     }
-  }, [lastExamResult]);
+    setShowResults(true);
+    setExamCompleted(true);
+    setIsTimerRunning(false);
+  }, [lastExamResult, exam?._id]);
 
   const formatTime = (seconds) => {
     // Ensure seconds is a valid number
@@ -229,7 +241,7 @@ const ExamModal = ({ isOpen, onClose, exam, courseId, lessonId, unitId, examType
         </div>
 
         <div className="space-y-3">
-          {question.options.map((option, optionIndex) => (
+          {question.options.slice(0, question.numberOfOptions || 4).map((option, optionIndex) => (
             <label
               key={optionIndex}
               className={`flex items-center p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
@@ -367,22 +379,12 @@ const ExamModal = ({ isOpen, onClose, exam, courseId, lessonId, unitId, examType
           </div>
         </div>
 
-        <div className="mt-6 flex gap-3">
+        <div className="mt-6">
           <button
             onClick={onClose}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-medium transition-colors"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-medium transition-colors"
           >
             إغلاق
-          </button>
-          <button
-            onClick={() => {
-              setExamStarted(false);
-              setShowResults(false);
-              dispatch(clearLastExamResult());
-            }}
-            className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-3 px-4 rounded-lg font-medium transition-colors"
-          >
-            إعادة الامتحان
           </button>
         </div>
       </div>
@@ -395,7 +397,7 @@ const ExamModal = ({ isOpen, onClose, exam, courseId, lessonId, unitId, examType
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm">
       <div className="bg-gray-100 dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-6xl max-h-[95vh] overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
+        <div className="bg-gradient-to-r from-blue-600 to-orange-600 text-white p-6">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold">{exam.title}</h2>
@@ -473,7 +475,8 @@ const ExamModal = ({ isOpen, onClose, exam, courseId, lessonId, unitId, examType
                       disabled={currentQuestionIndex === 0}
                       className="flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors disabled:opacity-50"
                     >
-                      <FaChevronLeft />
+                      <FaChevronRight />
+                      
                       السابق
                     </button>
                     
@@ -492,7 +495,7 @@ const ExamModal = ({ isOpen, onClose, exam, courseId, lessonId, unitId, examType
                       className="flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors disabled:opacity-50"
                     >
                       التالي
-                      <FaChevronRight />
+                      <FaChevronLeft />
                     </button>
                   </div>
                 </div>

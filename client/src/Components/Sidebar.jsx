@@ -24,6 +24,8 @@ import {
   FaServer,
   FaVideo,
   FaClipboardCheck,
+  FaUserSecret,
+  FaChartBar,
 } from "react-icons/fa";
 
 export default function Sidebar({ hideBar = false }) {
@@ -36,7 +38,7 @@ export default function Sidebar({ hideBar = false }) {
 
   // Fetch wallet balance when user is logged in
   useEffect(() => {
-    if (isLoggedIn && role !== "ADMIN") {
+    if (isLoggedIn && !["ADMIN", "SUPER_ADMIN"].includes(role)) {
       dispatch(getWalletBalance());
     }
   }, [dispatch, isLoggedIn, role]);
@@ -75,16 +77,29 @@ export default function Sidebar({ hideBar = false }) {
         <div className="min-h-full w-64 bg-white dark:bg-gray-900 text-base-content p-3 relative z-60" dir="rtl">
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-orange-600 dark:text-orange-400">
+              منصة مستر مايكل
+            </h2>
             <button onClick={closeSidebar} className="text-red-500 hover:text-red-700">
               <AiFillCloseCircle size={20} />
             </button>
-            <h2 className="text-lg font-bold text-orange-600 dark:text-orange-400">
-              The Eagle
-            </h2>
           </div>
 
+          {/* Super Admin Status Banner */}
+          {role === "SUPER_ADMIN" && (
+            <div className="mb-4 bg-gradient-to-r from-red-600 to-pink-600 rounded-lg p-3 text-white shadow-lg">
+              <div className="flex items-center gap-2">
+                <FaUserSecret size={18} className="text-white" />
+                <div>
+                  <div className="font-bold text-sm">المدير المميز</div>
+                  <div className="text-xs opacity-90">صلاحيات كاملة للنظام</div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Wallet Balance */}
-          {isLoggedIn && role !== "ADMIN" && (
+          {isLoggedIn && !["ADMIN", "SUPER_ADMIN"].includes(role) && (
             <div className="mb-4">
               <div className="bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 rounded-lg p-3 text-white shadow-md">
                 <div className="flex items-center justify-between mb-2">
@@ -112,16 +127,16 @@ export default function Sidebar({ hideBar = false }) {
           {/* Navigation Menu */}
           <ul className="menu space-y-1">
             <li>
-              <Link to="/" className="flex gap-3 items-center text-gray-700 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-right py-2" onClick={closeSidebar}>
+              <Link to="/" className="flex gap-3 items-center text-gray-700 dark:text-white hover:text-orange-600 dark:hover:text-orange-400 transition-colors text-right py-2" onClick={closeSidebar}>
               <FaHome size={16} className="text-gray-500 dark:text-slate-100" />
                 الرئيسية
                 
               </Link>
             </li>
 
-            {role === "ADMIN" && (
+            {(role === "ADMIN" || role === "SUPER_ADMIN") && (
               <li>
-                <Link to="/admin/dashboard" className="flex gap-3 items-center text-gray-700 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-right py-2" onClick={closeSidebar}>
+                <Link to="/admin/dashboard" className="flex gap-3 items-center text-gray-700 dark:text-white hover:text-orange-600 dark:hover:text-orange-400 transition-colors text-right py-2" onClick={closeSidebar}>
                 <FaUserCircle size={16} className="text-gray-500 dark:text-slate-100" />
                   لوحة تحكم الإدارة
                   
@@ -131,16 +146,16 @@ export default function Sidebar({ hideBar = false }) {
 
             {/* Courses Section */}
             <li>
-              <Link to="/courses" className="flex gap-3 items-center text-gray-700 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-right py-2" onClick={closeSidebar}>
+              <Link to="/courses" className="flex gap-3 items-center text-gray-700 dark:text-white hover:text-orange-600 dark:hover:text-orange-400 transition-colors text-right py-2" onClick={closeSidebar}>
               <FaList size={16} className="text-gray-500 dark:text-slate-100" />
                 {role === "ADMIN" ? "جميع الكورسات " : "كورساتي"}
                 
               </Link>
             </li>
 
-            {isLoggedIn && role !== "ADMIN" && (
+            {isLoggedIn && !["ADMIN", "SUPER_ADMIN"].includes(role) && (
               <li>
-                <Link to="/wallet" className="flex gap-3 items-center text-gray-700 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-right py-2" onClick={closeSidebar}>
+                <Link to="/wallet" className="flex gap-3 items-center text-gray-700 dark:text-white hover:text-orange-600 dark:hover:text-orange-400 transition-colors text-right py-2" onClick={closeSidebar}>
                 <FaWallet size={16} className="text-gray-500 dark:text-slate-100" />
                   محفظتي
             
@@ -150,7 +165,7 @@ export default function Sidebar({ hideBar = false }) {
 
             {isLoggedIn && (
               <li>
-                <Link to="/live-meetings" className="flex gap-3 items-center text-gray-700 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-right py-2" onClick={closeSidebar}>
+                <Link to="/live-meetings" className="flex gap-3 items-center text-gray-700 dark:text-white hover:text-orange-600 dark:hover:text-orange-400 transition-colors text-right py-2" onClick={closeSidebar}>
                 <FaVideo size={16} className="text-gray-500 dark:text-slate-100" />
                   الجلسات المباشرة
                  
@@ -161,17 +176,17 @@ export default function Sidebar({ hideBar = false }) {
             {/* Admin management sections moved to admin dashboard */}
 
             <li>
-              <Link to="/instructors" className="flex gap-3 items-center text-gray-700 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2" onClick={closeSidebar}>
+              <Link to="/instructors" className="flex gap-3 items-center text-gray-700 dark:text-white hover:text-orange-600 dark:hover:text-orange-400 transition-colors py-2" onClick={closeSidebar}>
                 <FaChalkboardTeacher size={16} className="text-gray-500 dark:text-slate-100" />
                 المدرسين
               </Link>
             </li>
             {/* Admin Services Dropdown */}
-            {role === "ADMIN" && (
+            {(role === "ADMIN" || role === "SUPER_ADMIN") && (
               <li>
                 <button 
                   onClick={toggleAdminDropdown}
-                  className="flex gap-3 items-center justify-between w-full text-gray-700 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2"
+                  className="flex gap-3 items-center justify-between w-full text-gray-700 dark:text-white hover:text-orange-600 dark:hover:text-orange-400 transition-colors py-2"
                 >
                   <div className="flex gap-3 items-center">
                     <FaInfoCircle size={16} className="text-gray-500 dark:text-slate-100" />
@@ -190,7 +205,7 @@ export default function Sidebar({ hideBar = false }) {
                     <li>
                       <Link 
                         to="/admin/blog-dashboard" 
-                        className="flex gap-3 items-center text-xs text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-1.5 px-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+                        className="flex gap-3 items-center text-xs text-gray-600 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 transition-colors py-1.5 px-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
                         onClick={closeSidebar}
                       >
                         <FaBlog size={14} className="text-gray-500 dark:text-slate-100" />
@@ -200,7 +215,7 @@ export default function Sidebar({ hideBar = false }) {
                     <li>
                       <Link 
                         to="/admin/qa-dashboard" 
-                        className="flex gap-3 items-center text-xs text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-1.5 px-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+                        className="flex gap-3 items-center text-xs text-gray-600 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 transition-colors py-1.5 px-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
                         onClick={closeSidebar}
                       >
                         <FaQuestionCircle size={14} className="text-gray-500 dark:text-slate-100" />
@@ -210,7 +225,7 @@ export default function Sidebar({ hideBar = false }) {
                     <li>
                       <Link 
                         to="/admin/whatsapp-services" 
-                        className="flex gap-3 items-center text-xs text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-1.5 px-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+                        className="flex gap-3 items-center text-xs text-gray-600 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 transition-colors py-1.5 px-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
                         onClick={closeSidebar}
                       >
                         <FaWhatsapp size={14} className="text-gray-500 dark:text-slate-100" />
@@ -220,7 +235,7 @@ export default function Sidebar({ hideBar = false }) {
                     <li>
                       <Link 
                         to="/admin/live-meetings" 
-                        className="flex gap-3 items-center text-xs text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-1.5 px-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+                        className="flex gap-3 items-center text-xs text-gray-600 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 transition-colors py-1.5 px-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
                         onClick={closeSidebar}
                       >
                         <FaVideo size={14} className="text-gray-500 dark:text-slate-100" />
@@ -230,7 +245,7 @@ export default function Sidebar({ hideBar = false }) {
                     <li>
                       <Link 
                         to="/admin/exam-results" 
-                        className="flex gap-3 items-center text-xs text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-1.5 px-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+                        className="flex gap-3 items-center text-xs text-gray-600 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 transition-colors py-1.5 px-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
                         onClick={closeSidebar}
                       >
                         <FaClipboardCheck size={14} className="text-gray-500 dark:text-slate-100" />
@@ -240,7 +255,7 @@ export default function Sidebar({ hideBar = false }) {
                     <li>
                       <Link 
                         to="/about" 
-                        className="flex gap-3 items-center text-xs text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-1.5 px-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+                        className="flex gap-3 items-center text-xs text-gray-600 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 transition-colors py-1.5 px-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
                         onClick={closeSidebar}
                       >
                         <FaInfoCircle size={14} className="text-gray-500 dark:text-slate-100" />
@@ -250,7 +265,7 @@ export default function Sidebar({ hideBar = false }) {
                     <li>
                       <Link 
                         to="/contact" 
-                        className="flex gap-3 items-center text-xs text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-1.5 px-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+                        className="flex gap-3 items-center text-xs text-gray-600 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 transition-colors py-1.5 px-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
                         onClick={closeSidebar}
                       >
                         <FaPhone size={14} className="text-gray-500 dark:text-slate-100" />
@@ -262,39 +277,46 @@ export default function Sidebar({ hideBar = false }) {
               </li>
             )}
 
+            {/* Visual Separator for Super Admin */}
+            {role === "SUPER_ADMIN" && (
+              <li>
+                <div className="border-t border-red-200 dark:border-red-800 my-2 bg-red-200 dark:bg-red-800"></div>
+              </li>
+            )}
+
             {/* Show these links for non-admin users */}
-            {role !== "ADMIN" && (
+            {!["ADMIN", "SUPER_ADMIN"].includes(role) && (
               <>
                 <li>
-                  <Link to="/blogs" className="flex gap-3 items-center text-gray-700 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2" onClick={closeSidebar}>
+                  <Link to="/blogs" className="flex gap-3 items-center text-gray-700 dark:text-white hover:text-orange-600 dark:hover:text-orange-400 transition-colors py-2" onClick={closeSidebar}>
                     <FaBlog size={16} className="text-gray-500 dark:text-slate-100" />
                     المدونة
                   </Link>
                 </li>
 
                 <li>
-                  <Link to="/qa" className="flex gap-3 items-center text-gray-700 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2" onClick={closeSidebar}>
+                  <Link to="/qa" className="flex gap-3 items-center text-gray-700 dark:text-white hover:text-orange-600 dark:hover:text-orange-400 transition-colors py-2" onClick={closeSidebar}>
                     <FaQuestionCircle size={16} className="text-gray-500 dark:text-slate-100" />
                     الأسئلة والأجوبة
                   </Link>
                 </li>
 
                 <li>
-                  <Link to="/whatsapp-services" className="flex gap-3 items-center text-gray-700 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2" onClick={closeSidebar}>
+                  <Link to="/whatsapp-services" className="flex gap-3 items-center text-gray-700 dark:text-white hover:text-orange-600 dark:hover:text-orange-400 transition-colors py-2" onClick={closeSidebar}>
                     <FaWhatsapp size={16} className="text-gray-500 dark:text-slate-100" />
                     خدمات واتساب
                   </Link>
                 </li>
 
                 <li>
-                  <Link to="/contact" className="flex gap-3 items-center text-gray-700 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2" onClick={closeSidebar}>
+                  <Link to="/contact" className="flex gap-3 items-center text-gray-700 dark:text-white hover:text-orange-600 dark:hover:text-orange-400 transition-colors py-2" onClick={closeSidebar}>
                     <FaPhone size={16} className="text-gray-500 dark:text-slate-100" />
                     اتصل بنا
                   </Link>
                 </li>
 
                 <li>
-                  <Link to="/about" className="flex gap-3 items-center text-gray-700 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2" onClick={closeSidebar}>
+                  <Link to="/about" className="flex gap-3 items-center text-gray-700 dark:text-white hover:text-orange-600 dark:hover:text-orange-400 transition-colors py-2" onClick={closeSidebar}>
                     <FaInfoCircle size={16} className="text-gray-500 dark:text-slate-100" />
                     عنا
                   </Link>
@@ -310,7 +332,7 @@ export default function Sidebar({ hideBar = false }) {
                 {/* User Avatar */}
                 <Link 
                   to="/user/profile" 
-                  className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer border-2 border-white dark:border-gray-700"
+                  className="w-8 h-8 rounded-full bg-gradient-to-r from-orange-500 to-yellow-600 flex items-center justify-center text-white font-bold text-xs shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer border-2 border-white dark:border-gray-700"
                   onClick={closeSidebar}
                 >
                   {data?.avatar?.secure_url ? (
@@ -330,7 +352,7 @@ export default function Sidebar({ hideBar = false }) {
                     {data?.fullName || "User"}
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">
-                    {role === "ADMIN" ? "مدير" : "طالب"}
+                    {role === "SUPER_ADMIN" ? "مدير مميز" : role === "ADMIN" ? "مدير" : "طالب"}
                   </div>
                 </div>
 
@@ -365,14 +387,14 @@ export default function Sidebar({ hideBar = false }) {
                 <Link 
                   to="/login" 
                   onClick={closeSidebar}
-                  className="w-full group relative overflow-hidden rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 p-0.5 hover:from-blue-600 hover:to-purple-700 transition-all duration-300"
+                  className="w-full group relative overflow-hidden rounded-lg bg-gradient-to-r from-orange-500 to-yellow-600 p-0.5 hover:from-orange-600 hover:to-yellow-700 transition-all duration-300"
                 >
                   <div className="relative flex items-center justify-center gap-2 rounded-[8px] bg-white dark:bg-gray-800 px-3 py-2 transition-all duration-300 group-hover:bg-transparent">
                     <div className="relative z-10 flex items-center gap-2">
-                      <svg className="w-3 h-3 text-blue-500 group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-3 h-3 text-orange-500 group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                       </svg>
-                      <span className="font-semibold text-xs text-blue-500 group-hover:text-white transition-colors duration-300">
+                      <span className="font-semibold text-xs text-orange-500 group-hover:text-white transition-colors duration-300">
                         تسجيل الدخول
                       </span>
                     </div>

@@ -45,6 +45,9 @@ export default function CourseDashboard() {
   const handleCloseModal = () => {
     setShowCreateModal(false);
     setSelectedCourse(null);
+    // Refresh the courses list and stats after modal operations
+    dispatch(getAdminCourses());
+    dispatch(getCourseStats());
   };
 
   const handleFilterChange = (newFilters) => {
@@ -79,13 +82,18 @@ export default function CourseDashboard() {
     dispatch(getAdminCourses());
   };
 
+  const refreshCourses = () => {
+    dispatch(getAdminCourses());
+    dispatch(getCourseStats());
+  };
+
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-8" dir="rtl">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-orange-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-8" dir="rtl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="mx-auto h-16 w-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mb-4 shadow-lg">
+            <div className="mx-auto h-16 w-16 bg-gradient-to-r from-blue-600 to-orange-600 rounded-full flex items-center justify-center mb-4 shadow-lg">
               <FaBook className="h-8 w-8 text-white" />
             </div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
@@ -112,7 +120,7 @@ export default function CourseDashboard() {
               {role === 'ADMIN' && (
                 <button
                   onClick={handleCreateCourse}
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105"
+                  className="bg-gradient-to-r from-blue-600 to-orange-600 hover:from-blue-700 hover:to-orange-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
                   <FaPlus className="text-sm" />
                   إضافة دورة جديدة
@@ -134,6 +142,7 @@ export default function CourseDashboard() {
             pagination={pagination}
             onEditCourse={handleEditCourse}
             role={role}
+            onRefresh={refreshCourses}
           />
 
           {/* Create/Edit Modal */}

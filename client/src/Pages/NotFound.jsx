@@ -11,13 +11,13 @@ function NotFound() {
   return (
     <Layout>
       {/* Hero Section */}
-      <section className="relative min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 overflow-hidden">
+      <section className="relative min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-orange-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
         
         {/* Floating Elements */}
         <div className="absolute top-20 left-10 w-20 h-20 bg-blue-200 dark:bg-blue-800 rounded-full opacity-20 animate-bounce"></div>
-        <div className="absolute top-40 right-20 w-16 h-16 bg-purple-200 dark:bg-purple-800 rounded-full opacity-20 animate-pulse"></div>
+        <div className="absolute top-40 right-20 w-16 h-16 bg-orange-200 dark:bg-orange-800 rounded-full opacity-20 animate-pulse"></div>
         <div className="absolute bottom-20 left-20 w-12 h-12 bg-indigo-200 dark:bg-indigo-800 rounded-full opacity-20 animate-bounce"></div>
         
         <div className="relative z-10 container mx-auto px-4 py-16">
@@ -32,7 +32,7 @@ function NotFound() {
               </div>
 
               {/* Main Heading */}
-              <h1 className="text-8xl lg:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 dark:from-blue-400 dark:via-purple-400 dark:to-indigo-400 mb-6 leading-none">
+              <h1 className="text-8xl lg:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-orange-600 to-indigo-600 dark:from-blue-400 dark:via-orange-400 dark:to-indigo-400 mb-6 leading-none">
             404
           </h1>
 
@@ -52,7 +52,7 @@ function NotFound() {
                 {/* Go Back Button */}
                 <button
                   onClick={() => navigate(-1)}
-                  className="group relative inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
+                  className="group relative inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-blue-600 to-orange-600 hover:from-blue-700 hover:to-orange-700 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
                 >
                   <FaArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform duration-300" />
                   العودة للخلف
@@ -97,7 +97,7 @@ function NotFound() {
               <div className="relative">
                 {/* Image Container with Glow Effect */}
                 <div className="relative p-8">
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-3xl blur-3xl animate-pulse"></div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-orange-400/20 rounded-3xl blur-3xl animate-pulse"></div>
                   <img 
                     src={NotFoundImg} 
                     alt="رسم توضيحي للصفحة غير الموجودة" 
@@ -109,7 +109,7 @@ function NotFound() {
                 <div className="absolute top-10 right-10 text-6xl font-black text-blue-200 dark:text-blue-800 animate-bounce">
                   4
                 </div>
-                <div className="absolute bottom-10 left-10 text-6xl font-black text-purple-200 dark:text-purple-800 animate-bounce" style={{animationDelay: '0.5s'}}>
+                <div className="absolute bottom-10 left-10 text-6xl font-black text-orange-200 dark:text-orange-800 animate-bounce" style={{animationDelay: '0.5s'}}>
                   0
                 </div>
                 <div className="absolute top-1/2 right-5 text-6xl font-black text-indigo-200 dark:text-indigo-800 animate-bounce" style={{animationDelay: '1s'}}>
@@ -182,9 +182,9 @@ function NotFound() {
               </div>
             </div>
 
-            <div className="group p-6 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-800 dark:to-gray-700 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+            <div className="group p-6 bg-gradient-to-br from-orange-50 to-pink-50 dark:from-gray-800 dark:to-gray-700 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
               <div className="text-center">
-                <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
                   <FaBlog className="w-6 h-6 text-white" />
                 </div>
                 <h4 className="font-semibold text-gray-800 dark:text-white mb-2">اقرأ المدونة</h4>
@@ -193,7 +193,7 @@ function NotFound() {
                 </p>
                 <button 
                   onClick={() => navigate("/blogs")}
-                  className="text-purple-600 dark:text-purple-400 hover:underline font-medium text-sm"
+                  className="text-orange-600 dark:text-orange-400 hover:underline font-medium text-sm"
                 >
                   اقرأ المقالات →
                 </button>

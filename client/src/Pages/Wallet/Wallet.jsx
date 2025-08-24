@@ -174,7 +174,7 @@ export default function Wallet() {
 
     return (
         <Layout>
-            <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-8">
+            <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-8" dir="rtl">
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                     {/* Header */}
                     <div className="text-center mb-8">
@@ -196,7 +196,7 @@ export default function Wallet() {
                                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                                     الرصيد الحالي
                                 </h2>
-                                <div className="flex items-center space-x-2">
+                                <div className="flex items-center space-x-reverse space-x-2">
                                     <span className="text-4xl font-bold text-green-600 dark:text-green-400">
                                         {showAmount ? `${balance.toFixed(2)} جنيه` : "**** جنيه"}
                                     </span>
@@ -220,7 +220,7 @@ export default function Wallet() {
                     </div>
 
                     {/* Tabs */}
-                    <div className="flex space-x-4 mb-6">
+                    <div className="flex space-x-reverse space-x-4 mb-6">
                         <button
                             onClick={() => setActiveTab("balance")}
                             className={`px-6 py-3 rounded-lg font-medium transition-colors ${
@@ -229,7 +229,7 @@ export default function Wallet() {
                                     : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                             }`}
                         >
-                            <FaCreditCard className="inline mr-2" />
+                            <FaCreditCard className="inline ml-2" />
                             شحن المحفظة
                         </button>
                         <button
@@ -240,7 +240,7 @@ export default function Wallet() {
                                     : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                             }`}
                         >
-                            <FaHistory className="inline mr-2" />
+                            <FaHistory className="inline ml-2" />
                             سجل المعاملات
                         </button>
                     </div>
@@ -260,22 +260,93 @@ export default function Wallet() {
                                     </h4>
                                     <ul className="space-y-2 text-blue-800 dark:text-blue-200">
                                         <li className="flex items-start">
-                                            <span className="text-blue-600 dark:text-blue-400 mr-2">•</span>
+                                            <span className="text-blue-600 dark:text-blue-400 ml-2">•</span>
+                                            تواصل معنا على واتساب: <strong> 01205434383</strong> للحصول على كود شحن
+                                        </li>
+                                        <li className="flex items-start">
+                                            <span className="text-blue-600 dark:text-blue-400 ml-2">•</span>
+                                            أو ادفع عبر فودافون كاش: <strong>01205434383</strong>
+                                        </li>
+                                        <li className="flex items-start">
+                                            <span className="text-blue-600 dark:text-blue-400 ml-2">•</span>
                                             اشتر كود شحن من البائعين المعتمدين
                                         </li>
                                         <li className="flex items-start">
-                                            <span className="text-blue-600 dark:text-blue-400 mr-2">•</span>
+                                            <span className="text-blue-600 dark:text-blue-400 ml-2">•</span>
                                             أدخل الكود والمبلغ في النموذج أعلاه
                                         </li>
                                         <li className="flex items-start">
-                                            <span className="text-blue-600 dark:text-blue-400 mr-2">•</span>
+                                            <span className="text-blue-600 dark:text-blue-400 ml-2">•</span>
                                             سيتم إضافة المبلغ إلى محفظتك فوراً
                                         </li>
                                         <li className="flex items-start">
-                                            <span className="text-blue-600 dark:text-blue-400 mr-2">•</span>
+                                            <span className="text-blue-600 dark:text-blue-400 ml-2">•</span>
                                             استخدم رصيدك لشراء الكورسات والخدمات التي ستتواصل معنا بشأنها على واتساب
                                         </li>
                                     </ul>
+                                    
+                                    {/* Contact Methods */}
+                                    <div className="mt-4 space-y-3">
+                                        {/* WhatsApp Contact */}
+                                        <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg">
+                                            <h5 className="text-md font-semibold text-green-900 dark:text-green-100 mb-3 flex items-center gap-2">
+                                                <FaWhatsapp className="text-green-600 dark:text-green-400" />
+                                                للحصول على كود شحن - تواصل معنا على واتساب
+                                            </h5>
+                                            <div className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded border border-green-200 dark:border-green-600">
+                                                <div>
+                                                    <div className="font-medium text-gray-900 dark:text-white">
+                                                        رقم الواتساب
+                                                    </div>
+                                                    <div className="text-lg font-bold text-green-600 dark:text-green-400">
+                                                        01205434383
+                                                    </div>
+                                                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                                                        متاح على مدار 24/7
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    onClick={() => {
+                                                        const message = `مرحباً! أنا مهتم بشراء كود شحن للمحفظة. هل يمكنك تقديم المزيد من المعلومات؟`;
+                                                        window.open(`https://wa.me/201205434383?text=${encodeURIComponent(message)}`, '_blank');
+                                                    }}
+                                                    className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                                                >
+                                                    <FaWhatsapp />
+                                                    تواصل الآن
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Vodafone Cash Contact */}
+                                        <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
+                                            <h5 className="text-md font-semibold text-blue-900 dark:text-blue-100 mb-3 flex items-center gap-2">
+                                                <FaCreditCard className="text-blue-600 dark:text-blue-400" />
+                                                الدفع عبر فودافون كاش
+                                            </h5>
+                                            <div className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded border border-blue-200 dark:border-blue-600">
+                                                <div>
+                                                    <div className="font-medium text-gray-900 dark:text-white">
+                                                        رقم فودافون كاش
+                                                    </div>
+                                                    <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                                                        01205434383
+                                                    </div>
+                                                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                                                        ادفع المبلغ وسيصلك الكود فوراً
+                                                    </div>
+                                                </div>
+                                                <div className="text-center">
+                                                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                                                        ادفع المبلغ المطلوب
+                                                    </div>
+                                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                                        ثم تواصل على الواتساب
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                     
                                     {/* WhatsApp Contact Information */}
                                     {whatsappServices && whatsappServices.length > 0 && (
@@ -356,7 +427,7 @@ export default function Wallet() {
                                                 required
                                             />
                                             {rechargeForm.code && (
-                                                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                                <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
                                                     {codeValidation.isValid ? (
                                                         <FaCheckCircle className="text-green-500 w-5 h-5" />
                                                     ) : codeValidation.error ? (
@@ -400,12 +471,12 @@ export default function Wallet() {
                                     >
                                         {rechargeLoading ? (
                                             <div className="flex items-center">
-                                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white ml-2"></div>
                                                 جاري المعالجة...
                                             </div>
                                         ) : (
                                             <div className="flex items-center">
-                                                <FaPlus className="mr-2" />
+                                                <FaPlus className="ml-2" />
                                                 شحن المحفظة
                                             </div>
                                         )}
@@ -438,7 +509,7 @@ export default function Wallet() {
                                                 key={index}
                                                 className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600"
                                             >
-                                                <div className="flex items-center space-x-4">
+                                                <div className="flex items-center space-x-reverse space-x-4">
                                                     <div className={`p-2 rounded-full ${getTransactionColor(transaction.type)}`}>
                                                         {getTransactionIcon(transaction.type)}
                                                     </div>
@@ -450,7 +521,7 @@ export default function Wallet() {
                                                             الكود: {transaction.code}
                                                         </p>
                                                         <p className="text-xs text-gray-400 dark:text-gray-500 flex items-center">
-                                                            <FaCalendarAlt className="mr-1" />
+                                                            <FaCalendarAlt className="ml-1" />
                                                             {formatDate(transaction.date)}
                                                         </p>
                                                     </div>

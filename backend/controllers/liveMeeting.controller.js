@@ -336,7 +336,7 @@ export const getLiveMeeting = asyncHandler(async (req, res, next) => {
 // @access  Admin
 export const updateLiveMeeting = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
-  const updates = req.body;
+  const updates = { ...req.body };
 
   const liveMeeting = await LiveMeeting.findById(id);
 
@@ -355,6 +355,44 @@ export const updateLiveMeeting = asyncHandler(async (req, res, next) => {
     if (scheduledDateTime <= new Date()) {
       return next(new AppError('تاريخ الاجتماع يجب أن يكون في المستقبل', 400));
     }
+  }
+
+  // Transform attendees if provided - convert array of user IDs to proper schema format
+  if (updates.attendees && Array.isArray(updates.attendees)) {
+    console.log('🔄 Transforming attendees for update:', {
+      originalAttendees: updates.attendees,
+      existingAttendees: liveMeeting.attendees
+    });
+    
+    // Keep existing attendees with their properties (hasJoined, joinedAt)
+    const existingAttendees = liveMeeting.attendees || [];
+    const existingAttendeeMap = new Map();
+    
+    existingAttendees.forEach(attendee => {
+      const userId = attendee.user._id ? attendee.user._id.toString() : attendee.user.toString();
+      existingAttendeeMap.set(userId, attendee);
+    });
+    
+    // Transform new attendees array to proper schema format
+    updates.attendees = updates.attendees.map(userId => {
+      const existingAttendee = existingAttendeeMap.get(userId.toString());
+      if (existingAttendee) {
+        // Keep existing attendee data
+        return {
+          user: userId,
+          hasJoined: existingAttendee.hasJoined || false,
+          joinedAt: existingAttendee.joinedAt
+        };
+      } else {
+        // New attendee with default values
+        return {
+          user: userId,
+          hasJoined: false
+        };
+      }
+    });
+    
+    console.log('✅ Transformed attendees:', updates.attendees);
   }
 
   // Update the meeting

@@ -89,7 +89,7 @@ export default function LessonCard({
             </span>
           )}
           {hasTrainingExam(lesson) && (
-            <span className="flex items-center gap-1 text-xs text-purple-600">
+            <span className="flex items-center gap-1 text-xs text-orange-600">
               <FaClipboardCheck />
               امتحان تدريبي
             </span>
@@ -127,7 +127,7 @@ export default function LessonCard({
             </div>
             <button
               onClick={() => onDetail(lesson)}
-              className="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 flex items-center gap-2 shadow-md hover:shadow-lg transform hover:scale-105 bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700"
+              className="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 flex items-center gap-2 shadow-md hover:shadow-lg transform hover:scale-105 bg-gradient-to-r from-blue-500 to-orange-600 text-white hover:from-blue-600 hover:to-orange-700"
             >
               <FaEye />
               {isPurchased ? 'مشاهدة' : 'التفاصيل'}

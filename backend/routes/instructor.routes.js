@@ -19,9 +19,9 @@ router.get('/:id', getInstructorById);
 router.get('/:id/stats', getInstructorStats);
 
 // Protected routes (Admin only)
-router.post('/', isLoggedIn, authorisedRoles('ADMIN'), upload.single('profileImage'), createInstructor);
-router.put('/:id', isLoggedIn, authorisedRoles('ADMIN'), upload.single('profileImage'), updateInstructor);
-router.delete('/:id', isLoggedIn, authorisedRoles('ADMIN'), deleteInstructor);
+router.post('/', isLoggedIn, authorisedRoles('ADMIN', 'SUPER_ADMIN'), upload.single('profileImage'), createInstructor);
+router.put('/:id', isLoggedIn, authorisedRoles('ADMIN', 'SUPER_ADMIN'), upload.single('profileImage'), updateInstructor);
+router.delete('/:id', isLoggedIn, authorisedRoles('ADMIN', 'SUPER_ADMIN'), deleteInstructor);
 
 
 export default router; 

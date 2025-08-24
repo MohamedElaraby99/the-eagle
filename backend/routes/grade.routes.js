@@ -14,7 +14,7 @@ import {
 
 // All routes require authentication and admin role
 router.use(isLoggedIn);
-router.use(authorisedRoles('ADMIN'));
+router.use(authorisedRoles('ADMIN', 'SUPER_ADMIN'));
 
 // Create a new grade
 router.post('/', createGrade);

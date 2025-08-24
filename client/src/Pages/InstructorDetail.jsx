@@ -48,7 +48,7 @@ export default function InstructorDetail() {
   if (loading) {
     return (
       <Layout>
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-orange-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
           <div className="container mx-auto px-4 py-16">
             <div className="flex items-center justify-center">
               <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
@@ -62,7 +62,7 @@ export default function InstructorDetail() {
   if (!instructor) {
     return (
       <Layout>
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-orange-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
           <div className="container mx-auto px-4 py-16">
             <div className="text-center">
               <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
@@ -83,7 +83,7 @@ export default function InstructorDetail() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900" dir="rtl">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-orange-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900" dir="rtl">
         <div className="container mx-auto px-4 py-8">
           {/* Back Button */}
           <button
@@ -98,7 +98,7 @@ export default function InstructorDetail() {
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden mb-8">
             <div className="relative">
               {/* Background Image */}
-              <div className="w-full h-48 bg-gradient-to-r from-blue-500 to-purple-600"></div>
+              <div className="w-full h-48 bg-gradient-to-r from-blue-500 to-orange-600"></div>
               
               {/* Profile Image */}
               <div className="absolute -bottom-16 right-8">
@@ -155,8 +155,8 @@ export default function InstructorDetail() {
                   <div className="text-sm text-gray-600 dark:text-gray-400">طالب</div>
                 </div>
                 
-                <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                  <FaGraduationCap className="w-8 h-8 text-purple-600 dark:text-purple-400 mx-auto mb-2" />
+                <div className="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                  <FaGraduationCap className="w-8 h-8 text-orange-600 dark:text-orange-400 mx-auto mb-2" />
                   <div className="text-2xl font-bold text-gray-800 dark:text-white">
                     {instructor.courses?.length || 0}
                   </div>
@@ -193,7 +193,7 @@ export default function InstructorDetail() {
               {instructor.education && (
                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
                   <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2 text-right">
-                    <FaGraduationCap className="text-purple-600" />
+                    <FaGraduationCap className="text-orange-600" />
                     المؤهلات التعليمية
                   </h2>
                   <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-right">

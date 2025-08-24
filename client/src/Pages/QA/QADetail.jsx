@@ -56,7 +56,7 @@ export default function QADetail() {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'featured': return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
+      case 'featured': return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
       case 'answered': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
       case 'pending': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
       default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
@@ -69,7 +69,7 @@ export default function QADetail() {
       'Technical': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
       'Course Related': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
       'Payment': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-      'Account': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+      'Account': 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
       'Other': 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
     };
     return colors[category] || colors['Other'];

@@ -46,7 +46,7 @@ const FAQItem = ({ item, isOpen, onToggle }) => {
         </h3>
         <div className="flex-shrink-0">
           {isOpen ? (
-            <FaChevronUp className="w-5 h-5 text-blue-600 dark:text-blue-400 transition-transform duration-200" />
+            <FaChevronUp className="w-5 h-5 text-orange-600 dark:text-orange-400 transition-transform duration-200" />
           ) : (
             <FaChevronDown className="w-5 h-5 text-gray-400 dark:text-gray-500 transition-transform duration-200" />
           )}
@@ -62,7 +62,7 @@ const FAQItem = ({ item, isOpen, onToggle }) => {
               {item.answer}
             </p>
             {isOpen && (
-              <div className="mt-4 flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400">
+              <div className="mt-4 flex items-center gap-2 text-sm text-orange-600 dark:text-orange-400">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -148,7 +148,7 @@ const FAQAccordion = () => {
             <div className="text-center pt-4">
               <button
                 onClick={toggleShowAll}
-                className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors duration-200"
+                className="inline-flex items-center gap-2 text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 font-medium transition-colors duration-200"
               >
                 {showAll ? (
                   <>

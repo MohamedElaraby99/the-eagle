@@ -1,5 +1,5 @@
 import express from "express";
-import { isLoggedIn } from "../middleware/auth.middleware.js";
+import { isLoggedIn, authorisedRoles } from "../middleware/auth.middleware.js";
 import {
   getVideoProgress,
   updateVideoProgress,
@@ -17,10 +17,10 @@ const router = express.Router();
 router.get("/course/:courseId", isLoggedIn, getCourseProgress);
 
 // Get all users' progress for a specific video (admin only)
-router.get("/admin/video/:videoId", isLoggedIn, getVideoProgressForAllUsers);
+router.get("/admin/video/:videoId", isLoggedIn, authorisedRoles("ADMIN", "SUPER_ADMIN"), getVideoProgressForAllUsers);
 
 // Get all users' progress summary for admin dashboard
-router.get("/admin/all-users", isLoggedIn, getAllUsersProgressSummary);
+router.get("/admin/all-users", isLoggedIn, authorisedRoles("ADMIN", "SUPER_ADMIN"), getAllUsersProgressSummary);
 
 // Get or create video progress for a user
 router.get("/:courseId/:videoId", isLoggedIn, getVideoProgress);

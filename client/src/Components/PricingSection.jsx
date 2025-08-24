@@ -41,7 +41,7 @@ const PricingSection = () => {
       period: "per month",
       description: "For teams and organizations",
       icon: FaCrown,
-      color: "bg-purple-500",
+      color: "bg-orange-500",
       features: [
         "Everything in Pro",
         "Team management",

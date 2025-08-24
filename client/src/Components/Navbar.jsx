@@ -113,26 +113,19 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 shadow-xl">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                 <div className="flex justify-between items-center h-16 md:h-20">
+    <nav className="sticky top-0 z-50 bg-white/15 dark:bg-gray-900/15 backdrop-blur-3xl border-b border-gray-200/20 dark:border-gray-700/20 shadow-xl">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-0.5">
+                 <div className="flex justify-between items-center h-20 md:h-24">
           {/* Modern Logo */}
                      <Link to="/" onClick={handleLogoClick} className="flex items-center space-x-2 md:space-x-4 group logo-hover">
         
             <div className="relative">
               {/* Logo Image */}
-              <img 
-                src={logo} 
-                alt="منصة" 
-                className="w-14 h-14 object-contain group-hover:scale-110 transition-transform duration-300 dark:drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] dark:group-hover:drop-shadow-[0_0_20px_rgba(255,255,255,0.5)]"
-              />
-            </div>
-
-            <div className="flex flex-col">
-              <span className="oi-regular text-2xl font-bold text-amber-600 group-hover:text-amber-700 transition-colors duration-300 dark:text-amber-400 dark:group-hover:text-amber-300 dark:drop-shadow-[0_0_20px_rgba(217,119,6,0.5)] dark:group-hover:drop-shadow-[0_0_25px_rgba(217,119,6,0.7)]">
-                The Eagle
-              </span>
-              
+                             <img 
+                 src={logo} 
+                 alt="منصة مستر مايكل" 
+                 className="w-16 h-16 md:w-20 md:h-20 object-contain group-hover:scale-110 transition-transform duration-300 dark:drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] dark:group-hover:drop-shadow-[0_0_20px_rgba(255,255,255,0.5)]"
+               />
             </div>
           
           </Link>
@@ -142,20 +135,33 @@ export default function Navbar() {
             {/* Theme Toggle */}
             <button
               onClick={toggleDarkMode}
-              className="p-2.5 md:p-3 rounded-xl bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 hover:from-blue-100 hover:to-purple-100 dark:hover:from-blue-900 dark:hover:to-purple-900 transition-all duration-300 group shadow-lg hover:shadow-xl"
+              className="relative w-16 h-8 rounded-full bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 transition-all duration-300 shadow-lg hover:shadow-xl border border-orange-300 dark:border-orange-600 overflow-hidden"
             >
-              {darkMode ? (
-                <FaSun className="w-4 h-4 md:w-5 md:h-5 text-yellow-500 group-hover:scale-110 transition-transform duration-300" />
-              ) : (
-                <FaMoon className="w-4 h-4 md:w-5 md:h-5 text-gray-700 group-hover:scale-110 transition-transform duration-300" />
-              )}
+              {/* Sun Icon (Left side) */}
+              <div className={`absolute left-1 top-1/2 transform -translate-y-1/2 transition-all duration-300 ${darkMode ? 'opacity-40' : 'opacity-100'}`}>
+                <FaSun className="w-4 h-4 text-white" />
+              </div>
+              
+              {/* Moon Icon (Right side) */}
+              <div className={`absolute right-1 top-1/2 transform -translate-y-1/2 transition-all duration-300 ${darkMode ? 'opacity-100' : 'opacity-40'}`}>
+                <FaMoon className="w-4 h-4 text-white" />
+              </div>
+              
+              {/* Toggle Thumb */}
+              <div className={`absolute top-1 w-6 h-6 bg-white rounded-full border-2 border-orange-400 transition-all duration-300 transform ${darkMode ? 'translate-x-8' : 'translate-x-1'}`}>
+                {darkMode ? (
+                  <FaMoon className="w-3 h-3 text-orange-500 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+                ) : (
+                  <FaSun className="w-3 h-3 text-orange-500 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+                )}
+              </div>
             </button>
 
             {/* Sign Up Button - ONLY show when NO user is logged in */}
             {!user?.fullName && (
               <Link
                 to="/signup"
-                className="px-2 py-1 md:px-4 md:py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl font-semibold text-sm md:text-base transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                className="px-3 py-2 bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white rounded-lg font-medium text-sm transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg border border-orange-300/30"
               >
                 سجل الآن
               </Link>
@@ -164,7 +170,7 @@ export default function Navbar() {
 {!user?.fullName && (
               <Link
                 to="/login"
-                className="px-2 py-1 md:px-4 md:py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl font-semibold text-sm md:text-base transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                className="px-3 py-2 bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white rounded-lg font-medium text-sm transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg border border-orange-300/30"
               >
                 تسجيل الدخول
               </Link>
@@ -172,13 +178,15 @@ export default function Navbar() {
 
             {/* Menu Button - Visible on all devices */}
             <div className="flex items-center space-x-3">  
-              {/* Burger Menu Button */}
-              <button
-                onClick={toggleMenu}
-                className="p-2.5 md:p-3 rounded-xl bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 hover:from-blue-100 hover:to-purple-100 dark:hover:from-blue-900 dark:hover:to-purple-900 transition-all duration-300 shadow-lg hover:shadow-xl"
-              >
-                <FaBars className="w-4 h-4 md:w-5 md:h-5 text-gray-700 dark:text-gray-300" />
-              </button>
+              {/* Burger Menu Button - ONLY show when user is logged in */}
+              {user?.fullName && (
+                <button
+                  onClick={toggleMenu}
+                  className="p-2.5 md:p-3 rounded-xl bg-gradient-to-r from-orange-100 to-orange-200 dark:from-orange-800 dark:to-orange-700 hover:from-orange-200 hover:to-orange-300 dark:hover:from-orange-700 dark:hover:to-orange-600 transition-all duration-300 shadow-lg hover:shadow-xl border border-orange-200 dark:border-orange-600"
+                >
+                  <FaBars className="w-4 h-4 md:w-5 md:h-5 text-orange-700 dark:text-orange-300" />
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -205,13 +213,13 @@ export default function Navbar() {
                   to={item.path}
                   className={`flex items-center space-x-4 px-6 py-4 mx-4 rounded-2xl font-medium transition-all duration-300 mobile-menu-item ${
                     location.pathname === item.path
-                      ? "text-blue-600 dark:text-blue-400 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 shadow-lg"
-                      : "text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gradient-to-r hover:from-gray-50 hover:to-blue-50 dark:hover:from-gray-800 dark:hover:to-blue-900/20"
+                      ? "text-orange-600 dark:text-orange-400 bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20 shadow-lg"
+                      : "text-gray-700 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-gradient-to-r hover:from-gray-50 hover:to-orange-50 dark:hover:from-gray-800 dark:hover:to-orange-900/20"
                   }`}
                 >
                   <div className={`p-3 rounded-xl shadow-lg ${
                     location.pathname === item.path
-                      ? "bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30"
+                      ? "bg-gradient-to-r from-orange-100 to-yellow-100 dark:from-orange-900/30 dark:to-yellow-900/30"
                       : "bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800"
                   }`}>
                     <item.icon className="w-5 h-5" />
@@ -225,9 +233,9 @@ export default function Navbar() {
             {user && (
               <>
                 <div className="border-t border-gray-200/50 dark:border-gray-700/50 pt-6">
-                  <div className="px-6 py-4 mx-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-2xl shadow-lg">
+                  <div className="px-6 py-4 mx-4 bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20 rounded-2xl shadow-lg">
                     <div className="flex items-center space-x-4">
-                      <div className="w-14 h-14 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-xl">
+                      <div className="w-14 h-14 bg-gradient-to-r from-orange-600 to-yellow-600 rounded-2xl flex items-center justify-center shadow-xl">
                         <span className="text-white font-bold text-lg">
                           {user.fullName?.charAt(0)?.toUpperCase() || "U"}
                         </span>
@@ -239,7 +247,7 @@ export default function Navbar() {
                         <p className="text-sm text-gray-600 dark:text-gray-400">
                           {user.email}
                         </p>
-                        <p className="text-xs text-blue-600 dark:text-blue-400 font-semibold uppercase tracking-wider">
+                        <p className="text-xs text-orange-600 dark:text-orange-400 font-semibold uppercase tracking-wider">
                           {user.role}
                         </p>
                       </div>
@@ -251,7 +259,7 @@ export default function Navbar() {
                 {user.role === "ADMIN" && (
                   <div className="space-y-3">
                     <div className="px-6 py-3">
-                      <p className="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider">
+                      <p className="text-xs font-bold text-orange-600 dark:text-orange-400 uppercase tracking-wider">
                         لوحة الإدارة
                       </p>
                     </div>
@@ -261,13 +269,13 @@ export default function Navbar() {
                         to={item.path}
                         className={`flex items-center space-x-4 px-6 py-4 mx-4 rounded-2xl font-medium transition-all duration-300 mobile-menu-item ${
                           location.pathname === item.path
-                            ? "text-purple-600 dark:text-purple-400 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 shadow-lg"
-                            : "text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-gradient-to-r hover:from-gray-50 hover:to-purple-50 dark:hover:from-gray-800 dark:hover:to-purple-900/20"
+                            ? "text-orange-600 dark:text-orange-400 bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20 shadow-lg"
+                            : "text-gray-700 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-gradient-to-r hover:from-gray-50 hover:to-orange-50 dark:hover:from-gray-800 dark:hover:to-orange-900/20"
                         }`}
                       >
                         <div className={`p-3 rounded-xl shadow-lg ${
                           location.pathname === item.path
-                            ? "bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30"
+                            ? "bg-gradient-to-r from-orange-100 to-yellow-100 dark:from-orange-900/30 dark:to-yellow-900/30"
                             : "bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800"
                         }`}>
                           <item.icon className="w-5 h-5" />
@@ -287,7 +295,7 @@ export default function Navbar() {
                   </div>
                   <Link
                     to="/profile"
-                    className="flex items-center space-x-4 px-6 py-4 mx-4 rounded-2xl font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gradient-to-r hover:from-gray-50 hover:to-blue-50 dark:hover:from-gray-800 dark:hover:to-blue-900/20 transition-all duration-300 mobile-menu-item"
+                    className="flex items-center space-x-4 px-6 py-4 mx-4 rounded-2xl font-medium text-gray-700 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-gradient-to-r hover:from-gray-50 hover:to-orange-50 dark:hover:from-gray-800 dark:hover:to-orange-900/20 transition-all duration-300 mobile-menu-item"
                   >
                     <div className="p-3 rounded-xl shadow-lg bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800">
                       <FaUser className="w-5 h-5" />
@@ -315,20 +323,20 @@ export default function Navbar() {
                     انضم إلينا الآن
                   </h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    ابدأ رحلة التعلم مع The Eagle
+                    ابدأ رحلة التعلم مع منصة مستر مايكل
                   </p>
                 </div>
                 
                 <Link
                   to="/login"
-                  className="flex items-center justify-center gap-3 w-full px-8 py-4 text-center bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-2xl font-bold transition-all duration-300 transform hover:scale-105 mobile-menu-item shadow-lg hover:shadow-xl"
+                  className="flex items-center justify-center gap-3 w-full px-8 py-4 text-center bg-gradient-to-r from-orange-500 via-orange-600 to-yellow-500 hover:from-orange-600 hover:via-orange-700 hover:to-yellow-600 text-white rounded-2xl font-bold transition-all duration-300 transform hover:scale-105 mobile-menu-item shadow-lg hover:shadow-xl border-2 border-orange-400/50"
                 >
                   <FaUser className="w-5 h-5" />
                   تسجيل الدخول
                 </Link>
                 <Link
                   to="/signup"
-                  className="flex items-center justify-center gap-3 w-full px-8 py-4 text-center border-2 border-blue-600 text-blue-600 dark:text-blue-400 hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600 hover:text-white rounded-2xl font-bold transition-all duration-300 mobile-menu-item shadow-lg hover:shadow-xl"
+                  className="flex items-center justify-center gap-3 w-full px-8 py-4 text-center border-2 border-orange-500 text-orange-600 dark:text-orange-400 hover:bg-gradient-to-r hover:from-orange-500 hover:via-orange-600 hover:to-yellow-500 hover:text-white rounded-2xl font-bold transition-all duration-300 mobile-menu-item shadow-lg hover:shadow-xl"
                 >
                   <FaPlus className="w-5 h-5" />
                   إنشاء حساب جديد

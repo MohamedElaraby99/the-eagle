@@ -221,10 +221,10 @@ export default function BlogDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 dark:text-gray-400">إجمالي المشاهدات</p>
-                  <p className="text-2xl font-bold text-purple-600">{totalViews}</p>
+                  <p className="text-2xl font-bold text-orange-600">{totalViews}</p>
                 </div>
-                <div className="bg-purple-100 dark:bg-purple-900 p-3 rounded-full">
-                  <FaEye className="text-purple-600 dark:text-purple-400" />
+                <div className="bg-orange-100 dark:bg-orange-900 p-3 rounded-full">
+                  <FaEye className="text-orange-600 dark:text-orange-400" />
                 </div>
               </div>
             </div>

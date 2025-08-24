@@ -304,7 +304,7 @@ const CourseStructureModal = ({ courseId, onClose, isOpen }) => {
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">درس</h3>
               <button
                 onClick={() => setShowAddDirectLesson(true)}
-                className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700"
+                className="flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700"
               >
                 <FaPlus className="text-sm" />
 اضافة درس
@@ -499,16 +499,6 @@ const CourseStructureModal = ({ courseId, onClose, isOpen }) => {
                     className="w-full p-2 border border-gray-300 rounded-md"
                     placeholder="ادخل سعر الدرس"
                     min="0"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">المحتوى</label>
-                  <textarea
-                    value={newLesson.content || ''}
-                    onChange={(e) => setNewLesson({ ...newLesson, content: e.target.value })}
-                    className="w-full p-2 border border-gray-300 rounded-md"
-                    rows="3"
-                    placeholder="ادخل محتوى الدرس (مثل رابط الفيديو, رابط الPDF, وغيرها)"
                   />
                 </div>
               </div>

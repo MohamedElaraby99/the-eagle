@@ -1,6 +1,7 @@
 import CourseAccessCode from "../models/courseAccessCode.model.js";
 import CourseAccess from "../models/courseAccess.model.js";
 import Course from "../models/course.model.js";
+import userModel from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -102,6 +103,27 @@ export const redeemCourseAccessCode = asyncHandler(async (req, res) => {
     redeemable.usedBy = userId;
     redeemable.usedAt = now;
     await redeemable.save();
+
+    // Log wallet transaction entry (access code usage)
+    try {
+        const user = await userModel.findById(userId).select('wallet');
+        if (user) {
+            if (!user.wallet) {
+                user.wallet = { balance: 0, transactions: [] };
+            }
+            user.wallet.transactions.push({
+                type: 'access_code',
+                amount: 0,
+                code: redeemable.code,
+                description: `تم تفعيل كود وصول للكورس: ${course.title}`,
+                date: now,
+                status: 'completed'
+            });
+            await user.save();
+        }
+    } catch (e) {
+        console.error('Failed to record access code transaction:', e.message);
+    }
 
     return res.status(200).json(new ApiResponse(200, {
         access: {

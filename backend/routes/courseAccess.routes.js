@@ -5,10 +5,10 @@ import { generateCourseAccessCodes, redeemCourseAccessCode, checkCourseAccess, l
 const router = Router();
 
 // Admin endpoints
-router.post('/admin/codes', isLoggedIn, authorisedRoles("ADMIN"), generateCourseAccessCodes);
-router.get('/admin/codes', isLoggedIn, authorisedRoles("ADMIN"), listCourseAccessCodes);
-router.delete('/admin/codes/:id', isLoggedIn, authorisedRoles("ADMIN"), deleteCourseAccessCode);
-router.post('/admin/codes/bulk-delete', isLoggedIn, authorisedRoles("ADMIN"), bulkDeleteCourseAccessCodes);
+router.post('/admin/codes', isLoggedIn, authorisedRoles("ADMIN", "SUPER_ADMIN"), generateCourseAccessCodes);
+router.get('/admin/codes', isLoggedIn, authorisedRoles("ADMIN", "SUPER_ADMIN"), listCourseAccessCodes);
+router.delete('/admin/codes/:id', isLoggedIn, authorisedRoles("ADMIN", "SUPER_ADMIN"), deleteCourseAccessCode);
+router.post('/admin/codes/bulk-delete', isLoggedIn, authorisedRoles("ADMIN", "SUPER_ADMIN"), bulkDeleteCourseAccessCodes);
 
 // User endpoints
 router.post('/redeem', isLoggedIn, redeemCourseAccessCode);

@@ -25,14 +25,14 @@ router.get("/category/:category", getServicesByCategory);
 router.get("/:id", getServiceById);
 
 // Admin only routes
-router.get("/admin/all", isLoggedIn, authorisedRoles("ADMIN"), getAllServicesAdmin);
-router.post("/", isLoggedIn, authorisedRoles("ADMIN"), createService);
-router.put("/:id", isLoggedIn, authorisedRoles("ADMIN"), updateService);
-router.delete("/:id", isLoggedIn, authorisedRoles("ADMIN"), deleteService);
-router.patch("/:id/toggle", isLoggedIn, authorisedRoles("ADMIN"), toggleServiceStatus);
+router.get("/admin/all", isLoggedIn, authorisedRoles("ADMIN", "SUPER_ADMIN"), getAllServicesAdmin);
+router.post("/", isLoggedIn, authorisedRoles("ADMIN", "SUPER_ADMIN"), createService);
+router.put("/:id", isLoggedIn, authorisedRoles("ADMIN", "SUPER_ADMIN"), updateService);
+router.delete("/:id", isLoggedIn, authorisedRoles("ADMIN", "SUPER_ADMIN"), deleteService);
+router.patch("/:id/toggle", isLoggedIn, authorisedRoles("ADMIN", "SUPER_ADMIN"), toggleServiceStatus);
 
 // WhatsApp number management routes
-router.post("/:id/numbers", isLoggedIn, authorisedRoles("ADMIN"), addWhatsAppNumber);
-router.delete("/:id/numbers/:numberId", isLoggedIn, authorisedRoles("ADMIN"), removeWhatsAppNumber);
+router.post("/:id/numbers", isLoggedIn, authorisedRoles("ADMIN", "SUPER_ADMIN"), addWhatsAppNumber);
+router.delete("/:id/numbers/:numberId", isLoggedIn, authorisedRoles("ADMIN", "SUPER_ADMIN"), removeWhatsAppNumber);
 
 export default router; 

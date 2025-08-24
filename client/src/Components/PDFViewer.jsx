@@ -265,7 +265,7 @@ const PDFViewer = ({
               {/* Progress Bar */}
               <div className="w-full bg-white/20 rounded-full h-3 mb-4">
                 <div 
-                  className="bg-gradient-to-r from-blue-500 to-purple-600 h-3 rounded-full transition-all duration-300"
+                  className="bg-gradient-to-r from-blue-500 to-orange-600 h-3 rounded-full transition-all duration-300"
                   style={{ width: `${conversionProgress}%` }}
                 ></div>
               </div>

@@ -59,6 +59,7 @@ const getAllUsers = async (req, res, next) => {
                     activeUsers: { $sum: { $cond: ['$isActive', 1, 0] } },
                     inactiveUsers: { $sum: { $cond: ['$isActive', 0, 1] } },
                     adminUsers: { $sum: { $cond: [{ $eq: ['$role', 'ADMIN'] }, 1, 0] } },
+                    superAdminUsers: { $sum: { $cond: [{ $eq: ['$role', 'SUPER_ADMIN'] }, 1, 0] } },
                     regularUsers: { $sum: { $cond: [{ $eq: ['$role', 'USER'] }, 1, 0] } }
                 }
             }
@@ -74,6 +75,7 @@ const getAllUsers = async (req, res, next) => {
                     email: user.email,
                     phoneNumber: user.phoneNumber,
                     role: user.role,
+                    adminPermissions: user.adminPermissions || [],
                     isActive: user.isActive !== false, // Default to true if not set
                     governorate: user.governorate,
                     grade: user.grade,
@@ -96,6 +98,7 @@ const getAllUsers = async (req, res, next) => {
                     activeUsers: 0,
                     inactiveUsers: 0,
                     adminUsers: 0,
+                    superAdminUsers: 0,
                     regularUsers: 0
                 }
             }
@@ -129,6 +132,19 @@ const createUser = async (req, res, next) => {
         // Validate role
         if (!['USER', 'ADMIN'].includes(role)) {
             return next(new AppError("Role must be either USER or ADMIN", 400));
+        }
+
+        // Check if current admin can create admin users
+        if (role === 'ADMIN') {
+            const currentUser = await userModel.findById(req.user.id);
+            if (!currentUser) {
+                return next(new AppError("Current user not found", 404));
+            }
+            
+            // Only SUPER_ADMIN can create ADMIN users
+            if (currentUser.role !== 'SUPER_ADMIN') {
+                return next(new AppError("You don't have permission to create admin users. Only super admins can create admin accounts.", 403));
+            }
         }
 
         // For USER role, require additional fields (fatherPhoneNumber optional)
@@ -308,8 +324,18 @@ const deleteUser = async (req, res, next) => {
             return next(new AppError("You cannot delete your own account", 400));
         }
 
-        // Allow deleting admin accounts (but not self)
-        // Note: Admin can delete other admins, but cannot delete themselves
+        // Check if current admin can delete admin users
+        if (user.role === 'ADMIN') {
+            const currentUser = await userModel.findById(req.user.id);
+            if (!currentUser) {
+                return next(new AppError("Current user not found", 404));
+            }
+            
+            // Only SUPER_ADMIN can delete ADMIN users
+            if (currentUser.role !== 'SUPER_ADMIN') {
+                return next(new AppError("You don't have permission to delete admin users. Only super admins can do this.", 403));
+            }
+        }
 
         await userModel.findByIdAndDelete(userId);
 
@@ -340,6 +366,19 @@ const updateUserRole = async (req, res, next) => {
         // Prevent admin from changing their own role
         if (user._id.toString() === req.user.id) {
             return next(new AppError("You cannot change your own role", 400));
+        }
+
+        // Check if current admin can change roles to ADMIN
+        if (role === 'ADMIN') {
+            const currentUser = await userModel.findById(req.user.id);
+            if (!currentUser) {
+                return next(new AppError("Current user not found", 404));
+            }
+            
+            // Only SUPER_ADMIN can change roles to ADMIN
+            if (currentUser.role !== 'SUPER_ADMIN') {
+                return next(new AppError("You don't have permission to change user roles to ADMIN. Only super admins can do this.", 403));
+            }
         }
 
         user.role = role;
@@ -493,10 +532,18 @@ const updateUser = async (req, res, next) => {
 const updateUserPassword = async (req, res, next) => {
     try {
         const { userId } = req.params;
-        const { newPassword } = req.body;
+        const { password } = req.body;
 
-        if (!newPassword || newPassword.length < 6) {
+        if (!password) {
+            return next(new AppError("Password is required", 400));
+        }
+        
+        if (password.length < 6) {
             return next(new AppError("Password must be at least 6 characters long", 400));
+        }
+        
+        if (password.trim() === '') {
+            return next(new AppError("Password cannot be empty or contain only whitespace", 400));
         }
 
         const user = await userModel.findById(userId);
@@ -505,8 +552,10 @@ const updateUserPassword = async (req, res, next) => {
         }
 
         // Hash the new password
-        user.password = newPassword;
+        user.password = password;
         await user.save();
+        
+        console.log(`Password updated successfully for user: ${user.email} (ID: ${user._id})`);
 
         res.status(200).json({
             success: true,

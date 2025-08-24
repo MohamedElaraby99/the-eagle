@@ -5,11 +5,11 @@ import { FaShieldAlt, FaUserCheck, FaHandshake, FaExclamationTriangle, FaCheckCi
 export default function TermsOfService() {
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-orange-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <div className="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="text-center mb-12">
-            <div className="mx-auto h-16 w-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mb-6 shadow-lg">
+            <div className="mx-auto h-16 w-16 bg-gradient-to-r from-blue-600 to-orange-600 rounded-full flex items-center justify-center mb-6 shadow-lg">
               <FaShieldAlt className="h-8 w-8 text-white" />
             </div>
             <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
@@ -34,7 +34,7 @@ export default function TermsOfService() {
                   مقدمة
                 </h2>
                 <p className="text-gray-700 dark:text-gray-300 mb-4">
-                  مرحباً بك في نظام إدارة التعلم من The Eagle. من خلال الوصول إلى منصتنا واستخدامها، 
+                  مرحباً بك في نظام إدارة التعلم من منصة مستر مايكل. من خلال الوصول إلى منصتنا واستخدامها، 
                   فإنك توافق على الالتزام بشروط الخدمة هذه. إذا كنت لا توافق على هذه الشروط، 
                   يرجى عدم استخدام خدماتنا.
                 </p>
@@ -136,7 +136,7 @@ export default function TermsOfService() {
               {/* Acceptable Use */}
               <section className="mb-8">
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center">
-                  <FaHandshake className="ml-3 text-purple-600" />
+                  <FaHandshake className="ml-3 text-orange-600" />
                   الاستخدام المقبول
                 </h2>
                 <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
@@ -174,7 +174,7 @@ export default function TermsOfService() {
                 <div className="space-y-4">
                   <p className="text-gray-700 dark:text-gray-300">
                     جميع المحتوى على هذه المنصة، بما في ذلك الكورسات والمواد والبرامج، 
-                    مملوك لشركة The Eagle أو المرخصين لها ومحمي بقوانين حقوق النشر.
+                    مملوك لشركة منصة مستر مايكل أو المرخصين لها ومحمي بقوانين حقوق النشر.
                   </p>
                   <p className="text-gray-700 dark:text-gray-300">
                     لا يجوز لك إعادة إنتاج أو توزيع أو إنشاء أعمال مشتقة دون إذن صريح.
@@ -251,7 +251,7 @@ export default function TermsOfService() {
                 </h2>
                 <div className="space-y-4">
                   <p className="text-gray-700 dark:text-gray-300">
-                    تقدم شركة The Eagle المحتوى التعليمي والخدمات "كما هي" دون ضمانات.
+                    تقدم شركة منصة مستر مايكل المحتوى التعليمي والخدمات "كما هي" دون ضمانات.
                   </p>
                   <p className="text-gray-700 dark:text-gray-300">
                     نحن لسنا مسؤولين عن أي أضرار غير مباشرة أو عرضية أو تبعية.
@@ -298,7 +298,7 @@ export default function TermsOfService() {
               {/* Footer */}
               <div className="border-t border-gray-200 dark:border-gray-700 pt-6 mt-8">
                 <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
-                  من خلال استخدام منصة شركة The Eagle، فإنك تقر بأنك قد قرأت وفهمت 
+                  من خلال استخدام منصة شركة منصة مستر مايكل، فإنك تقر بأنك قد قرأت وفهمت 
                   وتوافق على الالتزام بشروط الخدمة هذه.
                 </p>
               </div>

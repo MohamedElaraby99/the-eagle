@@ -28,13 +28,15 @@ const lessonSchema = new mongoose.Schema({
     {
       url: { type: String, required: true },
       title: { type: String, default: '' },
-      description: { type: String, default: '' }
+      description: { type: String, default: '' },
+      publishDate: { type: Date }
     }
   ],
   pdfs: [
     {
       url: { type: String, required: true },
-      title: { type: String, default: '' }
+      title: { type: String, default: '' },
+      publishDate: { type: Date }
     }
   ],
   exams: [
@@ -50,7 +52,8 @@ const lessonSchema = new mongoose.Schema({
           options: [{ type: String, required: true }],
           correctAnswer: { type: Number, required: true },
           explanation: { type: String, default: '' },
-          image: { type: String, default: '' }
+          image: { type: String, default: '' },
+          numberOfOptions: { type: Number, default: 4, min: 2, max: 4 }
         }
       ],
       userAttempts: [
@@ -82,7 +85,8 @@ const lessonSchema = new mongoose.Schema({
           options: [{ type: String, required: true }],
           correctAnswer: { type: Number, required: true },
           explanation: { type: String, default: '' },
-          image: { type: String, default: '' }
+          image: { type: String, default: '' },
+          numberOfOptions: { type: Number, default: 4, min: 2, max: 4 }
         }
       ],
       userAttempts: [

@@ -78,11 +78,28 @@ export const verifyCaptcha = async (req, res, next) => {
   try {
     const { sessionId, answer } = req.body;
     
+    console.log('=== CAPTCHA VERIFICATION REQUEST DEBUG ===');
+    console.log('Received sessionId:', sessionId);
+    console.log('Received answer:', answer);
+    console.log('Total sessions before verification:', captchaSessions.size);
+    console.log('Available session IDs:', Array.from(captchaSessions.keys()));
+    console.log('=== END DEBUG ===');
+    
     if (!sessionId || !answer) {
       return next(new ApiError(400, 'معرف الجلسة والإجابة مطلوبان'));
     }
     
     const session = captchaSessions.get(sessionId);
+    
+    console.log('Session lookup result:', {
+      sessionExists: !!session,
+      sessionData: session ? {
+        answer: session.answer,
+        createdAt: session.createdAt,
+        attempts: session.attempts,
+        verified: session.verified
+      } : null
+    });
     
     if (!session) {
       return next(new ApiError(400, 'رمز التحقق غير صحيح أو منتهي الصلاحية'));
@@ -105,15 +122,27 @@ export const verifyCaptcha = async (req, res, next) => {
     
     // Check answer
     if (answer.toString().trim() !== session.answer) {
+      console.log('Answer mismatch:', {
+        userAnswer: answer.toString().trim(),
+        correctAnswer: session.answer,
+        match: answer.toString().trim() === session.answer
+      });
       return next(new ApiError(400, 'إجابة خاطئة، يرجى المحاولة مرة أخرى'));
     }
     
     // Success - mark as verified
     session.verified = true;
     
+    console.log('CAPTCHA verification successful:', {
+      sessionId,
+      verified: session.verified,
+      totalSessions: captchaSessions.size
+    });
+    
     res.status(200).json(new ApiResponse(200, { verified: true }, 'تم التحقق بنجاح'));
     
   } catch (error) {
+    console.error('CAPTCHA verification error:', error);
     next(new ApiError(500, 'خطأ في التحقق من رمز التحقق'));
   }
 };
@@ -123,12 +152,16 @@ export const requireCaptchaVerification = (req, res, next) => {
   // Check for captchaSessionId in both req.body and req.body (in case of FormData)
   const captchaSessionId = req.body.captchaSessionId;
   
-  console.log('CAPTCHA Verification Middleware:', {
-    hasCaptchaSessionId: !!captchaSessionId,
-    captchaSessionId,
-    bodyKeys: Object.keys(req.body),
-    bodyType: typeof req.body
-  });
+  console.log('=== CAPTCHA VERIFICATION MIDDLEWARE DEBUG ===');
+  console.log('Request body keys:', Object.keys(req.body));
+  console.log('Request body type:', typeof req.body);
+  console.log('CAPTCHA session ID found:', !!captchaSessionId);
+  console.log('CAPTCHA session ID value:', captchaSessionId);
+  console.log('CAPTCHA session ID type:', typeof captchaSessionId);
+  console.log('CAPTCHA session ID length:', captchaSessionId ? captchaSessionId.length : 0);
+  console.log('Total CAPTCHA sessions in memory:', captchaSessions.size);
+  console.log('Available session IDs:', Array.from(captchaSessions.keys()));
+  console.log('=== END DEBUG ===');
   
   if (!captchaSessionId) {
     console.log('No CAPTCHA session ID found in request');
@@ -140,7 +173,11 @@ export const requireCaptchaVerification = (req, res, next) => {
   console.log('CAPTCHA Session Check:', {
     sessionExists: !!session,
     sessionVerified: session?.verified,
-    sessionsCount: captchaSessions.size
+    sessionAnswer: session?.answer,
+    sessionCreatedAt: session?.createdAt,
+    sessionAttempts: session?.attempts,
+    currentTime: Date.now(),
+    timeDifference: session ? Date.now() - session.createdAt : 'N/A'
   });
   
   if (!session || !session.verified) {
@@ -152,6 +189,7 @@ export const requireCaptchaVerification = (req, res, next) => {
   
   // Clean up the session after use
   captchaSessions.delete(captchaSessionId);
+  console.log('CAPTCHA session cleaned up, remaining sessions:', captchaSessions.size);
   
   next();
 };

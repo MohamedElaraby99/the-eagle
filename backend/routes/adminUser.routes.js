@@ -20,7 +20,7 @@ const router = express.Router();
 
 // All routes require admin authentication
 router.use(isLoggedIn);
-router.use(authorisedRoles("ADMIN"));
+router.use(authorisedRoles("ADMIN", "SUPER_ADMIN"));
 
 // Get all users with filters and pagination
 router.get("/users", (req, res, next) => {

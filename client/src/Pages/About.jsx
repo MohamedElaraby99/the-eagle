@@ -20,14 +20,14 @@ function AboutUs() {
       
   return (
     <Layout>
-      <section className="md:py-10 py-7 mb-10 text-white overflow-x-hidden  md:px-16 px-6 min-h-[100vh]">
+      <section className="md:py-10 py-7 mb-10 text-white overflow-x-hidden md:px-16 px-6 min-h-[100vh]" dir="rtl">
         {/* hero */}
         <div className="flex md:flex-row flex-col-reverse items-center justify-center md:gap-10 gap-7 w-full space-y-7">
-          <div className="md:w-1/2 w-full space-y-7">
-            <h1 className="text-5xl text-yellow-500 font-semibold font-inter">
+          <div className="md:w-1/2 w-full space-y-7 text-right">
+            <h1 className="text-5xl text-yellow-500 font-semibold font-inter text-right">
               تعليم <span className="font-nunito-sans">ميسور التكلفة وعالي الجودة</span>
             </h1>
-            <p className="text-xl text-gray-600 dark:text-gray-200 font-nunito-sans">
+            <p className="text-xl text-gray-600 dark:text-gray-200 font-nunito-sans text-right leading-relaxed">
               هدفنا هو توفير التعليم الميسور التكلفة وعالي الجودة للعالم. 
               نحن نوفر المنصة للمدرسين والطلاب الطموحين لمشاركة مهاراتهم وإبداعهم 
               ومعرفتهم مع بعضهم البعض لتمكين والمساهمة في نمو ورفاهية البشرية.
@@ -47,8 +47,7 @@ function AboutUs() {
         </div>
 
         {/* slider */}
-
-        <div className="w-[90vw] px-0 pt-7 mt-10 rounded-lg bg-[#dc85ffb4] dark:bg-[#393d4e93] backdrop-blur-lg md:h-[350px] h-[550px] ">
+        <div className="w-[90vw] px-0 pt-7 mt-10 rounded-lg bg-[#dc85ffb4] dark:bg-[#393d4e93] backdrop-blur-lg md:h-[350px] h-[550px]">
           <Slider {...settings} className="h-full">
             {celebrities.map((details, index) => (
               <CarouselSlide details={details} key={index} />

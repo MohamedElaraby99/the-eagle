@@ -139,7 +139,7 @@ const PurchaseModal = ({
         )}
 
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-6 text-white">
+        <div className="bg-gradient-to-r from-blue-500 to-orange-600 p-6 text-white">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
@@ -164,7 +164,7 @@ const PurchaseModal = ({
           {/* Lesson Info */}
           <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 mb-6">
             <div className="flex items-start gap-3">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-orange-600 rounded-lg flex items-center justify-center">
                 <FaPlay className="text-white text-lg" />
               </div>
               <div className="flex-1">
@@ -189,7 +189,7 @@ const PurchaseModal = ({
           </div>
 
           {/* Pricing */}
-          <div className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-xl p-4 mb-6">
+          <div className="bg-gradient-to-r from-orange-50 to-blue-50 dark:from-orange-900/20 dark:to-blue-900/20 rounded-xl p-4 mb-6">
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm text-gray-600 dark:text-gray-400">سعر الدرس</span>
               <div className="flex items-center gap-2">
@@ -262,7 +262,7 @@ const PurchaseModal = ({
             ) : (
               <button
                 onClick={onClose}
-                className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-4 px-6 rounded-xl font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-200 transform hover:scale-[1.02] flex items-center justify-center gap-3"
+                className="w-full bg-gradient-to-r from-blue-500 to-orange-600 text-white py-4 px-6 rounded-xl font-semibold hover:from-blue-600 hover:to-orange-700 transition-all duration-200 transform hover:scale-[1.02] flex items-center justify-center gap-3"
               >
                 <FaWallet />
                 شحن المحفظة

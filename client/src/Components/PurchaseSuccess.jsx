@@ -57,7 +57,7 @@ const PurchaseSuccess = ({
           {/* Lesson Info */}
           <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-orange-600 rounded-lg flex items-center justify-center">
                 <FaPlay className="text-white text-sm" />
               </div>
               <div className="flex-1">
@@ -96,7 +96,7 @@ const PurchaseSuccess = ({
           <div className="flex gap-2">
             <button
               onClick={onClose}
-              className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-4 rounded-xl font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-200 transform hover:scale-[1.02] flex items-center justify-center gap-2"
+              className="flex-1 bg-gradient-to-r from-blue-500 to-orange-600 text-white py-3 px-4 rounded-xl font-semibold hover:from-blue-600 hover:to-orange-700 transition-all duration-200 transform hover:scale-[1.02] flex items-center justify-center gap-2"
             >
               <FaPlay className="text-sm" />
               Watch Now

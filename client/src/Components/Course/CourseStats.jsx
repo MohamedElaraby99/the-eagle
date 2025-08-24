@@ -42,9 +42,9 @@ const CourseStats = ({ stats, loading }) => {
       title: "إجمالي الطلاب",
       value: stats?.totalStudents || 0,
       icon: FaUsers,
-      color: "from-purple-500 to-purple-600",
-      bgColor: "bg-purple-50 dark:bg-purple-900/20",
-      textColor: "text-purple-600 dark:text-purple-400"
+      color: "from-orange-500 to-orange-600",
+      bgColor: "bg-orange-50 dark:bg-orange-900/20",
+      textColor: "text-orange-600 dark:text-orange-400"
     }
   ];
 

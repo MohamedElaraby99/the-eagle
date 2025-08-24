@@ -23,7 +23,7 @@ router.route('/stats')
 
 // Admin only routes
 router.use(isLoggedIn);
-router.use(authorisedRoles('ADMIN'));
+router.use(authorisedRoles('ADMIN', 'SUPER_ADMIN'));
 
 router.route('/admin')
     .get(getAllStagesAdmin);

@@ -105,7 +105,7 @@ export default function CoursesPage() {
     <Layout>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900" dir="rtl">
         {/* Header Section */}
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-16">
+        <div className="bg-gradient-to-r from-blue-600 to-orange-600 text-white py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
               <h1 className="text-4xl md:text-5xl font-bold mb-4">
@@ -222,7 +222,7 @@ export default function CoursesPage() {
                   className="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group"
                 >
                   {/* Course Image */}
-                  <div className="h-48 bg-gradient-to-br from-blue-500 to-purple-600 relative overflow-hidden">
+                  <div className="h-48 bg-gradient-to-br from-blue-500 to-orange-600 relative overflow-hidden">
                     {course.image && course.image.secure_url ? (
                       // Display actual course image
                       <img

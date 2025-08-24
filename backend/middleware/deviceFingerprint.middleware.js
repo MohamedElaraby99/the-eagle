@@ -5,6 +5,14 @@ import { ApiError } from "../utils/ApiError.js";
  * This helps prevent unauthorized access and ensures proper device tracking
  */
 export const requireDeviceFingerprint = (req, res, next) => {
+    console.log('=== DEVICE FINGERPRINT MIDDLEWARE DEBUG ===');
+    console.log('Request body keys:', Object.keys(req.body));
+    console.log('Request body type:', typeof req.body);
+    console.log('Full request body:', req.body);
+    console.log('Device info from body:', req.body.deviceInfo);
+    console.log('Device info type:', typeof req.body.deviceInfo);
+    console.log('=== END DEBUG ===');
+    
     const { deviceInfo } = req.body;
     
     if (!deviceInfo) {

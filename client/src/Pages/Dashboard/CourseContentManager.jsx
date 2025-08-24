@@ -23,6 +23,39 @@ function formatDateTime(dateString) {
   });
 }
 
+// Helper function to convert numbers to Arabic ordinal numbers
+function getArabicOrdinalNumber(num) {
+  const arabicOrdinals = {
+    1: 'الأول',
+    2: 'الثاني',
+    3: 'الثالث',
+    4: 'الرابع',
+    5: 'الخامس',
+    6: 'السادس',
+    7: 'السابع',
+    8: 'الثامن',
+    9: 'التاسع',
+    10: 'العاشر',
+    11: 'الحادي عشر',
+    12: 'الثاني عشر',
+    13: 'الثالث عشر',
+    14: 'الرابع عشر',
+    15: 'الخامس عشر',
+    16: 'السادس عشر',
+    17: 'السابع عشر',
+    18: 'الثامن عشر',
+    19: 'التاسع عشر',
+    20: 'العشرون'
+  };
+  
+  if (num <= 20) {
+    return arabicOrdinals[num];
+  } else {
+    // For numbers above 20, use a more generic approach
+    return `السؤال رقم ${num}`;
+  }
+}
+
 const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
   const dispatch = useDispatch();
   const { courses } = useSelector(state => state.course);
@@ -61,8 +94,8 @@ const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
   const [pdfs, setPdfs] = useState(lesson?.pdfs || []);
   const [exams, setExams] = useState(lesson?.exams || []);
   const [trainings, setTrainings] = useState(lesson?.trainings || []);
-  const [newVideo, setNewVideo] = useState({ url: '', title: '', description: '' });
-  const [newPdf, setNewPdf] = useState({ url: '', title: '', fileName: '' });
+  const [newVideo, setNewVideo] = useState({ url: '', title: '', description: '', publishDate: '' });
+  const [newPdf, setNewPdf] = useState({ url: '', title: '', fileName: '', publishDate: '' });
   const [newExam, setNewExam] = useState({
     title: '',
     description: '',
@@ -71,12 +104,6 @@ const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
     closeDate: '',
     questions: []
   });
-  const [newQuestion, setNewQuestion] = useState({
-    question: '',
-    options: ['', '', '', ''],
-    correctAnswer: 0,
-    image: ''
-  });
   const [newTraining, setNewTraining] = useState({
     title: '',
     description: '',
@@ -84,11 +111,19 @@ const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
     openDate: '',
     questions: []
   });
+  const [newQuestion, setNewQuestion] = useState({
+    question: '',
+    options: ['', '', '', ''],
+    correctAnswer: 0,
+    image: '',
+    numberOfOptions: 4
+  });
   const [newTrainingQuestion, setNewTrainingQuestion] = useState({
     question: '',
     options: ['', '', '', ''],
     correctAnswer: 0,
-    image: ''
+    image: '',
+    numberOfOptions: 4
   });
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -100,6 +135,9 @@ const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
   const [editExamQuestionIndex, setEditExamQuestionIndex] = useState(null);
   // Training question edit
   const [editTrainingQuestionIndex, setEditTrainingQuestionIndex] = useState(null);
+  // Track expanded exams and trainings
+  const [expandedExams, setExpandedExams] = useState(new Set());
+  const [expandedTrainings, setExpandedTrainings] = useState(new Set());
 
   // PDF file upload handler
   const handlePdfFileChange = async (e) => {
@@ -180,10 +218,44 @@ const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
     }
   };
 
+  // Handle changing number of options for exam questions
+  const handleExamQuestionOptionsChange = (numberOfOptions) => {
+    const newOptions = Array(numberOfOptions).fill('').map((_, index) => 
+      index < newQuestion.options.length ? newQuestion.options[index] : ''
+    );
+    
+    // Reset correct answer if it's now out of range
+    const correctAnswer = newQuestion.correctAnswer < numberOfOptions ? newQuestion.correctAnswer : 0;
+    
+    setNewQuestion(q => ({
+      ...q,
+      numberOfOptions,
+      options: newOptions,
+      correctAnswer
+    }));
+  };
+
+  // Handle changing number of options for training questions
+  const handleTrainingQuestionOptionsChange = (numberOfOptions) => {
+    const newOptions = Array(numberOfOptions).fill('').map((_, index) => 
+      index < newTrainingQuestion.options.length ? newTrainingQuestion.options[index] : ''
+    );
+    
+    // Reset correct answer if it's now out of range
+    const correctAnswer = newTrainingQuestion.correctAnswer < numberOfOptions ? newTrainingQuestion.correctAnswer : 0;
+    
+    setNewTrainingQuestion(q => ({
+      ...q,
+      numberOfOptions,
+      options: newOptions,
+      correctAnswer
+    }));
+  };
+
   const handleAddVideo = () => {
     if (!newVideo.url.trim()) return;
     setVideos([...videos, newVideo]);
-    setNewVideo({ url: '', title: '', description: '' });
+    setNewVideo({ url: '', title: '', description: '', publishDate: '' });
   };
   const handleRemoveVideo = (idx) => {
     setVideos(videos.filter((_, i) => i !== idx));
@@ -192,7 +264,7 @@ const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
   const handleAddPdf = () => {
     if (!newPdf.url.trim()) return;
     setPdfs([...pdfs, newPdf]);
-    setNewPdf({ url: '', title: '', fileName: '' });
+    setNewPdf({ url: '', title: '', fileName: '', publishDate: '' });
   };
   const handleRemovePdf = (idx) => {
     setPdfs(pdfs.filter((_, i) => i !== idx));
@@ -208,7 +280,8 @@ const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
       question: '',
       options: ['', '', '', ''],
       correctAnswer: 0,
-      image: ''
+      image: '',
+      numberOfOptions: 4
     });
   };
 
@@ -229,7 +302,8 @@ const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
       question: '',
       options: ['', '', '', ''],
       correctAnswer: 0,
-      image: ''
+      image: '',
+      numberOfOptions: 4
     });
   };
 
@@ -293,11 +367,39 @@ const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
     setTrainings(trainings.filter((_, i) => i !== idx));
   };
 
+  // Function to refresh lesson data
+  const refreshLessonData = async () => {
+    try {
+      const response = await axiosInstance.get(`/courses/${courseId}/lessons/${lessonId}?${unitId ? `unitId=${unitId}` : ''}`);
+      if (response.data.success) {
+        // Update the lesson data in the parent component
+        // This will trigger the useEffect and update the local state
+        const updatedLesson = response.data.data.lesson;
+        console.log('🔄 Refreshed lesson data:', updatedLesson);
+        
+        // Update the local state directly
+        setVideos(updatedLesson.videos || []);
+        setPdfs(updatedLesson.pdfs || []);
+        setExams(updatedLesson.exams || []);
+        setTrainings(updatedLesson.trainings || []);
+      }
+    } catch (error) {
+      console.error('Error refreshing lesson data:', error);
+    }
+  };
+
   const handleSaveVideos = async () => {
     setSaving(true);
     try {
       console.log('Saving videos for lesson:', lessonId);
       console.log('Videos to save:', videos);
+      console.log('Videos with publishDate details:', videos.map(v => ({
+        title: v.title,
+        url: v.url,
+        publishDate: v.publishDate,
+        publishDateType: typeof v.publishDate,
+        publishDateISO: v.publishDate ? new Date(v.publishDate).toISOString() : null
+      })));
       console.log('Request data:', { unitId, videos });
       
       const response = await axiosInstance.put(`/courses/${courseId}/lessons/${lessonId}/content`, {
@@ -308,9 +410,9 @@ const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
       console.log('API Response:', response.data);
       
       toast.success('تم حفظ الفيديوهات بنجاح');
-      // Refresh course data
-      dispatch(getCourseById(courseId));
-      onClose();
+      // Refresh lesson data instead of course data
+      await refreshLessonData();
+      // onClose(); // Temporarily removed to see updated content
     } catch (error) {
       console.error('Error saving videos:', error);
       console.error('Error response:', error.response?.data);
@@ -325,6 +427,13 @@ const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
     try {
       console.log('Saving PDFs for lesson:', lessonId);
       console.log('PDFs to save:', pdfs);
+      console.log('PDFs with publishDate details:', pdfs.map(p => ({
+        title: p.title,
+        fileName: p.fileName,
+        publishDate: p.publishDate,
+        publishDateType: typeof p.publishDate,
+        publishDateISO: p.publishDate ? new Date(p.publishDate).toISOString() : null
+      })));
       console.log('Request data:', { unitId, pdfs });
       
       const response = await axiosInstance.put(`/courses/${courseId}/lessons/${lessonId}/content`, {
@@ -335,9 +444,9 @@ const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
       console.log('API Response:', response.data);
       
       toast.success('تم حفظ ملفات PDF بنجاح');
-      // Refresh course data
-      dispatch(getCourseById(courseId));
-      onClose();
+      // Refresh lesson data instead of course data
+      await refreshLessonData();
+      // onClose(); // Temporarily removed to see updated content
     } catch (error) {
       console.error('Error saving PDFs:', error);
       console.error('Error response:', error.response?.data);
@@ -367,8 +476,8 @@ const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
       console.log('API Response:', response.data);
       
       toast.success('تم حفظ الامتحانات بنجاح');
-      // Refresh course data
-      dispatch(getCourseById(courseId));
+      // Refresh lesson data instead of course data
+      await refreshLessonData();
       onClose();
     } catch (error) {
       console.error('Error saving exams:', error);
@@ -387,7 +496,8 @@ const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
         trainings
       });
       toast.success('تم حفظ التدريبات بنجاح');
-      dispatch(getCourseById(courseId));
+      // Refresh lesson data instead of course data
+      await refreshLessonData();
       onClose();
     } catch (error) {
       toast.error(error.response?.data?.message || 'فشل في حفظ التدريبات');
@@ -399,14 +509,35 @@ const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
   // TODO: Add handlers for Trainings
 
   useEffect(() => {
-    console.log('Lesson data updated:', lesson);
-    console.log('Current videos:', lesson?.videos);
-    console.log('Current pdfs:', lesson?.pdfs);
-    console.log('Current exams:', lesson?.exams);
-    setVideos(lesson?.videos || []);
-    setPdfs(lesson?.pdfs || []);
-    setExams(lesson?.exams || []);
-    setTrainings(lesson?.trainings || []);
+    if (lesson) {
+      console.log('🔄 Updating local state from lesson prop');
+      console.log('Lesson videos:', lesson.videos);
+      console.log('Lesson PDFs:', lesson.pdfs);
+      console.log('Lesson exams:', lesson.exams);
+      console.log('Lesson trainings:', lesson.trainings);
+      
+      // Ensure existing questions have numberOfOptions field
+      const processedExams = lesson.exams?.map(exam => ({
+        ...exam,
+        questions: exam.questions?.map(q => ({
+          ...q,
+          numberOfOptions: q.numberOfOptions || 4
+        })) || []
+      })) || [];
+      
+      const processedTrainings = lesson.trainings?.map(training => ({
+        ...training,
+        questions: training.questions?.map(q => ({
+          ...q,
+          numberOfOptions: q.numberOfOptions || 4
+        })) || []
+      })) || [];
+      
+      setVideos(lesson.videos || []);
+      setPdfs(lesson.pdfs || []);
+      setExams(processedExams);
+      setTrainings(processedTrainings);
+    }
   }, [lesson]);
 
   // Monitor exams state changes
@@ -425,11 +556,11 @@ const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
     if (!newVideo.url.trim()) return;
     setVideos(videos.map((v, idx) => idx === editVideoIndex ? newVideo : v));
     setEditVideoIndex(null);
-    setNewVideo({ url: '', title: '', description: '' });
+    setNewVideo({ url: '', title: '', description: '', publishDate: '' });
   };
   const handleCancelEditVideo = () => {
     setEditVideoIndex(null);
-    setNewVideo({ url: '', title: '', description: '' });
+    setNewVideo({ url: '', title: '', description: '', publishDate: '' });
   };
 
   // PDF edit handlers
@@ -441,11 +572,11 @@ const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
     if (!newPdf.url.trim()) return;
     setPdfs(pdfs.map((p, idx) => idx === editPdfIndex ? newPdf : p));
     setEditPdfIndex(null);
-    setNewPdf({ url: '', title: '', fileName: '' });
+    setNewPdf({ url: '', title: '', fileName: '', publishDate: '' });
   };
   const handleCancelEditPdf = () => {
     setEditPdfIndex(null);
-    setNewPdf({ url: '', title: '', fileName: '' });
+    setNewPdf({ url: '', title: '', fileName: '', publishDate: '' });
   };
 
   // Exam edit handlers
@@ -522,7 +653,8 @@ const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
       question: '',
       options: ['', '', '', ''],
       correctAnswer: 0,
-      image: ''
+      image: '',
+      numberOfOptions: 4
     });
   };
   const handleCancelEditExamQuestion = () => {
@@ -531,7 +663,8 @@ const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
       question: '',
       options: ['', '', '', ''],
       correctAnswer: 0,
-      image: ''
+      image: '',
+      numberOfOptions: 4
     });
   };
 
@@ -551,7 +684,8 @@ const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
       question: '',
       options: ['', '', '', ''],
       correctAnswer: 0,
-      image: ''
+      image: '',
+      numberOfOptions: 4
     });
   };
   const handleCancelEditTrainingQuestion = () => {
@@ -560,7 +694,8 @@ const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
       question: '',
       options: ['', '', '', ''],
       correctAnswer: 0,
-      image: ''
+      image: '',
+      numberOfOptions: 4
     });
   };
 
@@ -578,12 +713,46 @@ const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
     }));
   };
 
+  // Toggle expanded state for exams and trainings
+  const toggleExamExpanded = (examIndex) => {
+    setExpandedExams(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(examIndex)) {
+        newSet.delete(examIndex);
+      } else {
+        newSet.add(examIndex);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleTrainingExpanded = (trainingIndex) => {
+    setExpandedTrainings(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(trainingIndex)) {
+        newSet.delete(trainingIndex);
+      } else {
+        newSet.add(trainingIndex);
+      }
+      return newSet;
+    });
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-3 md:p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-3 md:p-6" dir="rtl">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">إدارة محتوى الدرس</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xl">×</button>
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white text-right">إدارة محتوى الدرس</h2>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={refreshLessonData}
+              className="text-blue-600 hover:text-blue-800 text-sm px-3 py-1 rounded border border-blue-600 hover:border-blue-800"
+              title="تحديث البيانات"
+            >
+              🔄 تحديث
+            </button>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xl">×</button>
+          </div>
         </div>
         <div className="mb-4 flex gap-2 border-b border-gray-200 dark:border-gray-700">
           <button className={`px-3 py-2 rounded-t ${tab === 'videos' ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-bold' : 'text-gray-600 dark:text-gray-300'}`} onClick={() => setTab('videos')}>فيديوهات</button>
@@ -594,7 +763,7 @@ const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
         {tab === 'videos' && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <div className="font-semibold text-gray-900 dark:text-white">إضافة فيديو (رابط يوتيوب، عنوان، وصف اختياري)</div>
+              <div className="font-semibold text-gray-900 dark:text-white text-right">إضافة فيديو (رابط يوتيوب، عنوان، وصف اختياري)</div>
               <button 
                 onClick={() => toggleSection('videos')}
                 className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
@@ -605,38 +774,59 @@ const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
             </div>
             {openSections.videos && (
               <>
-                <div className="flex flex-col gap-2">
-                  <input type="text" className="p-2 border rounded" placeholder="رابط يوتيوب" value={newVideo.url} onChange={e => setNewVideo(v => ({ ...v, url: e.target.value }))} />
-                  <input type="text" className="p-2 border rounded" placeholder="عنوان الفيديو (اختياري)" value={newVideo.title} onChange={e => setNewVideo(v => ({ ...v, title: e.target.value }))} />
-                  <textarea className="p-2 border rounded" placeholder="وصف الفيديو (اختياري)" value={newVideo.description} onChange={e => setNewVideo(v => ({ ...v, description: e.target.value }))} />
-                  {editVideoIndex !== null ? (
-                    <div className="flex gap-2">
-                      <button type="button" className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700" onClick={handleSaveEditVideo}>حفظ التعديل</button>
-                      <button type="button" className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500" onClick={handleCancelEditVideo}>إلغاء</button>
-                    </div>
-                  ) : (
-                    <button type="button" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 self-end" onClick={handleAddVideo}>إضافة فيديو</button>
-                  )}
+                {/* Video Details */}
+                <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 space-y-4">
+                  <h3 className="font-medium text-gray-900 dark:text-white text-right">تفاصيل الفيديو</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input type="text" className="p-2 border rounded text-right" placeholder="رابط الفيديو *" value={newVideo.url} onChange={e => setNewVideo(v => ({ ...v, url: e.target.value }))} />
+                    <input type="text" className="p-2 border rounded text-right" placeholder="عنوان الفيديو (اختياري)" value={newVideo.title} onChange={e => setNewVideo(v => ({ ...v, title: e.target.value }))} />
+                    <textarea className="p-2 border rounded text-right" placeholder="وصف الفيديو (اختياري)" value={newVideo.description} onChange={e => setNewVideo(v => ({ ...v, description: e.target.value }))} rows="2" />
+                    <input type="datetime-local" className="p-2 border rounded text-right" placeholder="تاريخ النشر" value={newVideo.publishDate} onChange={e => setNewVideo(v => ({ ...v, publishDate: e.target.value }))} />
+                  </div>
+                  <div className="flex justify-end">
+                    {editVideoIndex !== null ? (
+                      <div className="flex gap-2">
+                        <button type="button" className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700" onClick={handleSaveEditVideo}>حفظ التعديل</button>
+                        <button type="button" className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500" onClick={handleCancelEditVideo}>إلغاء</button>
+                      </div>
+                    ) : (
+                      <button type="button" className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700" onClick={handleAddVideo} disabled={!newVideo.url.trim()}>
+                        إضافة الفيديو
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <div className="mt-4">
-                  {videos.length === 0 ? <div className="text-gray-400 text-sm">لا توجد فيديوهات مضافة</div> : (
-                    <ul className="space-y-2">
+
+                {/* Videos List */}
+                {videos.length > 0 && (
+                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                    <h3 className="font-medium text-gray-900 dark:text-white mb-3 text-right">الفيديوهات المضافة ({videos.length})</h3>
+                    <div className="space-y-3">
                       {videos.map((video, idx) => (
-                        <li key={idx} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 rounded p-2">
-                          <div>
-                            <div className="font-medium text-gray-900 dark:text-white">{video.title || video.url}</div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">{video.url}</div>
-                            {video.description && <div className="text-xs text-gray-400 mt-1">{video.description}</div>}
+                        <div key={idx} className="bg-white dark:bg-gray-600 rounded p-3">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1 text-right">
+                              <p className="font-medium text-gray-900 dark:text-white">{video.title || 'بدون عنوان'}</p>
+                              {video.description && <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{video.description}</p>}
+                              <p className="text-xs text-blue-600 dark:text-blue-400 mt-1 break-all">{video.url}</p>
+                              {video.publishDate && (
+                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                  تاريخ النشر: {formatDateTime(video.publishDate)}
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex gap-2 mr-3">
+                              <button type="button" className="text-blue-500 hover:text-blue-700 text-sm" onClick={() => handleEditVideo(idx)}>تعديل</button>
+                              <button type="button" className="text-red-500 hover:text-red-700 text-sm" onClick={() => handleRemoveVideo(idx)}>حذف</button>
+                            </div>
                           </div>
-                          <div className="flex gap-2">
-                            <button className="text-blue-500 hover:text-blue-700 text-sm" onClick={() => handleEditVideo(idx)}>تعديل</button>
-                            <button className="text-red-500 hover:text-red-700 text-sm" onClick={() => handleRemoveVideo(idx)}>حذف</button>
-                          </div>
-                        </li>
+                        </div>
                       ))}
-                    </ul>
-                  )}
-                </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Save Videos Button */}
                 <div className="flex justify-end mt-6">
                   <button type="button" className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 disabled:opacity-50" onClick={handleSaveVideos} disabled={saving}>
                     {saving ? 'جاري الحفظ...' : 'حفظ الفيديوهات'}
@@ -649,7 +839,7 @@ const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
         {tab === 'pdfs' && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <div className="font-semibold text-gray-900 dark:text-white">أضف ملف PDF (ارفع ملف PDF فقط، العنوان واسم الملف اختياري)</div>
+              <div className="font-semibold text-gray-900 dark:text-white text-right">إضافة ملف PDF (رفع ملف، عنوان، اسم الملف)</div>
               <button 
                 onClick={() => toggleSection('pdfs')}
                 className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
@@ -660,41 +850,61 @@ const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
             </div>
             {openSections.pdfs && (
               <>
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-2">
-                    <input type="file" accept="application/pdf" onChange={handlePdfFileChange} disabled={uploading} />
-                    {uploading && <span className="text-blue-600 text-xs">جاري الرفع...</span>}
-                  </div>
-                  <input type="text" className="p-2 border rounded" placeholder="عنوان الملف (اختياري)" value={newPdf.title} onChange={e => setNewPdf(p => ({ ...p, title: e.target.value }))} />
-                  <input type="text" className="p-2 border rounded" placeholder="اسم الملف (اختياري)" value={newPdf.fileName} onChange={e => setNewPdf(p => ({ ...p, fileName: e.target.value }))} />
-                  {editPdfIndex !== null ? (
-                    <div className="flex gap-2">
-                      <button type="button" className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700" onClick={handleSaveEditPdf}>حفظ التعديل</button>
-                      <button type="button" className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500" onClick={handleCancelEditPdf}>إلغاء</button>
+                {/* PDF Details */}
+                <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 space-y-4">
+                  <h3 className="font-medium text-gray-900 dark:text-white text-right">تفاصيل ملف PDF</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="md:col-span-2">
+                      <input type="file" accept=".pdf" onChange={handlePdfFileChange} disabled={uploading} className="w-full p-2 border rounded text-right" />
+                      {uploading && <span className="text-blue-600 text-xs text-right block mt-1">جاري رفع الملف...</span>}
                     </div>
-                  ) : (
-                    <button type="button" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 self-end" onClick={handleAddPdf} disabled={uploading || !newPdf.url}>إضافة PDF</button>
-                  )}
+                    <input type="text" className="p-2 border rounded text-right" placeholder="عنوان الملف (اختياري)" value={newPdf.title} onChange={e => setNewPdf(p => ({ ...p, title: e.target.value }))} />
+                    <input type="text" className="p-2 border rounded text-right" placeholder="اسم الملف (اختياري)" value={newPdf.fileName} onChange={e => setNewPdf(p => ({ ...p, fileName: e.target.value }))} />
+                    <input type="datetime-local" className="p-2 border rounded text-right" placeholder="تاريخ النشر" value={newPdf.publishDate} onChange={e => setNewPdf(p => ({ ...p, publishDate: e.target.value }))} />
+                  </div>
+                  <div className="flex justify-end">
+                    {editPdfIndex !== null ? (
+                      <div className="flex gap-2">
+                        <button type="button" className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700" onClick={handleSaveEditPdf}>حفظ التعديل</button>
+                        <button type="button" className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500" onClick={handleCancelEditPdf}>إلغاء</button>
+                      </div>
+                    ) : (
+                      <button type="button" className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700" onClick={handleAddPdf} disabled={!newPdf.url.trim()}>
+                        إضافة ملف PDF
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <div className="mt-4">
-                  {pdfs.length === 0 ? <div className="text-gray-400 text-sm">لا توجد ملفات PDF مضافة</div> : (
-                    <ul className="space-y-2">
+
+                {/* PDFs List */}
+                {pdfs.length > 0 && (
+                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                    <h3 className="font-medium text-gray-900 dark:text-white mb-3 text-right">ملفات PDF المضافة ({pdfs.length})</h3>
+                    <div className="space-y-3">
                       {pdfs.map((pdf, idx) => (
-                        <li key={idx} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 rounded p-2">
-                          <div>
-                            <div className="font-medium text-gray-900 dark:text-white">{pdf.title || pdf.fileName || pdf.url}</div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">{pdf.url}</div>
-                            {pdf.fileName && <div className="text-xs text-gray-400 mt-1">اسم الملف: {pdf.fileName}</div>}
+                        <div key={idx} className="bg-white dark:bg-gray-600 rounded p-3">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1 text-right">
+                              <p className="font-medium text-gray-900 dark:text-white">{pdf.title || 'بدون عنوان'}</p>
+                              <p className="text-xs text-blue-600 dark:text-blue-400 mt-1 break-all">{pdf.fileName || pdf.url}</p>
+                              {pdf.publishDate && (
+                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                  تاريخ النشر: {formatDateTime(pdf.publishDate)}
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex gap-2 mr-3">
+                              <button type="button" className="text-blue-500 hover:text-blue-700 text-sm" onClick={() => handleEditPdf(idx)}>تعديل</button>
+                              <button type="button" className="text-red-500 hover:text-red-700 text-sm" onClick={() => handleRemovePdf(idx)}>حذف</button>
+                            </div>
                           </div>
-                          <div className="flex gap-2">
-                            <button className="text-blue-500 hover:text-blue-700 text-sm" onClick={() => handleEditPdf(idx)}>تعديل</button>
-                            <button className="text-red-500 hover:text-red-700 text-sm" onClick={() => handleRemovePdf(idx)}>حذف</button>
-                          </div>
-                        </li>
+                        </div>
                       ))}
-                    </ul>
-                  )}
-                </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Save PDFs Button */}
                 <div className="flex justify-end mt-6">
                   <button type="button" className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 disabled:opacity-50" onClick={handleSavePdfs} disabled={saving}>
                     {saving ? 'جاري الحفظ...' : 'حفظ ملفات PDF'}
@@ -707,7 +917,7 @@ const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
         {tab === 'exams' && (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <div className="font-semibold text-gray-900 dark:text-white mb-4">إضافة امتحان جديد</div>
+              <div className="font-semibold text-gray-900 dark:text-white text-right mb-4">إضافة امتحان جديد</div>
               <button 
                 onClick={() => toggleSection('exams')}
                 className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
@@ -720,28 +930,28 @@ const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
               <>
                 {/* Exam Details */}
                 <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 space-y-4">
-                  <h3 className="font-medium text-gray-900 dark:text-white">تفاصيل الامتحان</h3>
+                  <h3 className="font-medium text-gray-900 dark:text-white text-right">تفاصيل الامتحان</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input type="text" className="p-2 border rounded" placeholder="عنوان الامتحان *" value={newExam.title} onChange={e => setNewExam(exam => ({ ...exam, title: e.target.value }))} />
-                    <input type="text" className="p-2 border rounded" placeholder="وصف الامتحان (اختياري)" value={newExam.description} onChange={e => setNewExam(exam => ({ ...exam, description: e.target.value }))} />
+                    <input type="text" className="p-2 border rounded text-right" placeholder="عنوان الامتحان *" value={newExam.title} onChange={e => setNewExam(exam => ({ ...exam, title: e.target.value }))} />
+                    <input type="text" className="p-2 border rounded text-right" placeholder="وصف الامتحان (اختياري)" value={newExam.description} onChange={e => setNewExam(exam => ({ ...exam, description: e.target.value }))} />
                     <div className="flex items-center gap-2">
-                      <input type="number" className="p-2 border rounded flex-1" placeholder="المدة بالدقائق" min="1" max="300" value={newExam.timeLimit} onChange={e => setNewExam(exam => ({ ...exam, timeLimit: parseInt(e.target.value) || 30 }))} />
+                      <input type="number" className="p-2 border rounded flex-1 text-right" placeholder="المدة بالدقائق" min="1" max="300" value={newExam.timeLimit} onChange={e => setNewExam(exam => ({ ...exam, timeLimit: parseInt(e.target.value) || 30 }))} />
                       <span className="text-sm text-gray-600">دقيقة</span>
                     </div>
-                    <input type="datetime-local" className="p-2 border rounded" placeholder="تاريخ ووقت الفتح" value={newExam.openDate} onChange={e => setNewExam(exam => ({ ...exam, openDate: e.target.value }))} />
-                    <input type="datetime-local" className="p-2 border rounded" placeholder="تاريخ ووقت الإغلاق" value={newExam.closeDate} onChange={e => setNewExam(exam => ({ ...exam, closeDate: e.target.value }))} />
+                    <input type="datetime-local" className="p-2 border rounded text-right" placeholder="تاريخ ووقت الفتح" value={newExam.openDate} onChange={e => setNewExam(exam => ({ ...exam, openDate: e.target.value }))} />
+                    <input type="datetime-local" className="p-2 border rounded text-right" placeholder="تاريخ ووقت الإغلاق" value={newExam.closeDate} onChange={e => setNewExam(exam => ({ ...exam, closeDate: e.target.value }))} />
                   </div>
                 </div>
 
-                {/* Add Question */}
+                {/* Add Exam Question */}
                 <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 space-y-4">
-                  <h3 className="font-medium text-gray-900 dark:text-white">إضافة سؤال جديد</h3>
-                  <textarea className="w-full p-2 border rounded" placeholder="نص السؤال *" value={newQuestion.question} onChange={e => setNewQuestion(q => ({ ...q, question: e.target.value }))} rows="3" />
+                  <h3 className="font-medium text-gray-900 dark:text-white text-right">إضافة سؤال جديد</h3>
+                  <textarea className="w-full p-2 border rounded text-right" placeholder="نص السؤال *" value={newQuestion.question} onChange={e => setNewQuestion(q => ({ ...q, question: e.target.value }))} rows="3" />
                   
                   {/* Question Image */}
                   <div className="flex items-center gap-2">
                     <input type="file" accept="image/*" onChange={handleQuestionImageChange} disabled={uploading} />
-                    {uploading && <span className="text-blue-600 text-xs">جاري رفع الصورة...</span>}
+                    {uploading && <span className="text-blue-600 text-xs text-right">جاري رفع الصورة...</span>}
                     {newQuestion.image && (
                       <div className="flex items-center gap-2">
                         <img src={generateImageUrl(newQuestion.image)} alt="Question" className="w-16 h-16 object-cover rounded" />
@@ -750,13 +960,40 @@ const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
                     )}
                   </div>
 
+                  {/* Number of Options Selection */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-right">عدد الخيارات:</label>
+                    <div className="flex gap-4 text-right">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="examNumberOfOptions"
+                          value="2"
+                          checked={newQuestion.numberOfOptions === 2}
+                          onChange={(e) => handleExamQuestionOptionsChange(parseInt(e.target.value))}
+                        />
+                        <span>خياران</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="examNumberOfOptions"
+                          value="4"
+                          checked={newQuestion.numberOfOptions === 4}
+                          onChange={(e) => handleExamQuestionOptionsChange(parseInt(e.target.value))}
+                        />
+                        <span>4 خيارات</span>
+                      </label>
+                    </div>
+                  </div>
+
                   {/* Options */}
                   <div className="space-y-2">
-                    <label className="block text-sm font-medium">الخيارات:</label>
-                    {newQuestion.options.map((option, idx) => (
+                    <label className="block text-sm font-medium text-right">الخيارات:</label>
+                    {newQuestion.options.slice(0, newQuestion.numberOfOptions).map((option, idx) => (
                       <div key={idx} className="flex items-center gap-2">
                         <input type="radio" name="correctAnswer" checked={newQuestion.correctAnswer === idx} onChange={() => setNewQuestion(q => ({ ...q, correctAnswer: idx }))} />
-                        <input type="text" className="flex-1 p-2 border rounded" placeholder={`الخيار ${idx + 1} *`} value={option} onChange={e => {
+                        <input type="text" className="flex-1 p-2 border rounded text-right" placeholder={`الخيار ${idx + 1} *`} value={option} onChange={e => {
                           const newOptions = [...newQuestion.options];
                           newOptions[idx] = e.target.value;
                           setNewQuestion(q => ({ ...q, options: newOptions }));
@@ -766,12 +1003,12 @@ const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
                   </div>
                   
                   {editExamQuestionIndex !== null ? (
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 justify-end">
                       <button type="button" className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700" onClick={handleSaveEditExamQuestion}>حفظ التعديل</button>
                       <button type="button" className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500" onClick={handleCancelEditExamQuestion}>إلغاء</button>
                     </div>
                   ) : (
-                    <button type="button" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700" onClick={handleAddQuestion} disabled={!newQuestion.question.trim() || newQuestion.options.some(opt => !opt.trim())}>
+                    <button type="button" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700" onClick={handleAddQuestion} disabled={!newQuestion.question.trim() || newQuestion.options.slice(0, newQuestion.numberOfOptions).some(opt => !opt.trim())}>
                       إضافة السؤال
                     </button>
                   )}
@@ -780,23 +1017,28 @@ const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
                 {/* Questions List */}
                 {newExam.questions.length > 0 && (
                   <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                    <h3 className="font-medium text-gray-900 dark:text-white mb-3">الأسئلة المضافة ({newExam.questions.length})</h3>
+                    <h3 className="font-medium text-gray-900 dark:text-white mb-3 text-right">الأسئلة المضافة ({newExam.questions.length})</h3>
                     <div className="space-y-3">
                       {newExam.questions.map((question, idx) => (
                         <div key={idx} className="bg-white dark:bg-gray-600 rounded p-3">
                           <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <p className="font-medium text-gray-900 dark:text-white">{question.question}</p>
+                            <div className="flex-1 text-right">
+                              <p className="font-medium text-gray-900 dark:text-white">
+                                <span className="text-blue-600 font-bold">السؤال {getArabicOrdinalNumber(idx + 1)}:</span> {question.question}
+                              </p>
                               {question.image && <img src={generateImageUrl(question.image)} alt="Question" className="w-20 h-20 object-cover rounded mt-2" />}
                               <div className="mt-2 space-y-1">
-                                {question.options.map((option, optIdx) => (
+                                {question.options.slice(0, question.numberOfOptions || 4).map((option, optIdx) => (
                                   <div key={optIdx} className={`text-sm ${optIdx === question.correctAnswer ? 'text-green-600 font-bold' : 'text-gray-600 dark:text-gray-300'}`}>
                                     {optIdx + 1}. {option} {optIdx === question.correctAnswer && '(إجابة صحيحة)'}
                                   </div>
                                 ))}
+                                <div className="text-xs text-blue-600 mt-1">
+                                  عدد الخيارات: {question.numberOfOptions || 4}
+                                </div>
                               </div>
                             </div>
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 mr-3">
                               <button type="button" className="text-blue-500 hover:text-blue-700 text-sm" onClick={() => handleEditExamQuestion(idx)}>تعديل</button>
                               <button type="button" className="text-red-500 hover:text-red-700 text-sm" onClick={() => handleRemoveQuestion(idx)}>حذف</button>
                             </div>
@@ -823,15 +1065,15 @@ const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
 
                 {/* Existing Exams */}
                 <div className="mt-6">
-                  <h3 className="font-medium text-gray-900 dark:text-white mb-3">الامتحانات المضافة</h3>
+                  <h3 className="font-medium text-gray-900 dark:text-white mb-3 text-right">الامتحانات المضافة</h3>
                   {exams.length === 0 ? (
-                    <div className="text-gray-400 text-sm">لا توجد امتحانات مضافة</div>
+                    <div className="text-gray-400 text-sm text-right">لا توجد امتحانات مضافة</div>
                   ) : (
                     <div className="space-y-3">
                       {exams.map((exam, idx) => (
                         <div key={idx} className="bg-gray-50 dark:bg-gray-700 rounded p-4">
                           <div className="flex items-start justify-between">
-                            <div className="flex-1">
+                            <div className="flex-1 text-right">
                               <h4 className="font-medium text-gray-900 dark:text-white">{exam.title}</h4>
                               {exam.description && <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{exam.description}</p>}
                               <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
@@ -839,12 +1081,48 @@ const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
                                 <div>تاريخ الإغلاق: {formatDateTime(exam.closeDate)}</div>
                                 <div>عدد الأسئلة: {exam.questions?.length || 0}</div>
                               </div>
+                              <button 
+                                onClick={() => toggleExamExpanded(idx)}
+                                className="text-blue-600 hover:text-blue-800 text-sm mt-2 flex items-center gap-1"
+                              >
+                                {expandedExams.has(idx) ? 'إخفاء الأسئلة' : 'عرض الأسئلة'}
+                                <span>{expandedExams.has(idx) ? '▼' : '▶'}</span>
+                              </button>
                             </div>
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 mr-3">
                               <button type="button" className="text-blue-500 hover:text-blue-700 text-sm" onClick={() => handleEditExam(idx)}>تعديل</button>
                               <button type="button" className="text-red-500 hover:text-red-700 text-sm" onClick={() => handleRemoveExam(idx)}>حذف</button>
                             </div>
                           </div>
+                          
+                          {/* Expandable Questions Section */}
+                          {expandedExams.has(idx) && exam.questions && exam.questions.length > 0 && (
+                            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                              <h5 className="font-medium text-gray-900 dark:text-white mb-3 text-right">الأسئلة:</h5>
+                              <div className="space-y-3">
+                                {exam.questions.map((question, qIdx) => (
+                                  <div key={qIdx} className="bg-white dark:bg-gray-600 rounded p-3">
+                                    <div className="text-right">
+                                      <p className="font-medium text-gray-900 dark:text-white mb-2">
+                                        <span className="text-blue-600 font-bold">السؤال {getArabicOrdinalNumber(qIdx + 1)}:</span> {question.question}
+                                      </p>
+                                      {question.image && <img src={generateImageUrl(question.image)} alt="Question" className="w-20 h-20 object-cover rounded mb-2" />}
+                                      <div className="space-y-1">
+                                        {question.options.slice(0, question.numberOfOptions || 4).map((option, optIdx) => (
+                                          <div key={optIdx} className={`text-sm ${optIdx === question.correctAnswer ? 'text-green-600 font-bold' : 'text-gray-600 dark:text-gray-300'}`}>
+                                            {optIdx + 1}. {option} {optIdx === question.correctAnswer && '(إجابة صحيحة)'}
+                                          </div>
+                                        ))}
+                                        <div className="text-xs text-blue-600 mt-1">
+                                          عدد الخيارات: {question.numberOfOptions || 4}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -864,7 +1142,7 @@ const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
         {tab === 'trainings' && (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <div className="font-semibold text-gray-900 dark:text-white mb-4">إضافة تدريب جديد</div>
+              <div className="font-semibold text-gray-900 dark:text-white text-right mb-4">إضافة تدريب جديد</div>
               <button 
                 onClick={() => toggleSection('trainings')}
                 className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
@@ -877,27 +1155,27 @@ const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
               <>
                 {/* Training Details */}
                 <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 space-y-4">
-                  <h3 className="font-medium text-gray-900 dark:text-white">تفاصيل التدريب</h3>
+                  <h3 className="font-medium text-gray-900 dark:text-white text-right">تفاصيل التدريب</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input type="text" className="p-2 border rounded" placeholder="عنوان التدريب *" value={newTraining.title} onChange={e => setNewTraining(t => ({ ...t, title: e.target.value }))} />
-                    <input type="text" className="p-2 border rounded" placeholder="وصف التدريب (اختياري)" value={newTraining.description} onChange={e => setNewTraining(t => ({ ...t, description: e.target.value }))} />
+                    <input type="text" className="p-2 border rounded text-right" placeholder="عنوان التدريب *" value={newTraining.title} onChange={e => setNewTraining(t => ({ ...t, title: e.target.value }))} />
+                    <input type="text" className="p-2 border rounded text-right" placeholder="وصف التدريب (اختياري)" value={newTraining.description} onChange={e => setNewTraining(t => ({ ...t, description: e.target.value }))} />
                     <div className="flex items-center gap-2">
-                      <input type="number" className="p-2 border rounded flex-1" placeholder="المدة بالدقائق" min="1" max="300" value={newTraining.timeLimit} onChange={e => setNewTraining(t => ({ ...t, timeLimit: parseInt(e.target.value) || 30 }))} />
+                      <input type="number" className="p-2 border rounded flex-1 text-right" placeholder="المدة بالدقائق" min="1" max="300" value={newTraining.timeLimit} onChange={e => setNewTraining(t => ({ ...t, timeLimit: parseInt(e.target.value) || 30 }))} />
                       <span className="text-sm text-gray-600">دقيقة</span>
                     </div>
-                    <input type="datetime-local" className="p-2 border rounded" placeholder="تاريخ ووقت الفتح" value={newTraining.openDate} onChange={e => setNewTraining(t => ({ ...t, openDate: e.target.value }))} />
+                    <input type="datetime-local" className="p-2 border rounded text-right" placeholder="تاريخ ووقت الفتح" value={newTraining.openDate} onChange={e => setNewTraining(t => ({ ...t, openDate: e.target.value }))} />
                   </div>
                 </div>
 
                 {/* Add Training Question */}
                 <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 space-y-4">
-                  <h3 className="font-medium text-gray-900 dark:text-white">إضافة سؤال جديد</h3>
-                  <textarea className="w-full p-2 border rounded" placeholder="نص السؤال *" value={newTrainingQuestion.question} onChange={e => setNewTrainingQuestion(q => ({ ...q, question: e.target.value }))} rows="3" />
+                  <h3 className="font-medium text-gray-900 dark:text-white text-right">إضافة سؤال جديد</h3>
+                  <textarea className="w-full p-2 border rounded text-right" placeholder="نص السؤال *" value={newTrainingQuestion.question} onChange={e => setNewTrainingQuestion(q => ({ ...q, question: e.target.value }))} rows="3" />
                   
                   {/* Question Image */}
                   <div className="flex items-center gap-2">
                     <input type="file" accept="image/*" onChange={handleTrainingQuestionImageChange} disabled={uploading} />
-                    {uploading && <span className="text-blue-600 text-xs">جاري رفع الصورة...</span>}
+                    {uploading && <span className="text-blue-600 text-xs text-right">جاري رفع الصورة...</span>}
                     {newTrainingQuestion.image && (
                       <div className="flex items-center gap-2">
                         <img src={generateImageUrl(newTrainingQuestion.image)} alt="Question" className="w-16 h-16 object-cover rounded" />
@@ -906,13 +1184,40 @@ const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
                     )}
                   </div>
 
+                  {/* Number of Options Selection */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-right">عدد الخيارات:</label>
+                    <div className="flex gap-4 text-right">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="trainingNumberOfOptions"
+                          value="2"
+                          checked={newTrainingQuestion.numberOfOptions === 2}
+                          onChange={(e) => handleTrainingQuestionOptionsChange(parseInt(e.target.value))}
+                        />
+                        <span>خياران</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="trainingNumberOfOptions"
+                          value="4"
+                          checked={newTrainingQuestion.numberOfOptions === 4}
+                          onChange={(e) => handleTrainingQuestionOptionsChange(parseInt(e.target.value))}
+                        />
+                        <span>4 خيارات</span>
+                      </label>
+                    </div>
+                  </div>
+
                   {/* Options */}
                   <div className="space-y-2">
-                    <label className="block text-sm font-medium">الخيارات:</label>
-                    {newTrainingQuestion.options.map((option, idx) => (
+                    <label className="block text-sm font-medium text-right">الخيارات:</label>
+                    {newTrainingQuestion.options.slice(0, newTrainingQuestion.numberOfOptions).map((option, idx) => (
                       <div key={idx} className="flex items-center gap-2">
                         <input type="radio" name="correctTrainingAnswer" checked={newTrainingQuestion.correctAnswer === idx} onChange={() => setNewTrainingQuestion(q => ({ ...q, correctAnswer: idx }))} />
-                        <input type="text" className="flex-1 p-2 border rounded" placeholder={`الخيار ${idx + 1} *`} value={option} onChange={e => {
+                        <input type="text" className="flex-1 p-2 border rounded text-right" placeholder={`الخيار ${idx + 1} *`} value={option} onChange={e => {
                           const newOptions = [...newTrainingQuestion.options];
                           newOptions[idx] = e.target.value;
                           setNewTrainingQuestion(q => ({ ...q, options: newOptions }));
@@ -922,12 +1227,12 @@ const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
                   </div>
                   
                   {editTrainingQuestionIndex !== null ? (
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 justify-end">
                       <button type="button" className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700" onClick={handleSaveEditTrainingQuestion}>حفظ التعديل</button>
                       <button type="button" className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500" onClick={handleCancelEditTrainingQuestion}>إلغاء</button>
                     </div>
                   ) : (
-                    <button type="button" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700" onClick={handleAddTrainingQuestion} disabled={!newTrainingQuestion.question.trim() || newTrainingQuestion.options.some(opt => !opt.trim())}>
+                    <button type="button" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700" onClick={handleAddTrainingQuestion} disabled={!newTrainingQuestion.question.trim() || newTrainingQuestion.options.slice(0, newTrainingQuestion.numberOfOptions).some(opt => !opt.trim())}>
                       إضافة السؤال
                     </button>
                   )}
@@ -936,23 +1241,28 @@ const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
                 {/* Questions List */}
                 {newTraining.questions.length > 0 && (
                   <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                    <h3 className="font-medium text-gray-900 dark:text-white mb-3">الأسئلة المضافة ({newTraining.questions.length})</h3>
+                    <h3 className="font-medium text-gray-900 dark:text-white mb-3 text-right">الأسئلة المضافة ({newTraining.questions.length})</h3>
                     <div className="space-y-3">
                       {newTraining.questions.map((question, idx) => (
                         <div key={idx} className="bg-white dark:bg-gray-600 rounded p-3">
                           <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <p className="font-medium text-gray-900 dark:text-white">{question.question}</p>
+                            <div className="flex-1 text-right">
+                              <p className="font-medium text-gray-900 dark:text-white">
+                                <span className="text-blue-600 font-bold">السؤال {getArabicOrdinalNumber(idx + 1)}:</span> {question.question}
+                              </p>
                               {question.image && <img src={generateImageUrl(question.image)} alt="Question" className="w-20 h-20 object-cover rounded mt-2" />}
                               <div className="mt-2 space-y-1">
-                                {question.options.map((option, optIdx) => (
+                                {question.options.slice(0, question.numberOfOptions || 4).map((option, optIdx) => (
                                   <div key={optIdx} className={`text-sm ${optIdx === question.correctAnswer ? 'text-green-600 font-bold' : 'text-gray-600 dark:text-gray-300'}`}>
                                     {optIdx + 1}. {option} {optIdx === question.correctAnswer && '(إجابة صحيحة)'}
                                   </div>
                                 ))}
+                                <div className="text-xs text-blue-600 mt-1">
+                                  عدد الخيارات: {question.numberOfOptions || 4}
+                                </div>
                               </div>
                             </div>
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 mr-3">
                               <button type="button" className="text-blue-500 hover:text-blue-700 text-sm" onClick={() => handleEditTrainingQuestion(idx)}>تعديل</button>
                               <button type="button" className="text-red-500 hover:text-red-700 text-sm" onClick={() => handleRemoveTrainingQuestion(idx)}>حذف</button>
                             </div>
@@ -979,27 +1289,63 @@ const LessonContentModal = ({ courseId, unitId, lessonId, onClose }) => {
 
                 {/* Existing Trainings */}
                 <div className="mt-6">
-                  <h3 className="font-medium text-gray-900 dark:text-white mb-3">التدريبات المضافة</h3>
+                  <h3 className="font-medium text-gray-900 dark:text-white mb-3 text-right">التدريبات المضافة</h3>
                   {trainings.length === 0 ? (
-                    <div className="text-gray-400 text-sm">لا توجد تدريبات مضافة</div>
+                    <div className="text-gray-400 text-sm text-right">لا توجد تدريبات مضافة</div>
                   ) : (
                     <div className="space-y-3">
                       {trainings.map((training, idx) => (
                         <div key={idx} className="bg-gray-50 dark:bg-gray-700 rounded p-4">
                           <div className="flex items-start justify-between">
-                            <div className="flex-1">
+                            <div className="flex-1 text-right">
                               <h4 className="font-medium text-gray-900 dark:text-white">{training.title}</h4>
                               {training.description && <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{training.description}</p>}
                               <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                                 <div>تاريخ الفتح: {formatDateTime(training.openDate)}</div>
                                 <div>عدد الأسئلة: {training.questions?.length || 0}</div>
                               </div>
+                              <button 
+                                onClick={() => toggleTrainingExpanded(idx)}
+                                className="text-blue-600 hover:text-blue-800 text-sm mt-2 flex items-center gap-1"
+                              >
+                                {expandedTrainings.has(idx) ? 'إخفاء الأسئلة' : 'عرض الأسئلة'}
+                                <span>{expandedTrainings.has(idx) ? '▼' : '▶'}</span>
+                              </button>
                             </div>
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 mr-3">
                               <button type="button" className="text-blue-500 hover:text-blue-700 text-sm" onClick={() => handleEditTraining(idx)}>تعديل</button>
                               <button type="button" className="text-red-500 hover:text-red-700 text-sm" onClick={() => handleRemoveTraining(idx)}>حذف</button>
                             </div>
                           </div>
+                          
+                          {/* Expandable Questions Section */}
+                          {expandedTrainings.has(idx) && training.questions && training.questions.length > 0 && (
+                            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                              <h5 className="font-medium text-gray-900 dark:text-white mb-3 text-right">الأسئلة:</h5>
+                              <div className="space-y-3">
+                                {training.questions.map((question, qIdx) => (
+                                  <div key={qIdx} className="bg-white dark:bg-gray-600 rounded p-3">
+                                    <div className="text-right">
+                                      <p className="font-medium text-gray-900 dark:text-white mb-2">
+                                        <span className="text-blue-600 font-bold">السؤال {getArabicOrdinalNumber(qIdx + 1)}:</span> {question.question}
+                                      </p>
+                                      {question.image && <img src={generateImageUrl(question.image)} alt="Question" className="w-20 h-20 object-cover rounded mb-2" />}
+                                      <div className="space-y-1">
+                                        {question.options.slice(0, question.numberOfOptions || 4).map((option, optIdx) => (
+                                          <div key={optIdx} className={`text-sm ${optIdx === question.correctAnswer ? 'text-green-600 font-bold' : 'text-gray-600 dark:text-gray-300'}`}>
+                                            {optIdx + 1}. {option} {optIdx === question.correctAnswer && '(إجابة صحيحة)'}
+                                          </div>
+                                        ))}
+                                        <div className="text-xs text-blue-600 mt-1">
+                                          عدد الخيارات: {question.numberOfOptions || 4}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -1048,7 +1394,7 @@ const CourseContentManager = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex flex-col md:flex-row">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-orange-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex flex-col md:flex-row" dir="rtl">
         {/* Sidebar: Course List */}
         <div className="w-full md:w-1/3 lg:w-1/4 bg-white dark:bg-gray-900 border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-800 p-3 md:p-4 flex flex-col">
           <div className="mb-4 flex flex-col gap-2">
@@ -1059,14 +1405,14 @@ const CourseContentManager = () => {
                 placeholder="بحث عن دورة..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm md:text-base"
+                className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm md:text-base text-right"
               />
             </div>
             <div className="flex gap-2 flex-col sm:flex-row">
               <select
                 value={stageFilter}
                 onChange={e => setStageFilter(e.target.value)}
-                className="w-full sm:w-1/2 p-2 rounded-md border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm md:text-base"
+                className="w-full sm:w-1/2 p-2 rounded-md border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm md:text-base text-right"
               >
                 <option value="">كل المراحل</option>
                 {stages?.map(stage => (
@@ -1076,7 +1422,7 @@ const CourseContentManager = () => {
               <select
                 value={subjectFilter}
                 onChange={e => setSubjectFilter(e.target.value)}
-                className="w-full sm:w-1/2 p-2 rounded-md border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm md:text-base"
+                className="w-full sm:w-1/2 p-2 rounded-md border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm md:text-base text-right"
               >
                 <option value="">كل المواد</option>
                 {subjects?.map(subject => (
@@ -1103,7 +1449,7 @@ const CourseContentManager = () => {
                   }}
                 >
                   <FaBook className="text-blue-500 text-lg" />
-                  <div className="flex-1 min-w-0">
+                  <div className="flex-1 min-w-0 text-right">
                     <div className="font-bold text-gray-900 dark:text-white truncate text-sm md:text-base">{course.title}</div>
                     <div className="text-xs text-gray-500 dark:text-gray-400 truncate">{course.stage?.name}</div>
                   </div>
@@ -1128,16 +1474,16 @@ const CourseContentManager = () => {
 
                {/* درس */}
                {selectedCourse.directLessons?.length > 0 && (
-                <div className="bg-purple-50 dark:bg-purple-900/20 rounded-xl shadow p-3 md:p-4">
-                  <div className="font-semibold text-purple-700 dark:text-purple-300 mb-2 flex items-center gap-2">
-                    <FaBookOpen className="text-purple-500" />
+                <div className="bg-orange-50 dark:bg-orange-900/20 rounded-xl shadow p-3 md:p-4">
+                  <div className="font-semibold text-orange-700 dark:text-orange-300 mb-2 flex items-center gap-2 text-right">
+                    <FaBookOpen className="text-orange-500" />
                     مقدمة
                   </div>
                   {selectedCourse.directLessons.map(lesson => (
                     <div key={lesson._id} className="flex items-center justify-between bg-white dark:bg-gray-600 rounded p-2 mb-2">
-                      <div>
+                      <div className="text-right">
                         <span className="font-medium text-gray-900 dark:text-white text-sm md:text-base">{lesson.title}</span>
-                        <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">{lesson.price ? `سعر الدرس: ${lesson.price}` : 'بدون سعر'}</span>
+                        <span className="mr-2 text-xs text-gray-500 dark:text-gray-400">{lesson.price ? `سعر الدرس: ${lesson.price}` : 'بدون سعر'}</span>
                       </div>
                       <button
                         className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-xs flex items-center gap-1 transition-colors"
@@ -1161,7 +1507,7 @@ const CourseContentManager = () => {
                     className="flex items-center justify-between cursor-pointer"
                     onClick={() => setExpandedUnit(expandedUnit === unit._id ? null : unit._id)}
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 text-right">
                       <FaBookOpen className="text-blue-500" />
                       <span className="font-semibold text-gray-900 dark:text-white text-sm md:text-base">{unit.title}</span>
                       <span className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 px-2 py-0.5 rounded-full">{unit.price ? `سعر الوحدة: ${unit.price}` : 'بدون سعر'}</span>
@@ -1171,13 +1517,13 @@ const CourseContentManager = () => {
                   {expandedUnit === unit._id && (
                     <div className="mt-2 md:mt-4 space-y-2">
                       {unit.lessons?.length === 0 ? (
-                        <div className="text-gray-400 text-xs md:text-sm">لا توجد دروس في هذه الوحدة</div>
+                        <div className="text-gray-400 text-xs md:text-sm text-right">لا توجد دروس في هذه الوحدة</div>
                       ) : (
                         unit.lessons.map(lesson => (
                           <div key={lesson._id} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 rounded p-2">
-                            <div>
+                            <div className="text-right">
                               <span className="font-medium text-gray-900 dark:text-white text-sm md:text-base">{lesson.title}</span>
-                              <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">{lesson.price ? `سعر الدرس: ${lesson.price}` : 'بدون سعر'}</span>
+                              <span className="mr-2 text-xs text-gray-500 dark:text-gray-400">{lesson.price ? `سعر الدرس: ${lesson.price}` : 'بدون سعر'}</span>
                             </div>
                             <button
                               className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-xs flex items-center gap-1 transition-colors"

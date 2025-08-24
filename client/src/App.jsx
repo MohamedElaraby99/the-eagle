@@ -55,6 +55,7 @@ import ExamResultsDashboard from "./Pages/Dashboard/ExamResultsDashboard";
 import LiveMeetings from "./Pages/User/LiveMeetings";
 import ExamHistory from "./Pages/User/ExamHistory";
 import AdminCourseAccessCodes from "./Pages/Dashboard/AdminCourseAccessCodes";
+import ExamSearchDashboard from "./Pages/Dashboard/ExamSearchDashboard";
 
 function App() {
   // Auto scroll to top on route change
@@ -70,16 +71,9 @@ function App() {
         <Route path="/terms" element={<TermsOfService />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/wallet" element={<Wallet />} />
-        <Route path="/admin/recharge-codes" element={<AdminRechargeCodeDashboard />} />
-        <Route path="/admin/users" element={<AdminUserDashboard />} />
-        <Route path="/admin/instructors" element={<InstructorDashboard />} />
-        <Route path="/admin/stages" element={<StageDashboard />} />
-
-        <Route path="/admin/whatsapp-services" element={<WhatsAppServiceDashboard />} />
         <Route path="/whatsapp-services" element={<WhatsAppServices />} />
         <Route path="/instructors" element={<Instructors />} />
         <Route path="/instructors/:id" element={<InstructorDetail />} />
-        <Route path="/admin/course-content" element={<CourseContentManager />} />
 
         <Route path="/signup" element={<RedirectIfAuthenticated><Signup /></RedirectIfAuthenticated>} />
         <Route path="/login" element={<RedirectIfAuthenticated><Login /></RedirectIfAuthenticated>} />
@@ -103,9 +97,16 @@ function App() {
         <Route path="/courses" element={<CoursesPage />} />
         <Route path="/courses/:id" element={<CourseDetail />} />
 
-                  <Route element={<RequireAuth allowedRoles={["ADMIN"]} />}>
+                  <Route element={<RequireAuth allowedRoles={["ADMIN", "SUPER_ADMIN"]} />}>
                     <Route path="/exam-history" element={<ExamHistory />} />
+                    <Route path="/admin" element={<AdminDashboard />} />
                     <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                    <Route path="/admin/recharge-codes" element={<AdminRechargeCodeDashboard />} />
+                    <Route path="/admin/users" element={<AdminUserDashboard />} />
+                    <Route path="/admin/instructors" element={<InstructorDashboard />} />
+                    <Route path="/admin/stages" element={<StageDashboard />} />
+                    <Route path="/admin/whatsapp-services" element={<WhatsAppServiceDashboard />} />
+                    <Route path="/admin/course-content" element={<CourseContentManager />} />
                     <Route path="/admin/course-dashboard" element={<CourseDashboard />} />
                     <Route path="/admin/blog-dashboard" element={<BlogDashboard />} />
                     <Route path="/admin/qa-dashboard" element={<QADashboard />} />
@@ -115,10 +116,11 @@ function App() {
                     <Route path="/admin/device-management" element={<DeviceManagementDashboard />} />
                     <Route path="/admin/live-meetings" element={<LiveMeetingDashboard />} />
                     <Route path="/admin/exam-results" element={<ExamResultsDashboard />} />
+                    <Route path="/admin/exam-search" element={<ExamSearchDashboard />} />
                     <Route path="/admin/course-access-codes" element={<AdminCourseAccessCodes />} />
                   </Route>
 
-        <Route element={<RequireAuth allowedRoles={["USER", "ADMIN"]} />}>
+        <Route element={<RequireAuth allowedRoles={["USER", "ADMIN", "SUPER_ADMIN"]} />}>
           <Route path="/user/profile" element={<Profile />} />
           <Route
             path="/user/profile/change-password"

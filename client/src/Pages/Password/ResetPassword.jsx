@@ -42,7 +42,7 @@ export default function ResetPassword() {
           noValidate
           className="flex flex-col dark:bg-base-100 gap-4 rounded-lg md:py-5 py-7 md:px-7 px-3 md:w-[500px] w-full shadow-custom dark:shadow-xl  "
         >
-          <h1 className="text-center dark:text-purple-500 text-4xl font-bold font-inter">
+          <h1 className="text-center dark:text-orange-500 text-4xl font-bold font-inter">
             Reset Password Page
           </h1>
 

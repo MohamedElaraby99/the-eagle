@@ -16,7 +16,7 @@ const NewsletterSection = () => {
   };
 
   return (
-    <section className="py-20 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800">
+    <section className="py-20 bg-gradient-to-r from-blue-600 via-orange-600 to-blue-800">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <div className="relative">
           {/* Floating elements */}

@@ -24,10 +24,10 @@ router.get('/simple-test', (req, res) => {
 });
 
 // Payment statistics (Admin only)
-router.get('/stats', isLoggedIn, authorisedRoles('ADMIN'), getPaymentStats);
+router.get('/stats', isLoggedIn, authorisedRoles('ADMIN', 'SUPER_ADMIN'), getPaymentStats);
 
 // Course purchase simulation (Admin only)
-router.post('/simulate-course-purchase', isLoggedIn, authorisedRoles('ADMIN'), simulateCoursePurchase);
+router.post('/simulate-course-purchase', isLoggedIn, authorisedRoles('ADMIN', 'SUPER_ADMIN'), simulateCoursePurchase);
 
 // Record course purchase
 router.post('/record-course-purchase', isLoggedIn, recordCoursePurchase);

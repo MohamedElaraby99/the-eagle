@@ -41,6 +41,12 @@ const authorisedRoles = (...roles) => async (req, res, next) => {
     console.log('URL:', req.url);
     console.log('Method:', req.method);
     
+    // SUPER_ADMIN has access to all admin routes
+    if (currentUserRoles === 'SUPER_ADMIN') {
+        console.log('ACCESS GRANTED: User is SUPER_ADMIN');
+        return next();
+    }
+    
     if (!roles.includes(currentUserRoles)) {
         console.log('ACCESS DENIED: User role not in required roles');
         return next(new AppError("You do not have permission to access this routes", 403))
@@ -68,7 +74,7 @@ const authorizeSubscriber = async (req, res, next) => {
     console.log('User subscription object:', user.subscription);
     
     // For now, allow all logged-in users to access courses (temporary fix)
-    if (role !== 'ADMIN' && subscriptionStatus !== 'active') {
+    if (!['ADMIN', 'SUPER_ADMIN'].includes(role) && subscriptionStatus !== 'active') {
         console.log('ACCESS DENIED: User needs subscription, but allowing access for now');
         // return next(
         //     new AppError('Please subscribce to access this route!', 403)
@@ -90,7 +96,7 @@ const checkDeviceAuthorization = async (req, res, next) => {
     }
 
     // Skip device check for admin users
-    if (req.user && req.user.role === 'ADMIN') {
+    if (req.user && ['ADMIN', 'SUPER_ADMIN'].includes(req.user.role)) {
         console.log('Skipping device check for admin user');
         return next();
     }
@@ -141,7 +147,7 @@ const checkDeviceAuthorization = async (req, res, next) => {
 
 // Admin role check middleware
 const requireAdmin = async (req, res, next) => {
-    if (req.user.role !== 'ADMIN') {
+    if (!['ADMIN', 'SUPER_ADMIN'].includes(req.user.role)) {
         return next(new AppError("Access denied. Admin role required.", 403));
     }
     next();

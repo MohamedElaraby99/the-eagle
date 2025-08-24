@@ -285,8 +285,8 @@ const GradeDashboard = () => {
 
             <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
               <div className="flex items-center">
-                <div className="p-3 bg-purple-100 dark:bg-purple-900 rounded-lg">
-                  <FaBook className="text-purple-600 dark:text-purple-400 text-xl" />
+                <div className="p-3 bg-orange-100 dark:bg-orange-900 rounded-lg">
+                  <FaBook className="text-orange-600 dark:text-orange-400 text-xl" />
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Subjects</p>

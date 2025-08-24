@@ -218,7 +218,7 @@ const TakeExamModal = ({
           <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             <div className="flex items-center gap-1 sm:gap-2">
               {examType === 'training' ? (
-                <FaClipboardCheck className="text-lg sm:text-2xl text-purple-500 flex-shrink-0" />
+                <FaClipboardCheck className="text-lg sm:text-2xl text-orange-500 flex-shrink-0" />
               ) : (
                 <FaGraduationCap className="text-lg sm:text-2xl text-red-500 flex-shrink-0" />
               )}
@@ -316,7 +316,7 @@ const TakeExamModal = ({
                 
                 <button
                   onClick={startExam}
-                  className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-200"
+                  className="w-full bg-gradient-to-r from-blue-500 to-orange-600 text-white py-3 rounded-lg hover:from-blue-600 hover:to-orange-700 transition-all duration-200"
                 >
                   Start {examType === 'training' ? 'Training' : 'Final'} Exam
                 </button>
@@ -443,7 +443,7 @@ const TakeExamModal = ({
                             Question {index + 1}: {question.question}
                           </p>
                           <div className="space-y-1">
-                            {question.options.map((option, optionIndex) => (
+                            {question.options.slice(0, question.numberOfOptions || 4).map((option, optionIndex) => (
                               <div
                                 key={optionIndex}
                                 className={`p-2 rounded ${

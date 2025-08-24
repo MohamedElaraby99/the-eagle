@@ -38,6 +38,14 @@ const userDeviceSchema = new Schema({
     loginCount: {
         type: Number,
         default: 1
+    },
+    deactivatedAt: {
+        type: Date,
+        default: null
+    },
+    deactivationReason: {
+        type: String,
+        default: null
     }
 }, { 
     timestamps: true 
