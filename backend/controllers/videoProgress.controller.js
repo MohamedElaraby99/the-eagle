@@ -218,7 +218,7 @@ const getVideoProgressForAllUsers = async (req, res, next) => {
     const { role } = req.user;
 
     // Only admins can see all users' progress
-    if (role !== 'ADMIN') {
+    if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') {
       return next(new AppError("Unauthorized access", 403));
     }
 
@@ -274,7 +274,7 @@ const resetVideoProgress = async (req, res, next) => {
     }
 
     // Only allow reset if user owns the progress or is admin
-    if (progress.userId.toString() !== userId && role !== 'ADMIN') {
+    if (progress.userId.toString() !== userId && role !== 'ADMIN' && role !== 'SUPER_ADMIN') {
       return next(new AppError("Unauthorized access", 403));
     }
 
@@ -309,7 +309,7 @@ const getUserVideoTracking = async (req, res, next) => {
     const requestingUserRole = req.user.role;
     
     // 🔒 SECURITY: Only allow users to see their own data or admins to see any data
-    if (userId !== requestingUserId.toString() && requestingUserRole !== 'ADMIN') {
+    if (userId !== requestingUserId.toString() && requestingUserRole !== 'ADMIN' && requestingUserRole !== 'SUPER_ADMIN') {
       return next(new AppError("Unauthorized access to user tracking data", 403));
     }
     

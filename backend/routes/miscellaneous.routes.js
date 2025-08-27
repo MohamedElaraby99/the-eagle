@@ -44,4 +44,42 @@ router.post('/upload/image', upload.single('image'), (req, res) => {
   return res.status(200).json({ success: true, url: fileUrl, fileName: req.file.filename });
 });
 
+// Generic file upload endpoint (supports pdf, doc, docx, images)
+router.post('/upload/file', upload.single('file'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ success: false, message: 'No file uploaded' });
+  }
+
+  try {
+    const ext = path.extname(req.file.originalname).toLowerCase();
+    const isImage = req.file.mimetype?.startsWith('image/');
+    const isPdf = ext === '.pdf' || req.file.mimetype === 'application/pdf';
+    const isDoc = ext === '.doc' || ext === '.docx' || req.file.mimetype?.includes('word');
+
+    let subfolder = 'files';
+    if (isImage) subfolder = 'images';
+    else if (isPdf) subfolder = 'pdfs';
+    else if (isDoc) subfolder = 'files';
+
+    const uploadsDir = path.join('uploads', subfolder);
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+    const destPath = path.join(uploadsDir, req.file.filename);
+    fs.renameSync(req.file.path, destPath);
+
+    const fileUrl = `/uploads/${subfolder}/${req.file.filename}`;
+    return res.status(200).json({ 
+      success: true, 
+      url: fileUrl, 
+      fileName: req.file.originalname || req.file.filename,
+      storedName: req.file.filename,
+      mimeType: req.file.mimetype,
+      subfolder
+    });
+  } catch (e) {
+    return res.status(500).json({ success: false, message: 'Failed to save file', error: e.message });
+  }
+});
+
 export default router;

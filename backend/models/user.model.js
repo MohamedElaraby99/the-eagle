@@ -24,10 +24,15 @@ const userSchema = new Schema({
     },
     email: {
         type: String,
-        required: [true, 'email is required'],
+        required: function() {
+            return ['ADMIN', 'SUPER_ADMIN'].includes(this.role);
+        },
         lowercase: true,
         trim: true,
-        unique: true
+        unique: function() {
+            return this.email; // Only unique if email is provided
+        },
+        sparse: true
     },
     password: {
         type: String,
@@ -38,8 +43,12 @@ const userSchema = new Schema({
     phoneNumber: {
         type: String,
         required: function() {
-            return !['ADMIN', 'SUPER_ADMIN'].includes(this.role);
+            return this.role === 'USER';
         },
+        unique: function() {
+            return this.role === 'USER';
+        },
+        sparse: true,
         trim: true
     },
     fatherPhoneNumber: {
@@ -87,6 +96,11 @@ const userSchema = new Schema({
         type: [String],
         default: [],
         enum: ['CREATE_ADMIN', 'DELETE_ADMIN', 'MANAGE_USERS', 'MANAGE_COURSES', 'MANAGE_PAYMENTS', 'VIEW_ANALYTICS']
+    },
+    code: {
+        type: String,
+        trim: true,
+        default: null
     },
     isActive: {
         type: Boolean,
@@ -157,8 +171,21 @@ userSchema.pre('save', async function (next) {
 
 userSchema.methods = {
     generateJWTToken: function () {
+        const payload = {
+            id: this._id,
+            role: this.role
+        };
+        
+        // Include email for ADMIN/SUPER_ADMIN, phone number for USER
+        if (this.role === 'USER') {
+            payload.phoneNumber = this.phoneNumber;
+            if (this.email) payload.email = this.email; // Include email if available
+        } else {
+            payload.email = this.email;
+        }
+        
         return jwt.sign(
-            { id: this._id, email: this.email, role: this.role },
+            payload,
             process.env.JWT_SECRET,
             { expiresIn: process.env.JWT_EXPIRE }
         )

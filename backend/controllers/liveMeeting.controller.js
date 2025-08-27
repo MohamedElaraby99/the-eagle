@@ -298,7 +298,7 @@ export const getLiveMeeting = asyncHandler(async (req, res, next) => {
   }
 
   // Check if user has access to this meeting
-  if (userRole !== 'ADMIN') {
+  if (userRole !== 'ADMIN' && userRole !== 'SUPER_ADMIN') {
     const isAttendee = liveMeeting.isUserAttendee(userId);
     const isInstructor = liveMeeting.instructor._id.toString() === userId.toString();
     
