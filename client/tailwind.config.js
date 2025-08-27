@@ -14,6 +14,8 @@ export default {
         'roboto': ['Roboto', 'sans-serif'],
         'oi': ['Oi', 'serif'],
         'marhey': ['Marhey', 'sans-serif'],
+        'cairo': ['Cairo', 'sans-serif'],
+        'sans': ['Cairo', 'system-ui', 'sans-serif'],
       },
       colors: {
         'input-bg': '#ffffff',
@@ -26,6 +28,13 @@ export default {
         'marhey-medium': '500',
         'marhey-semibold': '600',
         'marhey-bold': '700',
+        'cairo-light': '300',
+        'cairo-regular': '400',
+        'cairo-medium': '500',
+        'cairo-semibold': '600',
+        'cairo-bold': '700',
+        'cairo-extrabold': '800',
+        'cairo-black': '900',
       }
     },
   },

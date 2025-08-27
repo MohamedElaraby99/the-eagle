@@ -36,7 +36,7 @@ export default function Footer() {
         <div className="flex gap-5 items-center">
              
           <a
-            href="https://www.facebook.com/people/Fikra-Software-%D9%81%D9%83%D8%B1%D8%A9/61572824761047/?rdid=nlovUeabJT3GGFPg&share_url=https%3A%2F%2Fwww.facebook.com%2Fshare%2F1AN2gA2bMq%2F"
+            href="https://www.facebook.com/people/Fikra-Software-%D9%81%D9%83%D8%B1%D8%A9/61572824761047/?rdid=biNLEhMQ1dj1y9E9&share_url=https%3A%2F%2Fwww.facebook.com%2Fshare%2F1AN2gA2bMq%2F"
             target="_blank"
             rel="noopener noreferrer"
             className="md:text-3xl text-xl text-gray-900 dark:text-slate-50 hover:text-gray-500 dark:hover:text-slate-300 transition-colors"

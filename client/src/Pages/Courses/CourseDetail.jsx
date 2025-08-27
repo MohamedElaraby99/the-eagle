@@ -106,7 +106,7 @@ export default function CourseDetail() {
 
   // Fetch wallet balance only when user is logged in
   useEffect(() => {
-    if (user && isLoggedIn && user.role !== 'ADMIN') {
+    if (user && isLoggedIn && user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN') {
       dispatch(getWalletBalance());
     }
   }, [dispatch, user, isLoggedIn]);
@@ -204,7 +204,7 @@ export default function CourseDetail() {
 
   const isItemPurchased = (purchaseType, itemId) => {
     // Admin users have access to all content
-    if (user?.role === 'ADMIN') {
+    if (user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN') {
       return true;
     }
     
@@ -231,7 +231,7 @@ export default function CourseDetail() {
 
   // Block access if code-based access expired (only for code access, not purchased)
   useEffect(() => {
-    if (!user || user.role === 'ADMIN') return;
+    if (!user || user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') return;
     if (!currentCourse) return;
     
     // Check if access has expired
@@ -266,7 +266,7 @@ export default function CourseDetail() {
     }
     
     // Admin users have access to all content, no need to purchase
-    if (user.role === 'ADMIN') {
+    if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
       setAlertMessage('أنت مدير النظام - لديك صلاحية الوصول لجميع المحتوى');
       setShowSuccessAlert(true);
       return;
@@ -446,7 +446,7 @@ export default function CourseDetail() {
         </button>
         <button 
           onClick={() => handlePurchaseClick(item, purchaseType)}
-          className="text-blue-600 hover:text-blue-700 flex items-center gap-1"
+          className="text-orange-600 hover:text-orange-700 flex items-center gap-1"
           disabled={paymentLoading}
         >
           <FaLock />
@@ -461,7 +461,7 @@ export default function CourseDetail() {
       <Layout>
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto"></div>
             <p className="mt-4 text-gray-600 dark:text-gray-400">جاري تحميل تفاصيل الدرس...</p>
           </div>
         </div>
@@ -483,7 +483,7 @@ export default function CourseDetail() {
             </p>
             <Link
               to="/courses"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors"
             >
               <FaArrowLeft />
               <span>العودة للكورسات </span>
@@ -501,7 +501,7 @@ export default function CourseDetail() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
           <Link
             to="/courses"
-            className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors"
+            className="inline-flex items-center gap-2 text-orange-600 hover:text-orange-700 transition-colors"
           >
             <FaArrowLeft />
             <span>العودة للكورسات </span>
@@ -527,7 +527,7 @@ export default function CourseDetail() {
                 </>
               ) : (
                 <>
-                  <div className="w-full h-full bg-gradient-to-br from-blue-500 to-orange-600"></div>
+                  <div className="w-full h-full bg-gradient-to-br from-orange-500 to-orange-600"></div>
                   <div className="absolute inset-0 bg-black bg-opacity-30"></div>
                   <div className="absolute inset-0 flex items-center justify-center">
                     <FaBookOpen className="text-8xl text-white opacity-80" />
@@ -536,7 +536,7 @@ export default function CourseDetail() {
               )}
               
               {/* Fallback gradient for broken images */}
-              <div className="hidden w-full h-full bg-gradient-to-br from-blue-500 to-orange-600">
+              <div className="hidden w-full h-full bg-gradient-to-br from-orange-500 to-orange-600">
                 <div className="absolute inset-0 bg-black bg-opacity-30"></div>
                 <div className="absolute inset-0 flex items-center justify-center">
                   <FaBookOpen className="text-8xl text-white opacity-80" />
@@ -566,7 +566,7 @@ export default function CourseDetail() {
                   {/* Course Stats */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                     <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                      <div className="text-2xl font-bold text-blue-600 mb-1">
+                      <div className="text-2xl font-bold text-orange-600 mb-1">
                         {getTotalLessons(currentCourse)}
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">درس</div>
@@ -578,7 +578,7 @@ export default function CourseDetail() {
                       <div className="text-sm text-gray-600 dark:text-gray-400">وحدة</div>
                     </div>
                     <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                      <div className="text-2xl font-bold text-yellow-600 mb-1">
+                      <div className="text-2xl font-bold text-orange-600 mb-1">
                         {currentCourse.directLessons?.length || 0}
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">مقدمة</div>
@@ -586,8 +586,8 @@ export default function CourseDetail() {
                   </div>
 
                   {/* Instructor Info */}
-                  <div className="flex items-center gap-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg mb-6">
-                    <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
+                  <div className="flex items-center gap-4 p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg mb-6">
+                    <div className="w-12 h-12 bg-orange-600 rounded-full flex items-center justify-center">
                       <FaUser className="text-white text-xl" />
                     </div>
                     <div>
@@ -603,7 +603,7 @@ export default function CourseDetail() {
                 <div className="lg:col-span-1">
                   <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6 sticky top-6">
                                                                {/* Wallet Balance */}
-                      {user && isLoggedIn && user.role !== 'ADMIN' && (
+                      {user && isLoggedIn && user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN' && (
                         <div className="text-center mb-6 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
                           <div className="flex items-center justify-center gap-2 mb-2">
                             <FaWallet className="text-green-600" />
@@ -638,7 +638,7 @@ export default function CourseDetail() {
                     </div>
 
                                          {/* Redeem Access Code */}
-                     {user && isLoggedIn && user.role !== 'ADMIN' && (
+                     {user && isLoggedIn && user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN' && (
                        <div className="space-y-3">
                          {/* Show expired access warning */}
                          {courseAccessState?.source === 'code' && !courseAccessState?.hasAccess && courseAccessState?.accessEndAt && (
@@ -698,12 +698,12 @@ export default function CourseDetail() {
            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
              <div className={`border rounded-xl p-4 ${
                courseAccessState?.hasAccess 
-                 ? 'bg-gradient-to-r from-blue-50 to-orange-50 dark:from-blue-900/20 dark:to-orange-900/20 border-blue-200 dark:border-blue-700'
+                 ? 'bg-gradient-to-r from-orange-50 to-orange-50 dark:from-orange-900/20 dark:to-orange-900/20 border-orange-200 dark:border-orange-700'
                  : 'bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border-red-200 dark:border-red-700'
              }`}>
                <div className="flex items-center justify-center gap-3">
                  {courseAccessState?.hasAccess ? (
-                   <FaClock className="text-blue-600 text-xl" />
+                   <FaClock className="text-orange-600 text-xl" />
                  ) : (
                    <FaExclamationTriangle className="text-red-600 text-xl" />
                  )}
@@ -741,7 +741,7 @@ export default function CourseDetail() {
                         className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                          <div className="w-8 h-8 bg-orange-600 rounded-full flex items-center justify-center">
                             <FaPlay className="text-white text-sm" />
                           </div>
                           <div>
@@ -821,7 +821,7 @@ export default function CourseDetail() {
                                   className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
                                 >
                                   <div className="flex items-center gap-3">
-                                    <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
+                                    <div className="w-6 h-6 bg-orange-600 rounded-full flex items-center justify-center">
                                       <FaPlay className="text-white text-xs" />
                                     </div>
                                     <div>
@@ -903,7 +903,7 @@ export default function CourseDetail() {
                 
                 <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg mt-2">
                   <span className="text-gray-600 dark:text-gray-300">رصيد المحفظة:</span>
-                  <span className="font-semibold text-blue-600">{walletBalance} جنيه</span>
+                  <span className="font-semibold text-orange-600">{walletBalance} جنيه</span>
                 </div>
               </div>
               
@@ -917,7 +917,7 @@ export default function CourseDetail() {
                 <button
                   onClick={handlePurchaseConfirm}
                   disabled={paymentLoading || walletBalance < selectedItem.price}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
                   {paymentLoading ? 'جاري الشراء...' : 'تأكيد الشراء'}
                 </button>
@@ -987,7 +987,7 @@ export default function CourseDetail() {
                        {previewItem.videos.slice(0, 2).map((video, index) => (
                          <div key={index} className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                            <div className="flex items-center gap-2">
-                             <FaPlay className="text-blue-600" />
+                             <FaPlay className="text-orange-600" />
                              <span className="text-sm text-gray-700 dark:text-gray-300">{video.title}</span>
                            </div>
                          </div>
@@ -1031,7 +1031,7 @@ export default function CourseDetail() {
                        {previewItem.exams.slice(0, 2).map((exam, index) => (
                          <div key={index} className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                            <div className="flex items-center gap-2">
-                             <FaGraduationCap className="text-yellow-600" />
+                             <FaGraduationCap className="text-orange-600" />
                              <span className="text-sm text-gray-700 dark:text-gray-300">{exam.title}</span>
                            </div>
                          </div>
@@ -1068,30 +1068,30 @@ export default function CourseDetail() {
                  )}
 
                  {/* Show content summary instead of "Content will be added soon" */}
-                 <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4 mb-4">
-                   <h6 className="font-medium text-blue-900 dark:text-blue-100 mb-3">ملخص المحتوى</h6>
+                 <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 rounded-lg p-4 mb-4">
+                   <h6 className="font-medium text-orange-900 dark:text-orange-100 mb-3">ملخص المحتوى</h6>
                    <div className="grid grid-cols-2 gap-3 text-sm">
                      <div className="flex items-center gap-2">
-                       <FaPlay className="text-blue-600" />
-                       <span className="text-blue-700 dark:text-blue-300">
+                       <FaPlay className="text-orange-600" />
+                       <span className="text-orange-700 dark:text-orange-300">
                          {previewItem.videosCount || 0} فيديو
                        </span>
                      </div>
                      <div className="flex items-center gap-2">
                        <FaBookOpen className="text-red-600" />
-                       <span className="text-blue-700 dark:text-blue-300">
+                       <span className="text-orange-700 dark:text-orange-300">
                          {previewItem.pdfsCount || 0} ملف PDF
                        </span>
                      </div>
                      <div className="flex items-center gap-2">
                        <FaClipboardList className="text-orange-600" />
-                       <span className="text-blue-700 dark:text-blue-300">
+                       <span className="text-orange-700 dark:text-orange-300">
                          {previewItem.examsCount || 0} اختبار
                        </span>
                      </div>
                      <div className="flex items-center gap-2">
                        <FaStar className="text-green-600" />
-                       <span className="text-blue-700 dark:text-blue-300">
+                       <span className="text-orange-700 dark:text-orange-300">
                          {previewItem.trainingsCount || 0} تدريب
                        </span>
                      </div>
@@ -1113,7 +1113,7 @@ export default function CourseDetail() {
                         setSelectedItem({ ...previewItem, purchaseType: previewItem.purchaseType });
                         setShowPurchaseModal(true);
                       }}
-                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                      className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700"
                     >
                       شراء الدرس
                     </button>

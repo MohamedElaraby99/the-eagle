@@ -44,8 +44,8 @@ const ExamSearchDashboard = () => {
   // Get score color
   const getScoreColor = (score) => {
     if (score >= 90) return 'text-green-600';
-    if (score >= 80) return 'text-blue-600';
-    if (score >= 70) return 'text-yellow-600';
+    if (score >= 80) return 'text-orange-600';
+    if (score >= 70) return 'text-orange-600';
     if (score >= 50) return 'text-orange-600';
     return 'text-red-600';
   };
@@ -88,12 +88,12 @@ const ExamSearchDashboard = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-orange-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-indigo-50 to-orange-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <div className="container mx-auto px-4 py-8">
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 text-right">
-              <FaClipboardList className="inline-block mr-3 text-blue-600" />
+              <FaClipboardList className="inline-block mr-3 text-orange-600" />
               جميع الامتحانات والنتائج
             </h1>
             <p className="text-gray-600 dark:text-gray-300 text-right">
@@ -104,7 +104,7 @@ const ExamSearchDashboard = () => {
           {/* Loading State */}
           {loading ? (
             <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4"></div>
               <p className="text-gray-600 dark:text-gray-300">جاري تحميل الامتحانات...</p>
             </div>
           ) : (
@@ -117,8 +117,8 @@ const ExamSearchDashboard = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
-                            <FaBook className="text-blue-600 dark:text-blue-400" />
+                          <div className="w-10 h-10 bg-orange-100 dark:bg-orange-900 rounded-full flex items-center justify-center">
+                            <FaBook className="text-orange-600 dark:text-orange-400" />
                           </div>
                           <div>
                             <h3 className="text-xl font-bold text-gray-900 dark:text-white">
@@ -187,7 +187,7 @@ const ExamSearchDashboard = () => {
                       
                       <button
                         onClick={() => viewExamDetails(examData)}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+                        className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
                       >
                         <FaEye />
                         عرض التفاصيل
@@ -231,8 +231,8 @@ const ExamSearchDashboard = () => {
                                 <td className="px-4 py-4 whitespace-nowrap">
                                   <div className="flex items-center">
                                     <div className="flex-shrink-0 h-8 w-8">
-                                      <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                                        <FaUser className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                      <div className="h-8 w-8 rounded-full bg-orange-100 dark:bg-orange-900 flex items-center justify-center">
+                                        <FaUser className="h-4 w-4 text-orange-600 dark:text-orange-400" />
                                       </div>
                                     </div>
                                     <div className="mr-3 text-right">
@@ -375,14 +375,14 @@ const ExamSearchDashboard = () => {
 
                 {/* Statistics */}
                 {selectedExam.students.length > 0 && (
-                  <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 mb-6">
-                    <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-3">إحصائيات الامتحان</h4>
+                  <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-4 mb-6">
+                    <h4 className="font-semibold text-orange-900 dark:text-orange-100 mb-3">إحصائيات الامتحان</h4>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                       <div className="text-center">
-                        <div className="text-2xl font-bold text-blue-600">
+                        <div className="text-2xl font-bold text-orange-600">
                           {selectedExam.students.length}
                         </div>
-                        <div className="text-blue-700 dark:text-blue-300">إجمالي الطلاب</div>
+                        <div className="text-orange-700 dark:text-orange-300">إجمالي الطلاب</div>
                       </div>
                       <div className="text-center">
                         <div className="text-2xl font-bold text-green-600">

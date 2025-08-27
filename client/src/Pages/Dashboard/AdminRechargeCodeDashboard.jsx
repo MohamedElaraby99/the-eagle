@@ -214,11 +214,11 @@ export default function AdminRechargeCodeDashboard() {
 
     return (
         <Layout>
-            <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-8" dir="rtl">
+            <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-8" dir="rtl">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     {/* Header */}
                     <div className="text-center mb-8">
-                        <div className="mx-auto h-16 w-16 bg-gradient-to-r from-orange-600 to-blue-600 rounded-full flex items-center justify-center mb-4 shadow-lg">
+                        <div className="mx-auto h-16 w-16 bg-gradient-to-r from-orange-600 to-orange-600 rounded-full flex items-center justify-center mb-4 shadow-lg">
                             <FaCreditCard className="h-8 w-8 text-white" />
                         </div>
                         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
@@ -233,8 +233,8 @@ export default function AdminRechargeCodeDashboard() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
                             <div className="flex items-center">
-                                <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900/20">
-                                    <FaCreditCard className="h-6 w-6 text-blue-600" />
+                                <div className="p-3 rounded-full bg-orange-100 dark:bg-orange-900/20">
+                                    <FaCreditCard className="h-6 w-6 text-orange-600" />
                                 </div>
                                 <div className="mr-4">
                                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">إجمالي الرموز</p>
@@ -257,8 +257,8 @@ export default function AdminRechargeCodeDashboard() {
 
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
                             <div className="flex items-center">
-                                <div className="p-3 rounded-full bg-yellow-100 dark:bg-yellow-900/20">
-                                    <FaCheckCircle className="h-6 w-6 text-yellow-600" />
+                                <div className="p-3 rounded-full bg-orange-100 dark:bg-orange-900/20">
+                                    <FaCheckCircle className="h-6 w-6 text-orange-600" />
                                 </div>
                                 <div className="mr-4">
                                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">الرموز المستخدمة</p>
@@ -366,7 +366,7 @@ export default function AdminRechargeCodeDashboard() {
                                     <button
                                         type="submit"
                                         disabled={generateLoading}
-                                        className="w-full flex justify-center items-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-orange-600 to-blue-600 hover:from-orange-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 shadow-lg"
+                                        className="w-full flex justify-center items-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-orange-600 to-orange-600 hover:from-orange-700 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 shadow-lg"
                                     >
                                         {generateLoading ? (
                                             <div className="flex items-center">
@@ -391,7 +391,7 @@ export default function AdminRechargeCodeDashboard() {
                                             </h4>
                                             <button
                                                 onClick={handleCopyAllCodes}
-                                                className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition-colors"
+                                                className="flex items-center px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm transition-colors"
                                             >
                                                 <FaCopy className="mr-2" />
                                                 نسخ الكل
@@ -410,7 +410,7 @@ export default function AdminRechargeCodeDashboard() {
                                                     </div>
                                                     <button
                                                         onClick={() => handleCopyCode(code.code)}
-                                                        className="p-2 text-gray-500 hover:text-blue-600 transition-colors"
+                                                        className="p-2 text-gray-500 hover:text-orange-600 transition-colors"
                                                         title="نسخ الرمز"
                                                     >
                                                         <FaCopy />
@@ -521,7 +521,7 @@ export default function AdminRechargeCodeDashboard() {
                                                 <div className="flex items-center space-x-2">
                                                     <button
                                                         onClick={() => handleCopyCode(code.code)}
-                                                        className="p-2 text-gray-500 hover:text-blue-600 transition-colors"
+                                                        className="p-2 text-gray-500 hover:text-orange-600 transition-colors"
                                                         title="نسخ الرمز"
                                                     >
                                                         <FaCopy />

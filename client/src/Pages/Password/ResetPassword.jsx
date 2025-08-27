@@ -59,7 +59,7 @@ export default function ResetPassword() {
           {/* submit btn */}
           <button
             type="submit"
-            className="mt-2 bg-yellow-500 text-white dark:text-base-200  transition-all ease-in-out duration-300 rounded-md py-2 font-nunito-sans font-[500]  text-lg cursor-pointer"
+            className="mt-2 bg-orange-500 text-white dark:text-base-200  transition-all ease-in-out duration-300 rounded-md py-2 font-nunito-sans font-[500]  text-lg cursor-pointer"
             disabled={isLoading}
           >
             {isLoading ? "Resetting..." : "Reset"}
@@ -71,7 +71,7 @@ export default function ResetPassword() {
               Back to profile ?{" "}
               <Link
                 to="/user/profile"
-                className="link text-blue-600 font-lato cursor-pointer"
+                className="link text-orange-600 font-lato cursor-pointer"
               >
                 {" "}
                 profile

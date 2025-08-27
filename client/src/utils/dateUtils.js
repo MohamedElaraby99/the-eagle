@@ -57,7 +57,7 @@ export const getRemainingDaysClass = (remainingDays) => {
   } else if (remainingDays <= 3) {
     return 'text-orange-600 bg-orange-50 dark:bg-orange-900/20';
   } else if (remainingDays <= 7) {
-    return 'text-yellow-600 bg-yellow-50 dark:bg-yellow-900/20';
+    return 'text-orange-600 bg-orange-50 dark:bg-orange-900/20';
   } else {
     return 'text-green-600 bg-green-50 dark:bg-green-900/20';
   }

@@ -47,14 +47,57 @@
   font-style: normal;
 }
 
-/* Global Marhey Font Application */
-html {
-  font-family: 'Marhey', sans-serif;
+/* Cairo Font Classes */
+.cairo-light {
+  font-family: "Cairo", sans-serif;
+  font-weight: 300;
+  font-style: normal;
 }
 
-/* Ensure all text elements use Marhey */
+.cairo-regular {
+  font-family: "Cairo", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.cairo-medium {
+  font-family: "Cairo", sans-serif;
+  font-weight: 500;
+  font-style: normal;
+}
+
+.cairo-semibold {
+  font-family: "Cairo", sans-serif;
+  font-weight: 600;
+  font-style: normal;
+}
+
+.cairo-bold {
+  font-family: "Cairo", sans-serif;
+  font-weight: 700;
+  font-style: normal;
+}
+
+.cairo-extrabold {
+  font-family: "Cairo", sans-serif;
+  font-weight: 800;
+  font-style: normal;
+}
+
+.cairo-black {
+  font-family: "Cairo", sans-serif;
+  font-weight: 900;
+  font-style: normal;
+}
+
+/* Global Cairo Font Application */
+html {
+  font-family: 'Cairo', sans-serif;
+}
+
+/* Ensure all text elements use Cairo */
 h1, h2, h3, h4, h5, h6, p, span, div, button, input, textarea, select, label, a {
-  font-family: 'Marhey', sans-serif;
+  font-family: 'Cairo', sans-serif;
 }
 
 * {
@@ -62,12 +105,12 @@ h1, h2, h3, h4, h5, h6, p, span, div, button, input, textarea, select, label, a 
   padding: 0;
   box-sizing: border-box;
   outline: none;
-  font-family: 'Marhey', sans-serif;
+  font-family: 'Cairo', sans-serif;
 }
 
 body {
   min-height: 100vh;
-  font-family: 'Marhey', sans-serif;
+  font-family: 'Cairo', sans-serif;
 }
 
 input:disabled,

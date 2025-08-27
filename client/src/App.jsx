@@ -56,6 +56,7 @@ import LiveMeetings from "./Pages/User/LiveMeetings";
 import ExamHistory from "./Pages/User/ExamHistory";
 import AdminCourseAccessCodes from "./Pages/Dashboard/AdminCourseAccessCodes";
 import ExamSearchDashboard from "./Pages/Dashboard/ExamSearchDashboard";
+import EssayExamDashboard from "./Pages/Dashboard/EssayExamDashboard";
 
 function App() {
   // Auto scroll to top on route change
@@ -117,6 +118,7 @@ function App() {
                     <Route path="/admin/live-meetings" element={<LiveMeetingDashboard />} />
                     <Route path="/admin/exam-results" element={<ExamResultsDashboard />} />
                     <Route path="/admin/exam-search" element={<ExamSearchDashboard />} />
+                    <Route path="/admin/essay-exams" element={<EssayExamDashboard />} />
                     <Route path="/admin/course-access-codes" element={<AdminCourseAccessCodes />} />
                   </Route>
 

@@ -139,7 +139,7 @@ const CaptchaComponent = ({ onVerified, onError }) => {
         {/* CAPTCHA Question */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <FaShieldAlt className="text-blue-500" />
+            <FaShieldAlt className="text-orange-500" />
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
               رمز التحقق
             </span>
@@ -148,7 +148,7 @@ const CaptchaComponent = ({ onVerified, onError }) => {
             type="button"
             onClick={generateCaptcha}
             disabled={isLoading}
-            className="p-2 text-gray-500 hover:text-blue-500 dark:text-gray-400 dark:hover:text-blue-400 transition-colors disabled:opacity-50"
+            className="p-2 text-gray-500 hover:text-orange-500 dark:text-gray-400 dark:hover:text-orange-400 transition-colors disabled:opacity-50"
             title="تحديث رمز التحقق"
           >
             <FaSyncAlt className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
@@ -160,7 +160,7 @@ const CaptchaComponent = ({ onVerified, onError }) => {
           <div className="bg-white dark:bg-gray-800 rounded-lg p-3 mb-3 border-2 border-dashed border-gray-300 dark:border-gray-600">
             <div className="text-center">
               <div className="flex items-center justify-center space-x-2">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-500"></div>
                 <span className="text-gray-600 dark:text-gray-400">جاري تحميل رمز التحقق...</span>
               </div>
             </div>
@@ -193,7 +193,7 @@ const CaptchaComponent = ({ onVerified, onError }) => {
               onKeyPress={handleKeyPress}
               placeholder="أدخل الإجابة..."
               disabled={isVerified || isLoading}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             />
             {isVerified && (
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -207,7 +207,7 @@ const CaptchaComponent = ({ onVerified, onError }) => {
               type="button"
               onClick={verifyCaptcha}
               disabled={!userAnswer.trim() || isVerifying || isLoading}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg font-medium transition-colors disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-4 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-400 text-white rounded-lg font-medium transition-colors disabled:cursor-not-allowed flex items-center gap-2"
             >
               {isVerifying ? (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>

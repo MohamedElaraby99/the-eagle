@@ -122,7 +122,7 @@ const FAQAccordion = () => {
           placeholder="البحث في الأسئلة الشائعة..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+          className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
         />
         {searchTerm && (
           <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
@@ -180,7 +180,7 @@ const FAQAccordion = () => {
           </p>
           <button
             onClick={() => setSearchTerm("")}
-            className="mt-4 inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
+            className="mt-4 inline-flex items-center gap-2 text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 font-medium"
           >
             مسح البحث
           </button>

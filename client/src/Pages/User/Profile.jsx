@@ -58,7 +58,7 @@ export default function Profile() {
     formData.append("phoneNumber", userInput.phoneNumber);
     
     // Only append user-specific fields for regular users
-    if (userData?.role !== 'ADMIN') {
+    if (userData?.role !== 'ADMIN' && userData?.role !== 'SUPER_ADMIN') {
       formData.append("fatherPhoneNumber", userInput.fatherPhoneNumber);
       formData.append("governorate", userInput.governorate);
       formData.append("age", userInput.age);
@@ -133,7 +133,7 @@ export default function Profile() {
         userInput.avatar;
       
       // Only check user-specific fields for regular users
-      if (userData?.role !== 'ADMIN') {
+      if (userData?.role !== 'ADMIN' && userData?.role !== 'SUPER_ADMIN') {
         hasChanges = hasChanges ||
           userInput.fatherPhoneNumber !== userData?.fatherPhoneNumber ||
           userInput.governorate !== userData?.governorate ||
@@ -144,10 +144,10 @@ export default function Profile() {
         nameChanged: userInput.name !== userData?.fullName,
         usernameChanged: userInput.username !== userData?.username,
         phoneChanged: userInput.phoneNumber !== userData?.phoneNumber,
-        fatherPhoneChanged: userData?.role !== 'ADMIN' ? userInput.fatherPhoneNumber !== userData?.fatherPhoneNumber : false,
-        governorateChanged: userData?.role !== 'ADMIN' ? userInput.governorate !== userData?.governorate : false,
+        fatherPhoneChanged: userData?.role !== 'ADMIN' && userData?.role !== 'SUPER_ADMIN' ? userInput.fatherPhoneNumber !== userData?.fatherPhoneNumber : false,
+        governorateChanged: userData?.role !== 'ADMIN' && userData?.role !== 'SUPER_ADMIN' ? userInput.governorate !== userData?.governorate : false,
 
-        ageChanged: userData?.role !== 'ADMIN' ? userInput.age !== userData?.age : false,
+        ageChanged: userData?.role !== 'ADMIN' && userData?.role !== 'SUPER_ADMIN' ? userInput.age !== userData?.age : false,
         avatarChanged: !!userInput.avatar,
         userRole: userData?.role,
         hasChanges
@@ -200,7 +200,7 @@ export default function Profile() {
           className="flex flex-col dark:bg-base-100 relative gap-7 rounded-lg md:py-10 py-7 md:px-7 px-3 md:w-[750px] w-full shadow-custom dark:shadow-xl  "
         >
           <div className="flex justify-center items-center">
-            <h1 className="text-center absolute left-6 md:top-auto top-5 text-violet-500 dark:text-orange-500 md:text-4xl text-3xl font-bold font-inter after:content-[' ']  after:absolute after:-bottom-3.5 after:left-0 after:h-1.5 after:w-[60%] after:rounded-full after:bg-yellow-400 dark:after:bg-yellow-600">
+            <h1 className="text-center absolute left-6 md:top-auto top-5 text-violet-500 dark:text-orange-500 md:text-4xl text-3xl font-bold font-inter after:content-[' ']  after:absolute after:-bottom-3.5 after:left-0 after:h-1.5 after:w-[60%] after:rounded-full after:bg-orange-400 dark:after:bg-orange-600">
               الملف الشخصي
             </h1>
             {/* avatar */}
@@ -271,7 +271,7 @@ export default function Profile() {
                 <button
                   type="button"
                   onClick={handleEditClick}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors"
                 >
                   <FaEdit size={14} />
                   تعديل الملف الشخصي
@@ -283,7 +283,7 @@ export default function Profile() {
               {/* Name */}
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                  <FaUser className="text-blue-500" />
+                  <FaUser className="text-orange-500" />
                   الاسم الكامل
                 </label>
                 <input
@@ -291,7 +291,7 @@ export default function Profile() {
                   value={isEditing ? userInput.name : (userData?.fullName || "")}
                   onChange={(e) => setUserInput({ ...userInput, name: e.target.value })}
                   disabled={!isEditing}
-                  className={`w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  className={`w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
                     !isEditing 
                       ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 cursor-not-allowed' 
                       : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white'
@@ -311,7 +311,7 @@ export default function Profile() {
                   value={isEditing ? userInput.username : (userData?.username || "")}
                   onChange={(e) => setUserInput({ ...userInput, username: e.target.value })}
                   disabled={!isEditing}
-                  className={`w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  className={`w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
                     !isEditing 
                       ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 cursor-not-allowed' 
                       : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white'
@@ -345,7 +345,7 @@ export default function Profile() {
                   value={isEditing ? userInput.phoneNumber : (userData?.phoneNumber || "")}
                   onChange={(e) => setUserInput({ ...userInput, phoneNumber: e.target.value })}
                   disabled={!isEditing}
-                  className={`w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  className={`w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
                     !isEditing 
                       ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 cursor-not-allowed' 
                       : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white'
@@ -355,7 +355,7 @@ export default function Profile() {
               </div>
 
               {/* User-specific fields - only show for regular users */}
-              {userData?.role !== 'ADMIN' && (
+              {userData?.role !== 'ADMIN' && userData?.role !== 'SUPER_ADMIN' && (
                 <>
                   {/* Father's Phone Number */}
                   <div className="space-y-2">
@@ -368,7 +368,7 @@ export default function Profile() {
                       value={isEditing ? userInput.fatherPhoneNumber : (userData?.fatherPhoneNumber || "")}
                       onChange={(e) => setUserInput({ ...userInput, fatherPhoneNumber: e.target.value })}
                       disabled={!isEditing}
-                      className={`w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      className={`w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
                         !isEditing 
                           ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 cursor-not-allowed' 
                           : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white'
@@ -388,7 +388,7 @@ export default function Profile() {
                       value={isEditing ? userInput.age : (userData?.age || "")}
                       onChange={(e) => setUserInput({ ...userInput, age: e.target.value })}
                       disabled={!isEditing}
-                      className={`w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      className={`w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
                         !isEditing 
                           ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 cursor-not-allowed' 
                           : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white'
@@ -402,7 +402,7 @@ export default function Profile() {
                   {/* Stage */}
                   <div className="space-y-2">
                     <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                      <FaBook className="text-blue-500" />
+                      <FaBook className="text-orange-500" />
                       المرحلة الدراسية
                     </label>
                     
@@ -424,7 +424,7 @@ export default function Profile() {
                       value={isEditing ? userInput.governorate : (userData?.governorate || "")}
                       onChange={(e) => setUserInput({ ...userInput, governorate: e.target.value })}
                       disabled={!isEditing}
-                      className={`w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      className={`w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
                         !isEditing 
                           ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 cursor-not-allowed' 
                           : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white'
@@ -454,7 +454,7 @@ export default function Profile() {
               {/* Role */}
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                  <FaIdCard className="text-blue-500" />
+                  <FaIdCard className="text-orange-500" />
                   دور الحساب
                 </label>
                 <input

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { axiosInstance } from './axiosInstance';
 
 /**
- * Custom hook to fetch optimized lesson data with processed exam results
+ * Custom hook to fetch optimized lesson data with processed exam results and essay exams
  * @param {string} courseId - Course ID
  * @param {string} lessonId - Lesson ID  
  * @param {string} unitId - Unit ID (optional)
@@ -27,7 +27,31 @@ export const useLessonData = (courseId, lessonId, unitId = null) => {
       });
       
       if (response.data.success) {
-        setLesson(response.data.data.lesson);
+        let lessonData = response.data.data.lesson;
+        
+        // Fetch essay exams for this lesson
+        try {
+          const essayResponse = await axiosInstance.get(`/essay-exams/course/${courseId}/lesson/${lessonId}`, {
+            params: unitId ? { unitId } : {}
+          });
+          
+          if (essayResponse.data.success) {
+            // Add essay exams to the lesson data
+            lessonData = {
+              ...lessonData,
+              essayExams: essayResponse.data.data || []
+            };
+          }
+        } catch (essayError) {
+          console.warn('Failed to fetch essay exams:', essayError);
+          // Don't fail the entire request if essay exams fail to load
+          lessonData = {
+            ...lessonData,
+            essayExams: []
+          };
+        }
+        
+        setLesson(lessonData);
         setCourseInfo(response.data.data.courseInfo);
       } else {
         setError(response.data.message || 'Failed to fetch lesson data');

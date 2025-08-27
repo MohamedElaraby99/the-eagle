@@ -123,7 +123,7 @@ export default function Navbar() {
               {/* Logo Image */}
                              <img 
                  src={logo} 
-                 alt="منصة مستر مايكل" 
+                 alt="منصة  theeagle" 
                  className="w-16 h-16 md:w-20 md:h-20 object-contain group-hover:scale-110 transition-transform duration-300 dark:drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] dark:group-hover:drop-shadow-[0_0_20px_rgba(255,255,255,0.5)]"
                />
             </div>
@@ -161,18 +161,20 @@ export default function Navbar() {
             {!user?.fullName && (
               <Link
                 to="/signup"
-                className="px-3 py-2 bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white rounded-lg font-medium text-sm transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg border border-orange-300/30"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-semibold text-white bg-gradient-to-r from-orange-600 via-orange-500 to-orange-600 hover:from-orange-700 hover:via-orange-600 hover:to-orange-700 shadow-lg hover:shadow-xl transition-all duration-300 border border-orange-400/40"
               >
-                سجل الآن
+                <FaPlus className="w-4 h-4" />
+                <span>سجل الآن</span>
               </Link>
             )}
 
-{!user?.fullName && (
+            {!user?.fullName && (
               <Link
                 to="/login"
-                className="px-3 py-2 bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white rounded-lg font-medium text-sm transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg border border-orange-300/30"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-semibold border-2 border-orange-500 text-orange-600 dark:text-orange-400 hover:bg-gradient-to-r hover:from-orange-500 hover:via-orange-600 hover:to-orange-500 hover:text-white transition-all duration-300 shadow-md hover:shadow-xl"
               >
-                تسجيل الدخول
+                <FaUser className="w-4 h-4" />
+                <span>تسجيل الدخول</span>
               </Link>
             )}
 
@@ -213,13 +215,13 @@ export default function Navbar() {
                   to={item.path}
                   className={`flex items-center space-x-4 px-6 py-4 mx-4 rounded-2xl font-medium transition-all duration-300 mobile-menu-item ${
                     location.pathname === item.path
-                      ? "text-orange-600 dark:text-orange-400 bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20 shadow-lg"
+                      ? "text-orange-600 dark:text-orange-400 bg-gradient-to-r from-orange-50 to-orange-50 dark:from-orange-900/20 dark:to-orange-900/20 shadow-lg"
                       : "text-gray-700 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-gradient-to-r hover:from-gray-50 hover:to-orange-50 dark:hover:from-gray-800 dark:hover:to-orange-900/20"
                   }`}
                 >
                   <div className={`p-3 rounded-xl shadow-lg ${
                     location.pathname === item.path
-                      ? "bg-gradient-to-r from-orange-100 to-yellow-100 dark:from-orange-900/30 dark:to-yellow-900/30"
+                      ? "bg-gradient-to-r from-orange-100 to-orange-100 dark:from-orange-900/30 dark:to-orange-900/30"
                       : "bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800"
                   }`}>
                     <item.icon className="w-5 h-5" />
@@ -233,9 +235,9 @@ export default function Navbar() {
             {user && (
               <>
                 <div className="border-t border-gray-200/50 dark:border-gray-700/50 pt-6">
-                  <div className="px-6 py-4 mx-4 bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20 rounded-2xl shadow-lg">
+                  <div className="px-6 py-4 mx-4 bg-gradient-to-r from-orange-50 to-orange-50 dark:from-orange-900/20 dark:to-orange-900/20 rounded-2xl shadow-lg">
                     <div className="flex items-center space-x-4">
-                      <div className="w-14 h-14 bg-gradient-to-r from-orange-600 to-yellow-600 rounded-2xl flex items-center justify-center shadow-xl">
+                      <div className="w-14 h-14 bg-gradient-to-r from-orange-600 to-orange-600 rounded-2xl flex items-center justify-center shadow-xl">
                         <span className="text-white font-bold text-lg">
                           {user.fullName?.charAt(0)?.toUpperCase() || "U"}
                         </span>
@@ -269,13 +271,13 @@ export default function Navbar() {
                         to={item.path}
                         className={`flex items-center space-x-4 px-6 py-4 mx-4 rounded-2xl font-medium transition-all duration-300 mobile-menu-item ${
                           location.pathname === item.path
-                            ? "text-orange-600 dark:text-orange-400 bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20 shadow-lg"
+                            ? "text-orange-600 dark:text-orange-400 bg-gradient-to-r from-orange-50 to-orange-50 dark:from-orange-900/20 dark:to-orange-900/20 shadow-lg"
                             : "text-gray-700 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-gradient-to-r hover:from-gray-50 hover:to-orange-50 dark:hover:from-gray-800 dark:hover:to-orange-900/20"
                         }`}
                       >
                         <div className={`p-3 rounded-xl shadow-lg ${
                           location.pathname === item.path
-                            ? "bg-gradient-to-r from-orange-100 to-yellow-100 dark:from-orange-900/30 dark:to-yellow-900/30"
+                            ? "bg-gradient-to-r from-orange-100 to-orange-100 dark:from-orange-900/30 dark:to-orange-900/30"
                             : "bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800"
                         }`}>
                           <item.icon className="w-5 h-5" />
@@ -323,22 +325,22 @@ export default function Navbar() {
                     انضم إلينا الآن
                   </h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    ابدأ رحلة التعلم مع منصة مستر مايكل
+                    ابدأ رحلة التعلم مع منصة  theeagle
                   </p>
                 </div>
                 
                 <Link
                   to="/login"
-                  className="flex items-center justify-center gap-3 w-full px-8 py-4 text-center bg-gradient-to-r from-orange-500 via-orange-600 to-yellow-500 hover:from-orange-600 hover:via-orange-700 hover:to-yellow-600 text-white rounded-2xl font-bold transition-all duration-300 transform hover:scale-105 mobile-menu-item shadow-lg hover:shadow-xl border-2 border-orange-400/50"
+                  className="flex items-center justify-center gap-2 w-full px-4 py-2 text-center bg-gradient-to-r from-orange-500 via-orange-600 to-orange-500 hover:from-orange-600 hover:via-orange-700 hover:to-orange-600 text-white rounded-xl font-semibold text-sm transition-all duration-300 transform hover:scale-105 mobile-menu-item shadow-lg hover:shadow-xl border-2 border-orange-400/50"
                 >
-                  <FaUser className="w-5 h-5" />
+                  <FaUser className="w-4 h-4" />
                   تسجيل الدخول
                 </Link>
                 <Link
                   to="/signup"
-                  className="flex items-center justify-center gap-3 w-full px-8 py-4 text-center border-2 border-orange-500 text-orange-600 dark:text-orange-400 hover:bg-gradient-to-r hover:from-orange-500 hover:via-orange-600 hover:to-yellow-500 hover:text-white rounded-2xl font-bold transition-all duration-300 mobile-menu-item shadow-lg hover:shadow-xl"
+                  className="flex items-center justify-center gap-2 w-full px-4 py-2 text-center border-2 border-orange-500 text-orange-600 dark:text-orange-400 hover:bg-gradient-to-r hover:from-orange-500 hover:via-orange-600 hover:to-orange-500 hover:text-white rounded-xl font-semibold text-sm transition-all duration-300 mobile-menu-item shadow-lg hover:shadow-xl"
                 >
-                  <FaPlus className="w-5 h-5" />
+                  <FaPlus className="w-4 h-4" />
                   إنشاء حساب جديد
                 </Link>
               </div>

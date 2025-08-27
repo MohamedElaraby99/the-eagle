@@ -74,8 +74,8 @@ export default function Contact() {
   };
 
   const socialMedia = [
-    // { name: "Facebook", icon: FaFacebook, url: "https://www.facebook.com/share/16Vq29HcXH/", color: "hover:text-orange-600" },
-    // { name: "YouTube", icon: FaYoutube, url: "https://youtube.com/@_aymanaboaish9685?si=X_KXTLDEsxNG5tAs", color: "hover:text-orange-600" },
+    { name: "Facebook", icon: FaFacebook, url: "https://www.facebook.com/people/MrMahmoud-Abdel-Aziz/100070094625467/?mibextid=ZbWKwL", color: "hover:text-orange-600" },
+    { name: "YouTube", icon: FaYoutube, url: "https://www.youtube.com/@mahmoudAbdel_Aziz", color: "hover:text-orange-600" },
     { name: "WhatsApp", icon: FaWhatsapp, url: `https://wa.me/${contactInfo.whatsapp.replace('+', '')}`, color: "hover:text-green-500" }
   ];
 
@@ -135,7 +135,7 @@ export default function Contact() {
               </div>
 
               {/* Social Media */}
-              <div className="mt-12 text-center">
+              {/* <div className="mt-12 text-center">
                 <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-8">
                   تابعنا
                 </h3>
@@ -158,13 +158,13 @@ export default function Contact() {
                 </a>
                   ))}
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
 
           {/* Additional Info */}
           <div className="mt-16 text-center">
-            <div className="bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20 rounded-2xl p-8">
+            <div className="bg-gradient-to-r from-orange-50 to-orange-50 dark:from-orange-900/20 dark:to-orange-900/20 rounded-2xl p-8">
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
                 لماذا تختار منصتنا؟
               </h3>

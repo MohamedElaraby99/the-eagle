@@ -40,6 +40,9 @@ export default function Signup() {
     adminCode: "",
   });
 
+  // Check if this is an admin registration
+  const isAdminRegistration = signupData.adminCode === 'ADMIN123';
+
   // Fetch stages on component mount
   useEffect(() => {
     const fetchData = async () => {
@@ -137,19 +140,38 @@ export default function Signup() {
       return;
     }
     
-    // Check if this is an admin registration
-    const isAdminRegistration = signupData.adminCode === 'ADMIN123';
-    
     // Basic required fields for all users
-    if (!signupData.email || !signupData.password || !signupData.fullName || !signupData.username || !signupData.avatar) {
-      toast.error("الاسم، اسم المستخدم، البريد الإلكتروني، كلمة المرور، والصورة الشخصية مطلوبة");
+    if (!signupData.password || !signupData.fullName || !signupData.username || !signupData.avatar) {
+      toast.error("الاسم، اسم المستخدم، كلمة المرور، والصورة الشخصية مطلوبة");
       return;
     }
     
-    // For regular users, check all required fields
-    if (!isAdminRegistration) {
-      if (!signupData.phoneNumber || !signupData.fatherPhoneNumber || !signupData.governorate || !signupData.stage || !signupData.age) {
+    // Role-specific validation
+    if (isAdminRegistration) {
+      // For admin users: email is required
+      if (!signupData.email) {
+        toast.error("البريد الإلكتروني مطلوب للمشرفين");
+        return;
+      }
+      // Validate email format for admin
+      if (!signupData.email.match(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g)) {
+        toast.error("بريد إلكتروني غير صحيح");
+        return;
+      }
+    } else {
+      // For regular users: phone number is required, email is optional
+      if (!signupData.phoneNumber || !signupData.governorate || !signupData.stage || !signupData.age) {
         toast.error("يرجى ملء جميع الحقول المطلوبة");
+        return;
+      }
+      // Validate phone number for regular users
+      if (!signupData.phoneNumber.match(/^(\+20|0)?1[0125][0-9]{8}$/)) {
+        toast.error("يرجى إدخال رقم هاتف مصري صحيح");
+        return;
+      }
+      // Validate email if provided (optional for regular users)
+      if (signupData.email && !signupData.email.match(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g)) {
+        toast.error("بريد إلكتروني غير صحيح");
         return;
       }
     }
@@ -169,21 +191,12 @@ export default function Signup() {
       toast.error("يمكن أن يحتوي اسم المستخدم على أحرف وأرقام وشرطة سفلية فقط");
       return;
     }
-    // checking valid email
-    if (!signupData.email.match(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g)) {
-      toast.error("بريد إلكتروني غير صحيح");
-      return;
-    }
+    
     // For regular users, validate additional fields
     if (!isAdminRegistration) {
-      // checking valid phone numbers
-      if (!signupData.phoneNumber.match(/^(\+20|0)?1[0125][0-9]{8}$/)) {
-        toast.error("يرجى إدخال رقم هاتف مصري صحيح");
-        return;
-      }
       // father phone optional - validate only if provided
       if (signupData.fatherPhoneNumber && !signupData.fatherPhoneNumber.match(/^(\+20|0)?1[0125][0-9]{8}$/)) {
-        toast.error("يرجى إدخال رقم هاتف ولي الامرالصحيح");
+        toast.error("يرجى إدخال رقم هاتف ولي الامر الصحيح");
         return;
       }
       // checking valid age
@@ -192,8 +205,6 @@ export default function Signup() {
         toast.error("يرجى إدخال عمر صحيح بين 5 و 100");
         return;
       }
-      
-
     }
 
     // Generate device information for fingerprinting
@@ -215,16 +226,22 @@ export default function Signup() {
     const requestData = {
       fullName: signupData.fullName,
       username: signupData.username,
-      email: signupData.email,
       password: signupData.password,
       adminCode: signupData.adminCode,
       captchaSessionId: captchaSessionId,
       deviceInfo: deviceInfo
     };
     
-    // Only add additional fields for regular users
-    if (!isAdminRegistration) {
+    // Add role-specific fields
+    if (isAdminRegistration) {
+      // For admin users: email is required
+      requestData.email = signupData.email;
+    } else {
+      // For regular users: phone number is required, email is optional
       requestData.phoneNumber = signupData.phoneNumber;
+      if (signupData.email) {
+        requestData.email = signupData.email; // Include email if provided
+      }
       if (signupData.fatherPhoneNumber) {
         requestData.fatherPhoneNumber = signupData.fatherPhoneNumber;
       }
@@ -321,7 +338,7 @@ export default function Signup() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8" dir="rtl">
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8" dir="rtl">
         <div className="max-w-md w-full space-y-8">
           {/* Enhanced Header with Logo */}
           <div className="text-center">
@@ -329,19 +346,19 @@ export default function Signup() {
             <div className="flex justify-center items-center mb-8">
               <div className="relative">
                 {/* Glowing Background Effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-orange-400 via-blue-500 to-indigo-600 rounded-full blur-2xl opacity-30 animate-pulse"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-orange-400 via-orange-500 to-indigo-600 rounded-full blur-2xl opacity-30 animate-pulse"></div>
                 
                 {/* Logo Container */}
                 <div className="relative bg-white dark:bg-gray-800 rounded-full p-4 shadow-2xl border-4 border-orange-200 dark:border-orange-700 transform hover:scale-110 transition-all duration-500">
                   <img 
                     src={logo} 
-                    alt="منصة مستر مايكل Logo" 
+                    alt="منصة  theeagle Logo" 
                     className="w-16 h-16 object-contain drop-shadow-lg"
                   />
                 </div>
                 
                 {/* Floating Decorative Elements */}
-                <div className="absolute -top-2 -right-2 w-4 h-4 bg-yellow-400 rounded-full animate-bounce z-10 shadow-lg"></div>
+                <div className="absolute -top-2 -right-2 w-4 h-4 bg-orange-400 rounded-full animate-bounce z-10 shadow-lg"></div>
                 <div className="absolute -bottom-2 -left-2 w-3 h-3 bg-pink-400 rounded-full animate-pulse z-10 shadow-lg"></div>
               </div>
             </div>
@@ -407,7 +424,7 @@ export default function Signup() {
               {/* Email Field */}
               <div className="group">
                 <label htmlFor="email" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 text-right">
-                  البريد الإلكتروني
+                  البريد الإلكتروني {!isAdminRegistration && "(اختياري)"}
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
@@ -417,13 +434,18 @@ export default function Signup() {
                     id="email"
                     name="email"
                     type="email"
-                    required
+                    required={isAdminRegistration}
                     className="block w-full pr-12 pl-4 py-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 text-right shadow-sm hover:shadow-md"
-                    placeholder="أدخل بريدك الإلكتروني"
+                    placeholder={isAdminRegistration ? "أدخل بريدك الإلكتروني" : "أدخل بريدك الإلكتروني (اختياري)"}
                     value={signupData.email}
                     onChange={handleUserInput}
                   />
                 </div>
+                {!isAdminRegistration && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-right">
+                    يمكنك ترك هذا الحقل فارغاً إذا كنت لا تريد استخدام البريد الإلكتروني
+                  </p>
+                )}
               </div>
 
               {/* Password Field */}
@@ -460,10 +482,10 @@ export default function Signup() {
               </div>
 
               {/* Phone Number Field - Only for regular users */}
-              {!signupData.adminCode && (
+              {!isAdminRegistration && (
                 <div className="group">
                   <label htmlFor="phoneNumber" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 text-right">
-                    رقم الهاتف
+                    رقم الهاتف *
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
@@ -473,18 +495,21 @@ export default function Signup() {
                       id="phoneNumber"
                       name="phoneNumber"
                       type="tel"
-                      required={!signupData.adminCode}
+                      required
                       className="block w-full pr-12 pl-4 py-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 text-right shadow-sm hover:shadow-md"
-                      placeholder="أدخل رقم هاتفك"
+                      placeholder="أدخل رقم هاتفك المصري"
                       value={signupData.phoneNumber}
                       onChange={handleUserInput}
                     />
                   </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-right">
+                    سيتم استخدام هذا الرقم لتسجيل الدخول إلى حسابك
+                  </p>
                 </div>
               )}
 
               {/* Father's Phone Number Field - Only for regular users */}
-              {!signupData.adminCode && (
+              {!isAdminRegistration && (
                 <div className="group">
                   <label htmlFor="fatherPhoneNumber" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 text-right">
                     رقم هاتف ولي الامر
@@ -497,7 +522,7 @@ export default function Signup() {
                       id="fatherPhoneNumber"
                       name="fatherPhoneNumber"
                       type="tel"
-                      required={!signupData.adminCode}
+                      required={false}
                       className="block w-full pr-12 pl-4 py-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 text-right shadow-sm hover:shadow-md"
                       placeholder="أدخل رقم هاتف ولي الامر"
                       value={signupData.fatherPhoneNumber}
@@ -508,7 +533,7 @@ export default function Signup() {
               )}
 
               {/* Governorate Field - Only for regular users */}
-              {!signupData.adminCode && (
+              {!isAdminRegistration && (
                 <div className="group">
                   <label htmlFor="governorate" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 text-right">
                     المدينة
@@ -520,7 +545,7 @@ export default function Signup() {
                     <select
                       id="governorate"
                       name="governorate"
-                      required={!signupData.adminCode}
+                      required
                       className="block w-full pr-12 pl-4 py-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 text-right shadow-sm hover:shadow-md"
                       value={signupData.governorate}
                       onChange={handleUserInput}
@@ -537,7 +562,7 @@ export default function Signup() {
               )}
 
               {/* Stage Field - Only for regular users */}
-              {!signupData.adminCode && (
+              {!isAdminRegistration && (
                 <div className="group">
                   <label htmlFor="stage" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 text-right">
                     المرحلة الدراسية
@@ -549,7 +574,7 @@ export default function Signup() {
                     <select
                       id="stage"
                       name="stage"
-                      required={!signupData.adminCode}
+                      required
                       className="block w-full pr-12 pl-4 py-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 text-right shadow-sm hover:shadow-md"
                       value={signupData.stage}
                       onChange={handleUserInput}
@@ -566,7 +591,7 @@ export default function Signup() {
               )}
 
               {/* Age Field - Only for regular users */}
-              {!signupData.adminCode && (
+              {!isAdminRegistration && (
                 <div className="group">
                   <label htmlFor="age" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 text-right">
                     العمر
@@ -581,7 +606,7 @@ export default function Signup() {
                       type="number"
                       min="5"
                       max="100"
-                      required={!signupData.adminCode}
+                      required
                       className="block w-full pr-12 pl-4 py-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 text-right shadow-sm hover:shadow-md"
                       placeholder="أدخل عمرك"
                       value={signupData.age}
@@ -598,7 +623,7 @@ export default function Signup() {
                 </label>
                 <div className="flex items-center space-x-reverse space-x-4">
                   <div className="relative">
-                    <div className="w-20 h-20 rounded-full bg-gradient-to-r from-orange-100 to-blue-100 dark:from-orange-900/20 dark:to-blue-900/20 flex items-center justify-center border-2 border-gray-200 dark:border-gray-600 overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-r from-orange-100 to-orange-100 dark:from-orange-900/20 dark:to-orange-900/20 flex items-center justify-center border-2 border-gray-200 dark:border-gray-600 overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">
                       {previewImage ? (
                         <img 
                           src={previewImage} 
@@ -646,10 +671,10 @@ export default function Signup() {
               <button
                 type="submit"
                 disabled={isLoading || !isCaptchaVerified}
-                className="group relative w-full flex justify-center py-4 px-6 border border-transparent text-lg font-semibold rounded-xl text-white bg-gradient-to-r from-orange-600 via-blue-600 to-indigo-600 hover:from-orange-700 hover:via-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-4 focus:ring-orange-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl shadow-lg overflow-hidden"
+                className="group relative w-full flex justify-center py-4 px-6 border border-transparent text-lg font-semibold rounded-xl text-white bg-gradient-to-r from-orange-600 via-orange-600 to-indigo-600 hover:from-orange-700 hover:via-orange-700 hover:to-indigo-700 focus:outline-none focus:ring-4 focus:ring-orange-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl shadow-lg overflow-hidden"
               >
                 {/* Button Background Glow */}
-                <div className="absolute inset-0 bg-gradient-to-r from-orange-600 via-orange-500 to-yellow-600 rounded-xl blur opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-orange-600 via-orange-500 to-orange-600 rounded-xl blur opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
                 
                 <span className="relative flex items-center gap-3">
                   {isLoading ? (
@@ -666,7 +691,7 @@ export default function Signup() {
                 </span>
                 
                 {/* Creative Button Border Animation */}
-                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-orange-400 via-orange-500 to-yellow-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-orange-400 via-orange-500 to-orange-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
               </button>
             </form>
 
@@ -712,7 +737,7 @@ export default function Signup() {
                   سياسة الخصوصية
                 </Link>
               </p>
-              <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse animation-delay-1000"></div>
+              <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse animation-delay-1000"></div>
             </div>
           </div>
         </div>
@@ -772,7 +797,7 @@ export default function Signup() {
                   <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                     <span className="bg-gray-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-medium flex-shrink-0">2</span>
                     <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed text-right">
-                      <strong>حد الجهاز:</strong> <span className="text-red-600 dark:text-red-400 font-bold">مش هتقدر تفتح الحساب إلا على اول جهازين انت فتحت منهم.</span> اختار الجهاز اللي هتستخدمه بعناية عشان لو غيرت الجهاز مش هتعرف تخش أو تفتح الحساب إلا منه.
+                      <strong>حد الجهاز:</strong> <span className="text-red-600 dark:text-red-400 font-bold">مش هتقدر تفتح الحساب إلا على  اول جهازين بس.</span> اختار الجهاز اللي هتستخدمه بعناية عشان لو غيرت الجهاز مش هتعرف تخش أو تفتح الحساب إلا منه.
                     </p>
                   </div>
 
@@ -845,7 +870,7 @@ export default function Signup() {
                     disabled={!termsAccepted}
                     className={`flex-1 px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 ${
                       termsAccepted
-                        ? 'bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-white shadow-sm hover:shadow-md'
+                        ? 'bg-gradient-to-r from-orange-500 to-orange-500 hover:from-orange-600 hover:to-orange-600 text-white shadow-sm hover:shadow-md'
                         : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                     }`}
                   >

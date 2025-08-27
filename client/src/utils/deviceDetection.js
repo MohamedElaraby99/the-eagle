@@ -22,85 +22,16 @@ export const isMobile = () => {
   return !isDesktop();
 };
 
-// Prevent mobile inspection on desktop
+// Prevent mobile inspection on desktop (neutralized)
 export const preventMobileInspection = () => {
-  if (isDesktop()) {
-    // TEMPORARY: Check if protection is disabled via localStorage
-    const protectionDisabled = localStorage.getItem('disableProtection') === 'true';
-    
-    if (protectionDisabled) {
-      console.log('Device protection is temporarily disabled');
-      return;
-    }
-    
-    // Disable right-click context menu
-    document.addEventListener('contextmenu', (e) => {
-      e.preventDefault();
-      return false;
-    });
-    
-    // Disable F12 key
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I')) {
-        e.preventDefault();
-        return false;
-      }
-    });
-    
-    // Disable Ctrl+Shift+C (inspect element)
-    document.addEventListener('keydown', (e) => {
-      if (e.ctrlKey && e.shiftKey && e.key === 'C') {
-        e.preventDefault();
-        return false;
-      }
-    });
-    
-    // Disable Ctrl+U (view source)
-    document.addEventListener('keydown', (e) => {
-      if (e.ctrlKey && e.key === 'u') {
-        e.preventDefault();
-        return false;
-      }
-    });
-    
-    // Disable Ctrl+Shift+J (console)
-    document.addEventListener('keydown', (e) => {
-      if (e.ctrlKey && e.shiftKey && e.key === 'J') {
-        e.preventDefault();
-        return false;
-      }
-    });
-    
-    // Disable Ctrl+Shift+K (console in Firefox)
-    document.addEventListener('keydown', (e) => {
-      if (e.ctrlKey && e.shiftKey && e.key === 'K') {
-        e.preventDefault();
-        return false;
-      }
-    });
-    
-    console.log('Mobile inspection prevention enabled for desktop');
-  }
+  // No-op: allow context menu and devtools
+  return;
 };
 
-// Initialize device detection and prevention
+// Initialize device detection and prevention (neutralized)
 export const initializeDeviceProtection = () => {
-  // Only apply protection on desktop
-  if (isDesktop()) {
-    preventMobileInspection();
-    
-    // Additional protection: disable console
-    const disableConsole = () => {
-      console.log = () => {};
-      console.warn = () => {};
-      console.error = () => {};
-      console.info = () => {};
-      console.debug = () => {};
-    };
-    
-    // Uncomment the line below if you want to completely disable console
-    // disableConsole();
-  }
+  // No-op: do not attach any listeners or disable console
+  return;
 };
 
 // Get device type for conditional rendering
@@ -118,18 +49,16 @@ export const shouldShowDesktopFeatures = () => {
   return isDesktop();
 };
 
-// Temporarily disable protection for debugging
+// Temporarily disable protection for debugging (kept for API compatibility)
 export const disableProtection = () => {
   localStorage.setItem('disableProtection', 'true');
-  console.log('🔓 Device protection DISABLED - You can now use F12 and inspect tools');
-  console.log('To re-enable protection, call enableProtection()');
+  console.log('🔓 Device protection DISABLED');
 };
 
-// Re-enable protection
+// Re-enable protection (kept for API compatibility)
 export const enableProtection = () => {
   localStorage.removeItem('disableProtection');
   console.log('🔒 Device protection ENABLED');
-  // Note: Protection will be applied on next page load or component re-render
 };
 
 // Check if protection is currently disabled

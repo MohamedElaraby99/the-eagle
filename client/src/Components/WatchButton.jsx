@@ -19,7 +19,7 @@ const WatchButton = ({
       case "primary":
         return `${baseStyles} bg-green-600 hover:bg-green-700 text-white`;
       case "secondary":
-        return `${baseStyles} bg-blue-600 hover:bg-blue-700 text-white`;
+        return `${baseStyles} bg-orange-600 hover:bg-orange-700 text-white`;
       case "outline":
         return `${baseStyles} border border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20`;
       default:

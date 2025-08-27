@@ -17,14 +17,14 @@ export default function CarouselSlide({ details }) {
         <p className="flex flex-col gap-0">
           <BsQuote
             size={60}
-            className=" text-blue-500 dark:text-red-400 font-semibold"
+            className=" text-orange-500 dark:text-red-400 font-semibold"
           />
           <span className="text-gray-900 md:text-2xl text-lg dark:text-white font-lato font-[500] px-10">
             {details.description}
           </span>
           <BsQuote
             size={50}
-            className=" text-blue-500 dark:text-red font-semibold self-end rotate-180"
+            className=" text-orange-500 dark:text-red font-semibold self-end rotate-180"
           />
         </p>
       </div>

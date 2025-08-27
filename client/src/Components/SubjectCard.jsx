@@ -20,7 +20,7 @@ const SubjectCard = ({ subject, showActions = false, onEdit, onDelete, onToggleF
         {/* Featured Badge */}
         {subject.featured && (
           <div className="absolute top-2 right-2">
-            <span className="bg-yellow-500 text-white px-2 py-1 rounded-full text-xs font-medium">مميز</span>
+            <span className="bg-orange-500 text-white px-2 py-1 rounded-full text-xs font-medium">مميز</span>
           </div>
         )}
         {/* Play Button Overlay */}
@@ -34,7 +34,7 @@ const SubjectCard = ({ subject, showActions = false, onEdit, onDelete, onToggleF
       <div className="p-6">
         {/* Instructor Badge */}
         <div className="flex items-center gap-2 mb-3">
-          <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+          <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
             <FaGraduationCap className="inline ml-1" />
             {subject.instructor?.name || 'المدرس غير محدد'}
           </span>
@@ -58,7 +58,7 @@ const SubjectCard = ({ subject, showActions = false, onEdit, onDelete, onToggleF
         <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-4">   
           {/* Rating */}
           <div className="flex items-center gap-1">
-            <FaStar className="text-yellow-500" />
+            <FaStar className="text-orange-500" />
             <span>{(subject.rating || 5).toFixed(1)}</span>
           </div>
         </div>
@@ -68,14 +68,14 @@ const SubjectCard = ({ subject, showActions = false, onEdit, onDelete, onToggleF
             <div className="flex gap-2">
               <button
                 onClick={() => onEdit(subject)}
-                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors"
+                className="px-3 py-1 bg-orange-600 hover:bg-orange-700 text-white rounded text-sm transition-colors"
               >
                 تعديل
               </button>
               <button
                 onClick={() => onToggleFeatured && onToggleFeatured(subject._id)}
                 className={`px-3 py-1 rounded text-sm transition-colors ${
-                  subject.featured ? 'bg-yellow-600 hover:bg-yellow-700 text-white' : 'bg-gray-600 hover:bg-gray-700 text-white'
+                  subject.featured ? 'bg-orange-600 hover:bg-orange-700 text-white' : 'bg-gray-600 hover:bg-gray-700 text-white'
                 }`}
               >
                 {subject.featured ? 'إلغاء التميز' : 'تمييز'}

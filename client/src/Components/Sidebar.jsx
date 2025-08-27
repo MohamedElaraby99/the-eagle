@@ -78,7 +78,7 @@ export default function Sidebar({ hideBar = false }) {
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-orange-600 dark:text-orange-400">
-              منصة مستر مايكل
+              منصة The Eagle
             </h2>
             <button onClick={closeSidebar} className="text-red-500 hover:text-red-700">
               <AiFillCloseCircle size={20} />
@@ -244,16 +244,6 @@ export default function Sidebar({ hideBar = false }) {
                     </li>
                     <li>
                       <Link 
-                        to="/admin/exam-results" 
-                        className="flex gap-3 items-center text-xs text-gray-600 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 transition-colors py-1.5 px-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
-                        onClick={closeSidebar}
-                      >
-                        <FaClipboardCheck size={14} className="text-gray-500 dark:text-slate-100" />
-                        نتائج الامتحانات
-                      </Link>
-                    </li>
-                    <li>
-                      <Link 
                         to="/about" 
                         className="flex gap-3 items-center text-xs text-gray-600 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 transition-colors py-1.5 px-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
                         onClick={closeSidebar}
@@ -332,7 +322,7 @@ export default function Sidebar({ hideBar = false }) {
                 {/* User Avatar */}
                 <Link 
                   to="/user/profile" 
-                  className="w-8 h-8 rounded-full bg-gradient-to-r from-orange-500 to-yellow-600 flex items-center justify-center text-white font-bold text-xs shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer border-2 border-white dark:border-gray-700"
+                  className="w-8 h-8 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 flex items-center justify-center text-white font-bold text-xs shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer border-2 border-white dark:border-gray-700"
                   onClick={closeSidebar}
                 >
                   {data?.avatar?.secure_url ? (
@@ -387,7 +377,7 @@ export default function Sidebar({ hideBar = false }) {
                 <Link 
                   to="/login" 
                   onClick={closeSidebar}
-                  className="w-full group relative overflow-hidden rounded-lg bg-gradient-to-r from-orange-500 to-yellow-600 p-0.5 hover:from-orange-600 hover:to-yellow-700 transition-all duration-300"
+                  className="w-full group relative overflow-hidden rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 p-0.5 hover:from-orange-600 hover:to-orange-700 transition-all duration-300"
                 >
                   <div className="relative flex items-center justify-center gap-2 rounded-[8px] bg-white dark:bg-gray-800 px-3 py-2 transition-all duration-300 group-hover:bg-transparent">
                     <div className="relative z-10 flex items-center gap-2">

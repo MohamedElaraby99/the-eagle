@@ -127,7 +127,7 @@ export default function Wallet() {
             case 'purchase':
                 return <FaArrowDown className="text-red-500" />;
             case 'refund':
-                return <FaArrowUp className="text-blue-500" />;
+                return <FaArrowUp className="text-orange-500" />;
             default:
                 return <FaMoneyBillWave className="text-gray-500" />;
         }
@@ -140,7 +140,7 @@ export default function Wallet() {
             case 'purchase':
                 return 'text-red-600 bg-red-50 dark:bg-red-900/20';
             case 'refund':
-                return 'text-blue-600 bg-blue-50 dark:bg-blue-900/20';
+                return 'text-orange-600 bg-orange-50 dark:bg-orange-900/20';
             default:
                 return 'text-gray-600 bg-gray-50 dark:bg-gray-700';
         }
@@ -174,11 +174,11 @@ export default function Wallet() {
 
     return (
         <Layout>
-            <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-8" dir="rtl">
+            <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-orange-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-8" dir="rtl">
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                     {/* Header */}
                     <div className="text-center mb-8">
-                        <div className="mx-auto h-16 w-16 bg-gradient-to-r from-green-600 to-blue-600 rounded-full flex items-center justify-center mb-4 shadow-lg">
+                        <div className="mx-auto h-16 w-16 bg-gradient-to-r from-green-600 to-orange-600 rounded-full flex items-center justify-center mb-4 shadow-lg">
                             <FaWallet className="h-8 w-8 text-white" />
                         </div>
                         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
@@ -225,7 +225,7 @@ export default function Wallet() {
                             onClick={() => setActiveTab("balance")}
                             className={`px-6 py-3 rounded-lg font-medium transition-colors ${
                                 activeTab === "balance"
-                                    ? "bg-blue-600 text-white"
+                                    ? "bg-orange-600 text-white"
                                     : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                             }`}
                         >
@@ -236,7 +236,7 @@ export default function Wallet() {
                             onClick={() => setActiveTab("history")}
                             className={`px-6 py-3 rounded-lg font-medium transition-colors ${
                                 activeTab === "history"
-                                    ? "bg-blue-600 text-white"
+                                    ? "bg-orange-600 text-white"
                                     : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                             }`}
                         >
@@ -254,33 +254,33 @@ export default function Wallet() {
                                 </h3>
                                 
                                 {/* How to recharge instructions */}
-                                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
-                                    <h4 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-3">
+                                <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4 mb-6">
+                                    <h4 className="text-lg font-semibold text-orange-900 dark:text-orange-100 mb-3">
                                         كيفية الشحن:
                                     </h4>
-                                    <ul className="space-y-2 text-blue-800 dark:text-blue-200">
+                                    <ul className="space-y-2 text-orange-800 dark:text-orange-200">
                                         <li className="flex items-start">
-                                            <span className="text-blue-600 dark:text-blue-400 ml-2">•</span>
+                                            <span className="text-orange-600 dark:text-orange-400 ml-2">•</span>
                                             تواصل معنا على واتساب: <strong> 01205434383</strong> للحصول على كود شحن
                                         </li>
                                         <li className="flex items-start">
-                                            <span className="text-blue-600 dark:text-blue-400 ml-2">•</span>
+                                            <span className="text-orange-600 dark:text-orange-400 ml-2">•</span>
                                             أو ادفع عبر فودافون كاش: <strong>01205434383</strong>
                                         </li>
                                         <li className="flex items-start">
-                                            <span className="text-blue-600 dark:text-blue-400 ml-2">•</span>
+                                            <span className="text-orange-600 dark:text-orange-400 ml-2">•</span>
                                             اشتر كود شحن من البائعين المعتمدين
                                         </li>
                                         <li className="flex items-start">
-                                            <span className="text-blue-600 dark:text-blue-400 ml-2">•</span>
+                                            <span className="text-orange-600 dark:text-orange-400 ml-2">•</span>
                                             أدخل الكود والمبلغ في النموذج أعلاه
                                         </li>
                                         <li className="flex items-start">
-                                            <span className="text-blue-600 dark:text-blue-400 ml-2">•</span>
+                                            <span className="text-orange-600 dark:text-orange-400 ml-2">•</span>
                                             سيتم إضافة المبلغ إلى محفظتك فوراً
                                         </li>
                                         <li className="flex items-start">
-                                            <span className="text-blue-600 dark:text-blue-400 ml-2">•</span>
+                                            <span className="text-orange-600 dark:text-orange-400 ml-2">•</span>
                                             استخدم رصيدك لشراء الكورسات والخدمات التي ستتواصل معنا بشأنها على واتساب
                                         </li>
                                     </ul>
@@ -319,17 +319,17 @@ export default function Wallet() {
                                         </div>
 
                                         {/* Vodafone Cash Contact */}
-                                        <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
-                                            <h5 className="text-md font-semibold text-blue-900 dark:text-blue-100 mb-3 flex items-center gap-2">
-                                                <FaCreditCard className="text-blue-600 dark:text-blue-400" />
+                                        <div className="p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 rounded-lg">
+                                            <h5 className="text-md font-semibold text-orange-900 dark:text-orange-100 mb-3 flex items-center gap-2">
+                                                <FaCreditCard className="text-orange-600 dark:text-orange-400" />
                                                 الدفع عبر فودافون كاش
                                             </h5>
-                                            <div className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded border border-blue-200 dark:border-blue-600">
+                                            <div className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded border border-orange-200 dark:border-orange-600">
                                                 <div>
                                                     <div className="font-medium text-gray-900 dark:text-white">
                                                         رقم فودافون كاش
                                                     </div>
-                                                    <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                                                    <div className="text-lg font-bold text-orange-600 dark:text-orange-400">
                                                         01205434383
                                                     </div>
                                                     <div className="text-sm text-gray-600 dark:text-gray-400">
@@ -398,8 +398,8 @@ export default function Wallet() {
                                                     </div>
                                                 ))}
                                             </div>
-                                            <div className="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded">
-                                                <p className="text-xs text-yellow-800 dark:text-yellow-200">
+                                            <div className="mt-3 p-2 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 rounded">
+                                                <p className="text-xs text-orange-800 dark:text-orange-200">
                                                     <strong>ساعات العمل:</strong> الدعم متاح على مدار 24/7
                                                 </p>
                                             </div>
@@ -422,7 +422,7 @@ export default function Wallet() {
                                                     handleRechargeFormChange(e);
                                                     handleCodeValidation(e.target.value);
                                                 }}
-                                                className="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                                                className="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
                                                 placeholder="أدخل كود الشحن الخاص بك"
                                                 required
                                             />
@@ -433,9 +433,9 @@ export default function Wallet() {
                                                     ) : codeValidation.error ? (
                                                         <FaTimesCircle className="text-red-500 w-5 h-5" />
                                                     ) : codeValidation.loading ? (
-                                                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
+                                                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-orange-500"></div>
                                                     ) : (
-                                                        <FaExclamationTriangle className="text-yellow-500 w-5 h-5" />
+                                                        <FaExclamationTriangle className="text-orange-500 w-5 h-5" />
                                                     )}
                                                 </div>
                                             )}
@@ -455,7 +455,7 @@ export default function Wallet() {
                                             name="amount"
                                             value={rechargeForm.amount}
                                             onChange={handleRechargeFormChange}
-                                            className="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                                            className="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
                                             placeholder="أدخل المبلغ بالجنيه"
                                             min="1"
                                             step="0.01"
@@ -467,7 +467,7 @@ export default function Wallet() {
                                     <button
                                         type="submit"
                                         disabled={rechargeLoading || !codeValidation.isValid}
-                                        className="w-full flex justify-center items-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 shadow-lg"
+                                        className="w-full flex justify-center items-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-green-600 to-orange-600 hover:from-green-700 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 shadow-lg"
                                     >
                                         {rechargeLoading ? (
                                             <div className="flex items-center">
@@ -493,7 +493,7 @@ export default function Wallet() {
                                 
                                 {loading ? (
                                     <div className="flex justify-center items-center py-8">
-                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
                                     </div>
                                 ) : transactions.length === 0 ? (
                                     <div className="text-center py-8">
@@ -539,7 +539,7 @@ export default function Wallet() {
                                                         transaction.status === 'completed'
                                                             ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
                                                             : transaction.status === 'pending'
-                                                            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
+                                                            ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400'
                                                             : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
                                                     }`}>
                                                         {getStatusText(transaction.status)}
